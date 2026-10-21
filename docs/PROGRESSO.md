@@ -27,7 +27,7 @@ v3 (opcional).
 | V1.5 | feito   | 2026-10-21 | 10 cartas geradas no PC                                                     |
 | V1.6 | feito   | 2026-10-21 | .apkg importa no Anki do PC e reimportar não duplica                        |
 | V1.7 | feito   | 2026-10-21 | PWA, backup, aviso de servidor pausado, deploy (só o `main` publica)        |
-| V2.1 | feito   | 2026-10-21 | Sincronizar Anki na tela Vocabulário; falta a 1ª sincronização real (👤)    |
+| V2.1 | feito   | 2026-10-21 | 1ª sincronização real: 1515 Cards, 1503 Palavras, 0 sem entrada, 1 Lote     |
 | V2.2 | feito   | 2026-10-21 | destaque, "Já sei", importação por frequência; falta ver o destaque (👤)    |
 | V2.3 | feito   | 2026-10-21 | cobertura no leitor, Biblioteca e Vocabulário; desconhecidas por frequência |
 | V2.4 | feito   | 2026-10-21 | lista do hub na tela Vocabulário; aba Palavras no Início                    |
@@ -49,7 +49,6 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 ## Pendências
 
 - [ ] Executar docs/MANHA.md e depois apagá-lo
-- [ ] V2.1: primeira Sincronização do Anki real, pelo botão na tela Vocabulário (Chrome do PC)
 - [ ] V2.2: conferir o destaque e o painel no leitor (o navegador do Claude não desenha o leitor)
 - [ ] v2: juntar o PR da `v2-autonomo` no `main` e ver o critério da v2 no iPad (cobertura em % e
       palavra conhecida destacada)
