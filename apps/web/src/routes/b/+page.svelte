@@ -122,6 +122,7 @@
   import { sincronizador } from '$lib/data/supabase/sincronizacao/iniciar';
   import LeitorDokusho from '$lib/components/painel-palavra/leitor-dokusho.svelte';
   import BarraLeitor from '$lib/components/painel-palavra/barra-leitor.svelte';
+  import { furiganaModo$ } from '$lib/data/furigana/modo';
   import { destaqueLigado$ } from '$lib/data/vocabulario/servico';
   import { textoMarcadorRemoto } from '$lib/data/supabase/sincronizacao/regras';
   import NumberDialog from '$lib/components/number-dialog.svelte';
@@ -1671,13 +1672,14 @@
   capitulo={capituloAtual}
   porcentagem={bookCharCount ? Math.floor((100 * exploredCharCount) / bookCharCount) : 0}
   furiganaLigado={!$hideFurigana$}
+  furigana={$hideFurigana$ ? 'nenhum' : $furiganaModo$}
   destaqueLigado={$destaqueLigado$}
   cobertura={coberturaDoLivro}
   corFundo={$backgroundColor$}
   corTexto={$themeOption$?.fontColor ?? 'rgba(0, 0, 0, 0.87)'}
   on:voltar={() => leaveReader(mergeEntries.MANAGE.routeId)}
   on:tamanho={() => ($fontSize$ = $fontSize$ === 20 ? 23 : $fontSize$ === 23 ? 17 : 20)}
-  on:furigana={() => ($hideFurigana$ = !$hideFurigana$)}
+  on:furigana={({ detail }) => leitorDokusho?.escolherFurigana(detail)}
   on:acao={({ detail }) => acaoDaBarra(detail)}
 />
 {#if showHeader && mostrarFerramentasTtu}

@@ -1,6 +1,6 @@
 # Arquitetura (como está construído)
 
-Mapa do código do Dokusho no fim da v2. A especificação está em docs/ESCOPO.md, os motivos em
+Mapa do código do Dokusho no fim da v2, mais o furigana da v3. A especificação está em docs/ESCOPO.md, os motivos em
 docs/adr/ e o registro datado de cada decisão em docs/historico/DECISOES.md. Atualize este arquivo
 quando um módulo mudar de forma (não a cada detalhe).
 
@@ -60,6 +60,18 @@ telas, nunca no leitor.
   realça com a CSS Custom Highlight API. `painel-palavra.svelte` (inferior até 767 px, lateral acima),
   `barra-leitor.svelte` (barra do topo do D1), `alcance-dom.ts` (barra verde).
 - Casamento texto ↔ Anki: `lib/data/vocabulario/casamento.ts` (ADR 0008, 0013).
+
+## Furigana gerado (`lib/data/furigana/`, ADR 0015)
+
+- `gerado.ts` (puro, testado): leitura de cada pedaço (tokenizador conferido com o JMdict,
+  JmdictFurigana kanji por kanji, regras de reserva), furigana de um parágrafo (pula o `<ruby>` do
+  EPUB) e `mostrarFurigana` (regra do adaptativo). `gerado.medicao.test.ts`: as 30 frases do R5.
+- `modo.ts`: `furiganaModo$` (Do livro, Todos, Adaptativo), por aparelho; "Sem furigana" é o
+  `hideFurigana$` do ttu.
+- Leitor: `painel-palavra/furigana-dom.ts` envolve os kanji em `span.dk-fg[data-r]` nos parágrafos
+  perto da tela e marca `dk-fg--conhecida` (também no `<ruby>` do EPUB) pelo hub; o CSS em
+  `leitor-dokusho.svelte` mostra a leitura conforme `html[data-dk-furigana]`. O menu ふ fica na
+  `barra-leitor.svelte`.
 
 ## Hub de vocabulário (`lib/data/vocabulario/`; ADR 0007, 0008, 0013)
 

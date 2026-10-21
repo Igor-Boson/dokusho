@@ -1,4 +1,4 @@
-# Testes de risco (R1–R5)
+# Testes de risco (R1–R5 e furigana automático)
 
 Resultados dos testes do ESCOPO "Riscos e testes antes de construir" (movido do PROGRESSO.md em
 2026-10-21). O que ficou em aberto está em docs/PROGRESSO.md › Pendências.
@@ -113,3 +113,23 @@ Resultados dos testes do ESCOPO "Riscos e testes antes de construir" (movido do 
   **US$ 0,00375 por carta** (US$ 0,38 por 100). 16 s por carta. Veredito do Igor: significados,
   traduções e vozes bons ("não acho que dê para ficar melhor"). ✅
 - Teto: subiu para 2000 só durante os testes; de volta a 300.
+
+## Furigana automático (V3.1, 2026-10-21)
+
+As 30 frases das cartas do R5 (`dicts/r5/cartas.json`, de また、同じ夢を見ていた), com o JMdict
+inteiro, pelo `gerado.medicao.test.ts`. **202 palavras com furigana; 197 certas (97,5%) antes das
+regras de reserva; 25 das 30 frases sem nenhum erro.** Os 5 erros eram todos palpites do IPADIC em
+homógrafos; o JmdictFurigana não errou nenhum, e nenhuma palavra ficou sem leitura.
+
+| Palavra no texto | Saiu   | Certo | Causa                     | Regra de reserva                        |
+| ---------------- | ------ | ----- | ------------------------- | --------------------------------------- |
+| 私の行っている   | おこな | い    | tokenizador (行う × 行く) | 行っ é sempre de 行く                   |
+| クリーム色       | しょく | いろ  | tokenizador (sufixo)      | 色 sozinho é いろ                       |
+| 知った風な       | かぜ   | ふう  | homógrafo                 | 風 entre verbo/こんな e な/に é ふう    |
+| 眠った後に       | のち   | あと  | homógrafo                 | 後 lido のち vira あと (その後 ご fica) |
+| 他の先生         | た     | ほか  | homógrafo                 | 他 sozinho é ほか                       |
+
+Com as regras, 202/202 nestas frases, mas elas foram ajustadas em cima delas: a taxa que vale como
+estimativa é a de antes (97,5%). Também conferidos: 一日 いちにち, 何度 なんど (regra do 何), 明日
+あした, その後 ご, 下げ さ, 上手く うまく. Rodar de novo (em apps/web):
+`$env:MEDIR_FURIGANA="<arquivo>"; npx vitest run gerado.medicao`.

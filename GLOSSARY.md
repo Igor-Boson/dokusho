@@ -68,6 +68,10 @@ _Avoid_: bookmark, posição, página
 O significado curto da Palavra, em inglês, tirado do dicionário sem tradução.
 _Avoid_: definição, tradução da palavra
 
+**Furigana adaptativo**:
+O modo de furigana que mostra a leitura só das Palavras que não estão no estado conhecida, tanto a gerada pelo app quanto a que o EPUB já traz.
+_Avoid_: furigana inteligente, furigana parcial
+
 **Tradução da frase**:
 A frase do livro traduzida para o português pelo Gemini, pedida por você e guardada em cache.
 _Avoid_: significado da frase

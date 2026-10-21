@@ -81,6 +81,11 @@ export function lerParagrafo(elemento: Element): ParagrafoDoLivro {
   return paragrafo;
 }
 
+/** O parágrafo mudou de nós (furigana gerado, ADR 0015): o próximo lerParagrafo lê de novo. */
+export function esquecerParagrafo(elemento: Element) {
+  cache.delete(elemento);
+}
+
 export function posicaoNoParagrafo(paragrafo: ParagrafoDoLivro, no: Node, deslocamento: number) {
   const trecho = paragrafo.trechos.find((t) => t.no === no);
 

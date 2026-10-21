@@ -1,14 +1,18 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
 
+  import type { OpcaoFurigana } from '$lib/data/furigana/modo';
+
   // Barra do topo do leitor (desenho do D1): voltar, título com capítulo e %, Aa, ふ e o menu ⋯. Aparece
-  // ao rolar para trás ou ao tocar na faixa do topo; as funções do ttu ficam no menu.
+  // ao rolar para trás ou ao tocar na faixa do topo; as funções do ttu ficam no menu. O ふ abre a
+  // escolha do furigana (v3): nenhum, só o do livro, todos ou adaptativo.
 
   export let visivel = false;
   export let titulo = '';
   export let capitulo = '';
   export let porcentagem = 0;
   export let furiganaLigado = true;
+  export let furigana: OpcaoFurigana = 'livro';
   export let destaqueLigado = true;
   export let cobertura = '';
   export let corFundo = '#fff';
@@ -17,7 +21,7 @@
   const dispatch = createEventDispatcher<{
     voltar: void;
     tamanho: void;
-    furigana: void;
+    furigana: OpcaoFurigana;
     acao: string;
   }>();
 
@@ -33,9 +37,25 @@
     ['ttu', 'Mais ferramentas do leitor']
   ];
 
-  let menu = false;
+  const FURIGANA: [OpcaoFurigana, string, string][] = [
+    ['nenhum', 'Sem furigana', ''],
+    ['livro', 'Do livro', 'só o que o EPUB traz'],
+    ['todos', 'Todos', 'gerado em todos os kanji'],
+    ['adaptativo', 'Adaptativo', 'esconde o das palavras conhecidas']
+  ];
 
-  $: if (!visivel) menu = false;
+  let menu = false;
+  let menuFurigana = false;
+
+  $: if (!visivel) {
+    menu = false;
+    menuFurigana = false;
+  }
+
+  function escolherFurigana(opcao: OpcaoFurigana) {
+    menuFurigana = false;
+    dispatch('furigana', opcao);
+  }
 
   function acao(nome: string) {
     menu = false;
@@ -69,15 +89,21 @@
   <button
     class="dokusho-barra__texto"
     class:ligado={furiganaLigado}
-    aria-label="Furigana do livro"
-    aria-pressed={furiganaLigado}
-    on:click={() => dispatch('furigana')}>ふ</button
+    aria-label="Furigana"
+    aria-expanded={menuFurigana}
+    on:click={() => {
+      menuFurigana = !menuFurigana;
+      menu = false;
+    }}>ふ</button
   >
   <button
     class="dokusho-barra__icone"
     aria-label="Mais opções"
     aria-expanded={menu}
-    on:click={() => (menu = !menu)}
+    on:click={() => {
+      menu = !menu;
+      menuFurigana = false;
+    }}
   >
     <svg viewBox="0 0 24 24" aria-hidden="true"
       ><circle cx="5" cy="12" r="1.3" /><circle cx="12" cy="12" r="1.3" /><circle
@@ -87,6 +113,21 @@
       /></svg
     >
   </button>
+
+  {#if menuFurigana}
+    <div class="dokusho-barra__menu" role="menu" aria-label="Furigana">
+      {#each FURIGANA as [opcao, rotulo, detalhe]}
+        <button
+          role="menuitemradio"
+          aria-checked={furigana === opcao}
+          class:escolhido={furigana === opcao}
+          on:click={() => escolherFurigana(opcao)}
+        >
+          {rotulo}{#if detalhe}<small>{detalhe}</small>{/if}
+        </button>
+      {/each}
+    </div>
+  {/if}
 
   {#if menu}
     <div class="dokusho-barra__menu" role="menu">
@@ -195,6 +236,19 @@
 
       &:active {
         background: rgba(128, 128, 128, 0.15);
+      }
+
+      &.escolhido {
+        font-weight: 700;
+        color: #2d4f86;
+        background: #e2e8f3;
+      }
+
+      small {
+        display: block;
+        font-size: 12px;
+        font-weight: 400;
+        opacity: 0.7;
       }
     }
   }

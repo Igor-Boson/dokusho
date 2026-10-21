@@ -5,10 +5,10 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 
 ## Estado
 
-**v1 pronta** (2026-10-21), no ar em https://dokusho-kappa.vercel.app. **v2 pronta** e testada
-pelo Igor no PC (app local), na branch `v2-autonomo` (PR #5). Decisões marcadas "(autônomo,
-revisar)" em docs/historico/DECISOES.md. Próximo: juntar o PR #5 e ver no iPad; depois, v3
-(opcional).
+**v1 pronta** (2026-10-21), no ar em https://dokusho-kappa.vercel.app. **v2 pronta** e no ar
+(PR #5, 2026-10-21). Decisões marcadas "(autônomo, revisar)" em docs/historico/DECISOES.md.
+**V3.1 feito no código** (branch `v3-1-furigana`, PR aberto; falta o Igor testar e juntar).
+Próximo: V3.2.
 
 | Item | Status  | Data       | Observação                                                                  |
 | ---- | ------- | ---------- | --------------------------------------------------------------------------- |
@@ -31,6 +31,7 @@ revisar)" em docs/historico/DECISOES.md. Próximo: juntar o PR #5 e ver no iPad;
 | V2.2 | feito   | 2026-10-21 | destaque, painel e "Já sei" conferidos no PC pelo Igor                      |
 | V2.3 | feito   | 2026-10-21 | cobertura no leitor, Biblioteca e Vocabulário; desconhecidas por frequência |
 | V2.4 | feito   | 2026-10-21 | lista do hub na tela Vocabulário; aba Palavras no Início                    |
+| V3.1 | código  | 2026-10-21 | furigana gerado e adaptativo (ADR 0015); 97,5% certo nas 30 frases          |
 
 \* Testes em aparelho dispensados pelo Igor, cobertos só pelos testes automáticos (ver abaixo).
 
@@ -48,8 +49,9 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 
 ## Pendências
 
-- [ ] v2: juntar o PR #5 (`v2-autonomo`) no `main`; no iPad, tocar em "Atualizar" e ver o critério
-      da v2 (cobertura em % ao abrir um livro; destaque pelo estado)
+- [ ] V3.1: testar o menu ふ no PC e no iPhone/iPad (Do livro, Todos, Adaptativo, Sem furigana) e
+      juntar o PR; no iPhone, ver se a leitura do furigana gerado não fica cortada no topo da página
+
 - [ ] Revisar as decisões "(autônomo, revisar)" da v2 em docs/historico/DECISOES.md
 - Conhecido: na primeira abertura da v2, uma aba ou janela antiga do Dokusho (v1) aberta trava a
   atualização do banco local; o app avisa e é só fechá-la.
