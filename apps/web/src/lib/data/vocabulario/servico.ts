@@ -14,7 +14,7 @@ import {
   sincronizarEmBreve,
   vocabMudou$
 } from '$lib/data/supabase/sincronizacao/iniciar';
-import type { LinhaRetrato } from '$lib/data/supabase/sincronizacao/regras';
+import type { LinhaRetrato, LinhaVocab } from '$lib/data/supabase/sincronizacao/regras';
 import { sincronizarAnki, type PassoSincAnki, type ResumoSincAnki } from './sincronizar-anki';
 import { desfazerJaSei, marcarJaSei } from './hub';
 import { IndiceDoHub } from './indice';
@@ -135,6 +135,26 @@ export async function marcarJaSeiNaEntrada(palavra: {
   const linha = marcarJaSei(atual, palavra, agora);
 
   await sincronizador().salvar('vocab', { ...linha, user_id: '', updated_at: agora });
+  vocabMudou$.next();
+  sincronizarEmBreve();
+}
+
+/** Tira o "Já sei" de uma linha da tela Vocabulário (com entrada: de toda a entrada). */
+export async function desfazerJaSeiDaLinha(linha: LinhaVocab) {
+  const seqs = linha.jmdict_ids ?? (linha.jmdict_id ? [linha.jmdict_id] : []);
+
+  if (seqs.length) {
+    for (const seq of seqs) await desfazerJaSeiNaEntrada(seq);
+    return;
+  }
+
+  const agora = new Date().toISOString();
+
+  await sincronizador().salvar('vocab', {
+    ...desfazerJaSei(linha, agora),
+    user_id: linha.user_id,
+    updated_at: linha.updated_at
+  });
   vocabMudou$.next();
   sincronizarEmBreve();
 }

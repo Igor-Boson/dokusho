@@ -77,18 +77,29 @@ async function atualizarListaDeLivros() {
   database.dataListChanged$.next(undefined);
 }
 
+const ESPERA_DO_BANCO = 5000;
+
+function abrirSinc() {
+  // Sem resposta em 5 s também é bloqueio: uma aba congelada no meio de uma abertura não dispara o
+  // evento `blocked`.
+  const espera = setTimeout(() => bancoBloqueado$.next(true), ESPERA_DO_BANCO);
+
+  return abrirBancoSinc(undefined, {
+    bloqueado: () => bancoBloqueado$.next(true),
+    // Uma aba com a versão nova precisa atualizar o banco: esta, desatualizada, recarrega.
+    substituido: () => location.reload()
+  }).then((db) => {
+    clearTimeout(espera);
+    bancoBloqueado$.next(false);
+    return db;
+  });
+}
+
 export function sincronizador() {
   if (!instancia) {
     instancia = new Sincronizador({
       ttu: database.db,
-      sinc: abrirBancoSinc(undefined, {
-        bloqueado: () => bancoBloqueado$.next(true),
-        // Uma aba com a versão nova precisa atualizar o banco: esta, desatualizada, recarrega.
-        substituido: () => location.reload()
-      }).then((db) => {
-        bancoBloqueado$.next(false);
-        return db;
-      }),
+      sinc: abrirSinc(),
       servidor: () => servidorSupabase(supabase),
       aparelho: aparelho(),
       avisos: {
