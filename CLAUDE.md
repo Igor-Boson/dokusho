@@ -18,7 +18,8 @@ desfazer um ADR sem um novo ADR).
   Schema em supabase/migrations/. Cliente: @supabase/supabase-js.
 - Hospedagem: Vercel (build estático do adapter-static), só `main`, sem previews. Configuração em
   apps/web/vercel.json (Root Directory `apps/web`, saída `build`, cleanUrls); env vars na Vercel:
-  PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY e ENABLE_EXPERIMENTAL_COREPACK=1.
+  PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY e ENABLE_EXPERIMENTAL_COREPACK=1. Produção:
+  https://dokusho-kappa.vercel.app (só o `main` publica; `git.deploymentEnabled` no vercel.json).
 - .apkg: port do genanki em apps/web/src/lib/functions/anki (sql.js + @zip.js), testado contra a
   saída do genanki.
 - Dicionários: zips Yomitan em dicts/ (local, fora do git) → script em tools/ converte para o formato
