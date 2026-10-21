@@ -1,5 +1,6 @@
 <script lang="ts">
   import CartaoAnki from '$lib/components/vocabulario/cartao-anki.svelte';
+  import ImportarJaSei from '$lib/components/vocabulario/importar-ja-sei.svelte';
   import NavegacaoInferior from '$lib/components/navegacao/navegacao-inferior.svelte';
   import { formatPageTitle } from '$lib/functions/format-page-title';
 
@@ -14,6 +15,7 @@
   <header><h1>Vocabulário</h1></header>
 
   <CartaoAnki />
+  <ImportarJaSei />
 </main>
 
 <NavegacaoInferior />

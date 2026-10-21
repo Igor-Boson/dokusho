@@ -6,7 +6,9 @@
 
 import { BehaviorSubject } from 'rxjs';
 import { criarAnkiConnect } from '$lib/functions/anki/anki-connect';
-import { consultarPalavra } from '$lib/data/dicionario/servico';
+import { consultarPalavra, percorrerDicionario } from '$lib/data/dicionario/servico';
+import type { Entrada } from '$lib/data/dicionario/formato';
+import { desfazerImportacao, jaSeiPorFrequencia, posicaoNaFrequencia } from './importacao';
 import {
   sincronizador,
   sincronizarEmBreve,
@@ -152,4 +154,62 @@ export async function desfazerJaSeiNaEntrada(seq: number) {
   );
   vocabMudou$.next();
   sincronizarEmBreve();
+}
+
+/** Entradas fora do Anki até a posição N do JPDB (para a prévia e a importação). */
+async function entradasAte(limite: number, aoProgredir?: (fracao: number) => void) {
+  const escolhidas: Entrada[] = [];
+  await percorrerDicionario((entradas) => {
+    for (const e of entradas) if (posicaoNaFrequencia(e) <= limite) escolhidas.push(e);
+  }, aoProgredir);
+  return escolhidas;
+}
+
+/** Quantas Palavras a importação inicial marcaria, sem gravar nada. */
+export async function previaDaImportacao(limite: number, aoProgredir?: (fracao: number) => void) {
+  const linhas = await linhasDaImportacao(limite, new Date().toISOString(), aoProgredir);
+  return linhas.length;
+}
+
+async function linhasDaImportacao(
+  limite: number,
+  agora: string,
+  aoProgredir?: (fracao: number) => void
+) {
+  const entradas = await entradasAte(limite, aoProgredir);
+  const atuais = await sincronizador().listarComApagadas('vocab');
+  return jaSeiPorFrequencia(
+    entradas,
+    limite,
+    (await indiceDoHub()).entradasNoAnki(),
+    atuais,
+    agora
+  );
+}
+
+/** Importação inicial: "Já sei" nas entradas até a posição N do JPDB que não estão no Anki. */
+export async function importarJaSei(limite: number, aoProgredir?: (fracao: number) => void) {
+  const agora = new Date().toISOString();
+  const linhas = await linhasDaImportacao(limite, agora, aoProgredir);
+
+  await sincronizador().salvarVarias(
+    'vocab',
+    linhas.map((l) => ({ ...l, user_id: '', updated_at: agora }))
+  );
+  vocabMudou$.next();
+  sincronizarEmBreve();
+  return linhas.length;
+}
+
+export async function desfazerImportacaoDe(quando: string) {
+  const agora = new Date().toISOString();
+  const linhas = desfazerImportacao(await sincronizador().listar('vocab'), quando, agora);
+
+  await sincronizador().salvarVarias(
+    'vocab',
+    linhas.map((l) => ({ ...l, user_id: '', updated_at: agora }))
+  );
+  vocabMudou$.next();
+  sincronizarEmBreve();
+  return linhas.length;
 }

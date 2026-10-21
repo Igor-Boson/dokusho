@@ -64,8 +64,22 @@ export type BancoSinc = IDBPDatabase<SincDb>;
 
 export const NOME_BANCO_SINC = 'dokusho-sinc';
 
-export function abrirBancoSinc(nome = NOME_BANCO_SINC) {
+export interface AvisosDoBanco {
+  /** Outra aba com a versão antiga segura o banco: a atualização espera ela fechar. */
+  bloqueado?(): void;
+  /** Uma aba com a versão nova quer atualizar o banco: esta fecha a conexão. */
+  substituido?(): void;
+}
+
+export function abrirBancoSinc(nome = NOME_BANCO_SINC, avisos: AvisosDoBanco = {}) {
   return openDB<SincDb>(nome, 3, {
+    blocked() {
+      avisos.bloqueado?.();
+    },
+    blocking(_atual, _nova, evento) {
+      (evento.target as IDBDatabase).close();
+      avisos.substituido?.();
+    },
     upgrade(db, versaoAntiga) {
       if (versaoAntiga < 1) {
         db.createObjectStore('livros', { keyPath: 'id' }).createIndex('titulo', 'titulo');

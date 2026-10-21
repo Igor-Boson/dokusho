@@ -32,6 +32,12 @@ export const estadoSinc$ = new BehaviorSubject<EstadoSinc>({ tipo: 'parado' });
 /** Estatísticas de outro aparelho chegaram (a tela inicial soma). */
 export const estatisticasRecebidas$ = new Subject<void>();
 
+/**
+ * O banco local espera outra aba (com a versão antiga do app) fechar para se atualizar; até lá, a
+ * sincronização e o hub não abrem.
+ */
+export const bancoBloqueado$ = new BehaviorSubject(false);
+
 /** Cartas, Lotes ou traduções chegaram do servidor (a Fila e o painel releem). */
 export const cartasRecebidas$ = new Subject<void>();
 
@@ -75,7 +81,14 @@ export function sincronizador() {
   if (!instancia) {
     instancia = new Sincronizador({
       ttu: database.db,
-      sinc: abrirBancoSinc(),
+      sinc: abrirBancoSinc(undefined, {
+        bloqueado: () => bancoBloqueado$.next(true),
+        // Uma aba com a versão nova precisa atualizar o banco: esta, desatualizada, recarrega.
+        substituido: () => location.reload()
+      }).then((db) => {
+        bancoBloqueado$.next(false);
+        return db;
+      }),
       servidor: () => servidorSupabase(supabase),
       aparelho: aparelho(),
       avisos: {

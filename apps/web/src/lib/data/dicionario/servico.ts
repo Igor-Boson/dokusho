@@ -11,6 +11,7 @@ import {
   apagarDicionario,
   consultar,
   NOME_BANCO,
+  percorrerEntradas,
   versaoGravada,
   type BancoDicionario
 } from './banco';
@@ -170,6 +171,14 @@ export function tokenizador() {
   }
 
   return carregando;
+}
+
+/** Passa por todas as entradas do dicionário gravado (importação inicial do "Já sei"). */
+export async function percorrerDicionario(
+  aoLer: (entradas: Entrada[]) => void,
+  aoProgredir?: (fracao: number) => void
+) {
+  await percorrerEntradas(await abrir(), aoLer, aoProgredir);
 }
 
 /** Consulta ao dicionário gravado, com as últimas respostas na memória. */
