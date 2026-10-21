@@ -9,6 +9,7 @@
   export let capitulo = '';
   export let porcentagem = 0;
   export let furiganaLigado = true;
+  export let destaqueLigado = true;
   export let corFundo = '#fff';
   export let corTexto = 'rgba(0, 0, 0, 0.87)';
 
@@ -19,7 +20,8 @@
     acao: string;
   }>();
 
-  const ACOES = [
+  $: ACOES = [
+    ['destaque', destaqueLigado ? 'Tirar o destaque das palavras' : 'Destacar as palavras'],
     ['desmarcar', 'Desmarcar a partir daqui'],
     ['sumario', 'Sumário'],
     ['marcador', 'Marcar este ponto'],

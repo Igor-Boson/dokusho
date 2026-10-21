@@ -278,6 +278,17 @@
   color: inherit;
 }
 
+// Destaque pelo estado do hub (V2.2): desconhecida com fundo azul claro, aprendendo sublinhada em
+// âmbar (o amarelo é da seleção); conhecida sem nada. Translúcidos para servir nos temas do ttu.
+::highlight(dokusho-desconhecida) {
+  background-color: rgba(80, 130, 230, 0.16);
+}
+
+::highlight(dokusho-aprendendo) {
+  text-decoration: underline 2px rgba(214, 140, 30, 0.9);
+  text-underline-offset: 0.25em;
+}
+
 // Leitura no celular como no protótipo D1: margens largas, espaço entre parágrafos e folga no fim
 // para o painel da palavra não cobrir as últimas linhas.
 @media (max-width: 767px) {

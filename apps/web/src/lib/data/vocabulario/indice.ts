@@ -79,6 +79,11 @@ export class IndiceDoHub {
     return this.porEscrita.get(base) ?? 'desconhecida';
   }
 
+  /** Sem nenhuma linha (o Anki nunca foi sincronizado e não há "Já sei"). */
+  get vazio() {
+    return !this.porEntrada.size && !this.porEscrita.size;
+  }
+
   linhasDaEntrada(seq: number) {
     return this.porEntrada.get(seq) ?? [];
   }
