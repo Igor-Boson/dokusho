@@ -42,9 +42,8 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 
 ## Pendências
 
-- [ ] Confirmar que o PR aberto por engano no ttu original (ttu-ttu/ebook-reader#550) foi fechado.
-- [ ] O teto do Gemini voltou a 300 (~70 cartas por dia). Se bater, `npx supabase secrets set
-  GEMINI_TETO_DIARIO=<n>`.
+Nenhuma da v1. Lembrete: o teto do Gemini está em 300 (~70 cartas por dia); se bater,
+`npx supabase secrets set GEMINI_TETO_DIARIO=<n>`.
 
 ## Sem decisão (da entrevista de 20/10)
 

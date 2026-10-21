@@ -293,3 +293,4 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   produção, PWA no iPhone, teto de volta a 300, alerta de orçamento, rls_check). **v1 encerrada.**
   Documentos reorganizados: PROGRESSO só com estado e pendências; este registro e os testes de risco em
   docs/historico/; mapa do código em docs/ARQUITETURA.md; README do Dokusho.
+- 2026-10-21: PR aberto por engano no ttu original (ttu-ttu/ebook-reader#550) fechado pelo Igor.
