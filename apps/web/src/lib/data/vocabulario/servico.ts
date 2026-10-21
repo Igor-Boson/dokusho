@@ -213,3 +213,23 @@ export async function desfazerImportacaoDe(quando: string) {
   sincronizarEmBreve();
   return linhas.length;
 }
+
+/** Cobertura (%) de cada livro com perfil neste aparelho, pelo título (Biblioteca e Vocabulário). */
+export async function coberturasPorTitulo() {
+  const { lerPerfis } = await import('./perfis');
+  const { cobertura } = await import('./perfil');
+  const [perfis, indice, titulos] = await Promise.all([
+    lerPerfis(),
+    indiceDoHub(),
+    sincronizador().titulosDosLivros()
+  ]);
+  const mapa = new Map<string, { livroId: string; porcentagem: number }>();
+  for (const perfil of perfis) {
+    const titulo = titulos.get(perfil.livroId) ?? perfil.livroId;
+    mapa.set(titulo, {
+      livroId: perfil.livroId,
+      porcentagem: cobertura(perfil, indice).porcentagem
+    });
+  }
+  return mapa;
+}

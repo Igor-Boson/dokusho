@@ -27,6 +27,13 @@
     marcarJaSeiNaEntrada
   } from '$lib/data/vocabulario/servico';
   import { DestaqueNoTexto } from './destaque-dom';
+  import { cobertura as calcularCobertura } from '$lib/data/vocabulario/perfil';
+  import {
+    garantirPerfil,
+    lerPerfil,
+    perfilPronto$,
+    progressoDoPerfil$
+  } from '$lib/data/vocabulario/perfis';
   import type { LinhaCarta } from '$lib/data/supabase/sincronizacao/regras';
   import { marcarLidos, mapearLivro, type MapaDoLivro } from './alcance-dom';
   import PainelPalavra from './painel-palavra.svelte';
@@ -54,6 +61,10 @@
   export let corTexto: string;
   /** A barra do topo do ttu (showHeader). */
   export let mostrarBarra = false;
+  /** Para a barra do topo: "cobertura 87%" (V2.3), ou o progresso do cálculo. */
+  export let cobertura = '';
+  /** Hash do EPUB (ADR 0001), para "Palavras do livro". */
+  export let livroId = '';
 
   const REALCE = 'dokusho-selecao';
 
@@ -104,6 +115,24 @@
 
     destaque.ligar();
     destaque.repintarDepois();
+  }
+
+  async function atualizarCobertura() {
+    if (!livroId) return;
+
+    const perfil = await lerPerfil(livroId);
+
+    if (perfil)
+      cobertura = `cobertura ${calcularCobertura(perfil, await indiceDoHub()).porcentagem}%`;
+  }
+
+  /** Perfil do livro em segundo plano, depois de a primeira tela se acomodar (V2.3). */
+  async function prepararCobertura() {
+    livroId = (await sincronizador().idDoLivro(titulo)) ?? titulo;
+    await atualizarCobertura();
+    await new Promise((r) => setTimeout(r, 3000));
+    await garantirPerfil(livroId, async () => htmlContent);
+    await atualizarCobertura();
   }
 
   /** Menu ⋯ da barra: liga ou desliga o destaque. */
@@ -512,10 +541,16 @@
       vocabMudou$.subscribe(() => {
         atualizarInfo();
         atualizarDestaque();
+        atualizarCobertura();
+      }),
+      perfilPronto$.subscribe((id) => id === livroId && atualizarCobertura()),
+      progressoDoPerfil$.subscribe(({ livroId: id, fracao }) => {
+        if (id === livroId) cobertura = `cobertura… ${Math.round(fracao * 100)}%`;
       })
     ];
 
     atualizarDestaque();
+    prepararCobertura().catch(() => undefined);
 
     sincronizador()
       .alcanceDe(titulo)
