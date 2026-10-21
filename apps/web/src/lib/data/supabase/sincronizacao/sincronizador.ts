@@ -360,6 +360,17 @@ export class Sincronizador {
     return new Map((await sinc.getAll('livros')).map((livro) => [livro.id, livro.titulo]));
   }
 
+  /** Livros que não foram apagados: hash → título. */
+  async livrosAtivos() {
+    const sinc = await this.opcoes.sinc;
+
+    return new Map(
+      (await sinc.getAll('livros'))
+        .filter((livro) => !livro.apagadoEm)
+        .map((livro) => [livro.id, livro.titulo])
+    );
+  }
+
   /** Estatísticas dos outros aparelhos num intervalo de datas (inclusive). */
   async estatisticasDeOutrosAparelhos(inicio = '', fim = '￿') {
     const sinc = await this.opcoes.sinc;

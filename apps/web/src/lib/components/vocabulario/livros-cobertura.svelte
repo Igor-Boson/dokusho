@@ -11,7 +11,7 @@
 
   async function carregar() {
     const [titulos, coberturas] = await Promise.all([
-      sincronizador().titulosDosLivros(),
+      sincronizador().livrosAtivos(),
       coberturasPorTitulo()
     ]);
     livros = [...titulos]
