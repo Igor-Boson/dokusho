@@ -5,10 +5,10 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 
 ## Estado
 
-**v1 pronta** (2026-10-21), no ar em https://dokusho-kappa.vercel.app. **v2 pronta no código** na
-branch `v2-autonomo` (chat autônomo; ainda não está no `main` nem no ar). Decisões marcadas
-"(autônomo, revisar)" em docs/historico/DECISOES.md. Próximo: os passos 👤 do docs/MANHA.md; depois,
-v3 (opcional).
+**v1 pronta** (2026-10-21), no ar em https://dokusho-kappa.vercel.app. **v2 pronta** e testada
+pelo Igor no PC (app local), na branch `v2-autonomo` (PR #5). Decisões marcadas "(autônomo,
+revisar)" em docs/historico/DECISOES.md. Próximo: juntar o PR #5 e ver no iPad; depois, v3
+(opcional).
 
 | Item | Status  | Data       | Observação                                                                  |
 | ---- | ------- | ---------- | --------------------------------------------------------------------------- |
@@ -28,7 +28,7 @@ v3 (opcional).
 | V1.6 | feito   | 2026-10-21 | .apkg importa no Anki do PC e reimportar não duplica                        |
 | V1.7 | feito   | 2026-10-21 | PWA, backup, aviso de servidor pausado, deploy (só o `main` publica)        |
 | V2.1 | feito   | 2026-10-21 | 1ª sincronização real: 1515 Cards, 1503 Palavras, 0 sem entrada, 1 Lote     |
-| V2.2 | feito   | 2026-10-21 | destaque, "Já sei", importação por frequência; falta ver o destaque (👤)    |
+| V2.2 | feito   | 2026-10-21 | destaque, painel e "Já sei" conferidos no PC pelo Igor                      |
 | V2.3 | feito   | 2026-10-21 | cobertura no leitor, Biblioteca e Vocabulário; desconhecidas por frequência |
 | V2.4 | feito   | 2026-10-21 | lista do hub na tela Vocabulário; aba Palavras no Início                    |
 
@@ -48,10 +48,8 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 
 ## Pendências
 
-- [ ] Executar docs/MANHA.md e depois apagá-lo
-- [ ] V2.2: conferir o destaque e o painel no leitor (o navegador do Claude não desenha o leitor)
-- [ ] v2: juntar o PR da `v2-autonomo` no `main` e ver o critério da v2 no iPad (cobertura em % e
-      palavra conhecida destacada)
+- [ ] v2: juntar o PR #5 (`v2-autonomo`) no `main`; no iPad, tocar em "Atualizar" e ver o critério
+      da v2 (cobertura em % ao abrir um livro; destaque pelo estado)
 - [ ] Revisar as decisões "(autônomo, revisar)" da v2 em docs/historico/DECISOES.md
 - Conhecido: na primeira abertura da v2, uma aba ou janela antiga do Dokusho (v1) aberta trava a
   atualização do banco local; o app avisa e é só fechá-la.
