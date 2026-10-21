@@ -367,3 +367,19 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   `/vocabulario/livro?id=<hash>` ("Palavras do livro" no menu ⋯ do leitor), com as desconhecidas da
   mais frequente no livro para a menos, glosa, número de vezes e "Já sei" em cada uma (50 por vez).
   Livro sem perfil: "Calcular agora" na própria tela. (autônomo, revisar)
+- 2026-10-21: V2.4. Aba Palavras do Início: o total é o de conhecidas no hub agora (com os "Já sei"
+  feitos depois da última sincronização); o gráfico não soma por dia (é um total acumulado): cada
+  dia vale o último retrato de `vocab_history` até ele, hoje vale o hub agora, e acima de 60 dias uma
+  barra por semana com o valor do fim dela. Nessa aba, "Por livro" vira "Cobertura por livro" (só os
+  livros com perfil neste aparelho). O calendário e a meta seguem a leitura. (autônomo, revisar)
+- 2026-10-21: V2.4. Tela Vocabulário (decide a "tela Vocabulário" que estava sem decisão), de cima
+  para baixo: Anki (sincronização e último retrato), Livros (cobertura), "Já sei" pela frequência e
+  Palavras: filtros Conhecidas / Aprendendo / Já sei com contagem, busca pela escrita ou leitura
+  (hiragana ou katakana), mais recentes primeiro, 100 por vez; cada linha mostra a origem (Anki,
+  suspenso, leech, intervalo; data do "Já sei") e "Desfazer" quando tem "Já sei" (desfaz a entrada
+  inteira). Sem gráfico próprio (o histórico está no Início). (autônomo, revisar)
+- 2026-10-21: V2.4. O aviso de banco bloqueado também aparece se o `dokusho-sinc` não abrir em 5 s:
+  no navegador do Claude, a aba antiga congelada nem disparava o evento `blocked`. (autônomo, revisar)
+- 2026-10-21: v2 encerrada no código (chat autônomo). Falta só o que é 👤: a primeira Sincronização
+  do Anki real, conferir destaque e painel no leitor, juntar o PR e ver no iPad/iPhone o critério da
+  v2 (passos no docs/MANHA.md).

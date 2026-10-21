@@ -1,6 +1,6 @@
 # Arquitetura (como está construído)
 
-Mapa do código do Dokusho no fim da v1. A especificação está em docs/ESCOPO.md, os motivos em
+Mapa do código do Dokusho no fim da v2. A especificação está em docs/ESCOPO.md, os motivos em
 docs/adr/ e o registro datado de cada decisão em docs/historico/DECISOES.md. Atualize este arquivo
 quando um módulo mudar de forma (não a cada detalhe).
 
@@ -80,8 +80,9 @@ telas, nunca no leitor.
   parágrafos perto da tela; o painel mostra o estado e o "Já sei".
 - `perfil.ts` (puro: perfil do livro, cobertura, desconhecidas) e `perfis.ts` (banco
   `dokusho-perfis`, fora da sincronização: o cálculo em fatias de 30 ms, `perfilPronto$`).
+- `lista.ts`: filtros e busca da lista do hub.
 - Tela: `lib/components/vocabulario/` (`cartao-anki.svelte`, `livros-cobertura.svelte`,
-  `importar-ja-sei.svelte`) em `/vocabulario`; `/vocabulario/livro?id=` com as desconhecidas. A
+  `importar-ja-sei.svelte`, `lista-hub.svelte`) em `/vocabulario`; `/vocabulario/livro?id=` com as desconhecidas. A
   Biblioteca (`book-card-list.svelte`) mostra a cobertura na capa.
 
 ## Cartas (`lib/data/cartas/`, ADR 0006, 0009, 0010; formato em docs/CARDS.md)
@@ -107,7 +108,11 @@ telas, nunca no leitor.
 
 ## Outros
 
-- Início: `lib/data/estatisticas/` (contas testadas em `inicio.ts`).
+- Início: `lib/data/estatisticas/` (contas testadas em `inicio.ts`; aba Palavras em `palavras.ts`, a
+  partir dos retratos de `vocab_history`).
+- Bancos locais (IndexedDB): `books` (ttu), `dokusho-sinc` (sincronização e hub; fecha a conexão
+  quando outra aba precisa atualizá-lo e avisa quando espera), `dokusho-dicionario`,
+  `dokusho-perfis` (perfis dos livros, fora da sincronização).
 - Backup: `lib/data/backup/` (zip com as tabelas em JSON; restaurar mescla, nada é apagado).
 - Tema: `lib/data/tema.ts` e as variáveis `--dk-*` do `app.scss` (claro, escuro ou sistema).
 - Atualização: `lib/data/atualizacao.ts` + `service-worker.ts` sem skipWaiting automático (ADR 0011).
