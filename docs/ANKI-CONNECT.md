@@ -1,8 +1,7 @@
 # AnkiConnect
 
 O app lê o Anki do PC (Windows) pelo add-on AnkiConnect, em `http://127.0.0.1:8765`, a partir do
-Chrome. Só a Sincronização do Anki usa isso (V2.1); a página provisória `/teste/anki` (R2) faz o
-mesmo caminho.
+Chrome. Só a Sincronização do Anki usa isso (botão "Sincronizar Anki" na tela Vocabulário, V2.1).
 
 ## Instalar
 

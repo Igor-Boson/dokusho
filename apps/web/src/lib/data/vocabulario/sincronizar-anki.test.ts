@@ -10,7 +10,7 @@ import { criarAnkiConnect } from '$lib/functions/anki/anki-connect';
 import type { LojasDeLinhas } from '$lib/data/supabase/sincronizacao/sincronizador';
 import type { LinhaCarta, LinhaLote } from '$lib/data/supabase/sincronizacao/regras';
 import type { Consulta } from './casamento';
-import { sincronizarAnki } from './sincronizar-anki';
+import { sincronizarAnki, type OpcoesSincAnki } from './sincronizar-anki';
 
 // AnkiConnect simulado (nada de Anki real nos testes): responde as ações de leitura e o sync.
 
@@ -103,7 +103,7 @@ function sincFalso(inicial: Partial<{ [L in keyof LojasDeLinhas]: LojasDeLinhas[
         rodadas += 1;
         return 'feito' as const;
       }
-    }
+    } as unknown as OpcoesSincAnki['sinc']
   };
 }
 

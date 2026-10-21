@@ -116,25 +116,6 @@ describe('criarAnkiConnect', () => {
     });
   });
 
-  it('lista só o deck raiz e os subdecks', async () => {
-    const { fetch } = fetchFalso({
-      deckNamesAndIds: () => ({
-        Default: 1,
-        日本語: 2,
-        '日本語::1. Dokusho': 3,
-        '日本語::2. Kaishi 1.5k': 4,
-        日本語X: 5
-      })
-    });
-    const anki = criarAnkiConnect({ fetch });
-
-    expect(await anki.listarDecks('日本語')).toEqual([
-      { nome: '日本語', id: 2 },
-      { nome: '日本語::1. Dokusho', id: 3 },
-      { nome: '日本語::2. Kaishi 1.5k', id: 4 }
-    ]);
-  });
-
   it('busca Cards do deck em lotes e junta as etiquetas das notas', async () => {
     const ids = Array.from({ length: 5 }, (_, i) => 100 + i);
     const { fetch, pedidos } = fetchFalso({

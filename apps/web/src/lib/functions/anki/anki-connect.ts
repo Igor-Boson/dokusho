@@ -33,11 +33,6 @@ export class ErroAnkiConnect extends Error {
   }
 }
 
-export interface DeckAnki {
-  nome: string;
-  id: number;
-}
-
 export interface CardAnki {
   cardId: number;
   noteId: number;
@@ -164,14 +159,6 @@ export function criarAnkiConnect({
     }
   }
 
-  async function listarDecks(raiz: string): Promise<DeckAnki[]> {
-    const decks = await invocar<Record<string, number>>('deckNamesAndIds');
-    return Object.entries(decks)
-      .filter(([nome]) => nome === raiz || nome.startsWith(`${raiz}::`))
-      .map(([nome, id]) => ({ nome, id }))
-      .sort((a, b) => a.nome.localeCompare(b.nome));
-  }
-
   /** Todos os Cards do deck raiz e dos subdecks, com as etiquetas da nota. */
   async function buscarCards(raiz: string): Promise<CardAnki[]> {
     const ids = await invocar<number[]>('findCards', { query: `"deck:${raiz}"` });
@@ -201,5 +188,5 @@ export function criarAnkiConnect({
     });
   }
 
-  return { invocar, sincronizar, listarDecks, buscarCards };
+  return { invocar, sincronizar, buscarCards };
 }

@@ -6,8 +6,7 @@
   import { pagePath } from '$lib/data/env';
   import { cartasRecebidas$, sincronizador } from '$lib/data/supabase/sincronizacao/iniciar';
 
-  // Navegação inferior (ESCOPO "Interface"): Início, Biblioteca, Fila de cartas e Vocabulário (este
-  // fica desativado até a v2).
+  // Navegação inferior (ESCOPO "Interface"): Início, Biblioteca, Fila de cartas e Vocabulário.
 
   let naFila = 0;
 
@@ -22,7 +21,13 @@
       caminho: '/manage',
       icone: 'M4 4h5v16H4zM10 4h4v16h-4zM15.4 5.2l3.8-1 2.8 15.4-3.8 1z'
     },
-    { rotulo: 'Fila', caminho: '/fila', icone: 'M8 3h11a1 1 0 0 1 1 1v12M4 7h13v14H4z' }
+    { rotulo: 'Fila', caminho: '/fila', icone: 'M8 3h11a1 1 0 0 1 1 1v12M4 7h13v14H4z' },
+    {
+      rotulo: 'Vocabulário',
+      caminho: '/vocabulario',
+      icone:
+        'M6.5 3.5h11a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3h-11a3 3 0 0 1-3-3v-11a3 3 0 0 1 3-3zM8 9h8M12 7v10M8.5 13.5c2 2.5 5 2.5 7 0'
+    }
   ];
 
   async function contar() {
@@ -61,14 +66,6 @@
       {/if}
     </a>
   {/each}
-  <span class="dokusho-nav__desativado" title="Chega na v2">
-    <svg viewBox="0 0 24 24" aria-hidden="true"
-      ><rect x="3.5" y="3.5" width="17" height="17" rx="3" /><path
-        d="M8 9h8M12 7v10M8.5 13.5c2 2.5 5 2.5 7 0"
-      /></svg
-    >
-    Vocabulário
-  </span>
 </nav>
 
 <style lang="scss">
@@ -104,8 +101,7 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
     font-family: 'Noto Sans JP', system-ui, sans-serif;
 
-    a,
-    span {
+    a {
       position: relative;
       display: flex;
       flex-direction: column;
@@ -135,10 +131,6 @@
     color: var(--dk-accent);
   }
 
-  .dokusho-nav__desativado {
-    opacity: 0.5;
-  }
-
   .dokusho-nav__contador {
     position: absolute !important;
     top: 4px;
@@ -151,6 +143,8 @@
     color: var(--dk-accent-ink);
     font-size: 11px !important;
     font-weight: 700;
+    display: flex;
+    align-items: center;
     justify-content: center;
   }
 </style>

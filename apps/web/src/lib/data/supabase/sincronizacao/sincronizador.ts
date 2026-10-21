@@ -483,7 +483,7 @@ export class Sincronizador {
 
       const { user_id: _, updated_at: __, ...semServidor } = linha;
 
-      linhas.push(semServidor as NovasLinhas[T]);
+      linhas.push(semServidor as unknown as NovasLinhas[T]);
       chaves.push(chaveLinha);
     }
 
