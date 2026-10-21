@@ -135,6 +135,45 @@ describe('leitura de um pedaço', () => {
   });
 });
 
+describe('regras de reserva para os palpites do IPADIC (teste das 30 frases)', () => {
+  const lido = async (p: Pedaco, anterior?: Pedaco, seguinte?: Pedaco) =>
+    (await leituraDoPedaco(consultar, p, seguinte, anterior))?.flatMap((x) =>
+      typeof x === 'string' ? [] : [x[1]]
+    );
+
+  it('行っ é de 行く (いっ), não de 行う', async () => {
+    expect(await lido(pedaco('行っ', '行う', 'おこなっ', 2, '動詞', '自立'))).toEqual(['い']);
+    expect(await lido(pedaco('行い', '行う', 'おこない', 2, '動詞', '自立'))).toEqual(['おこな']);
+  });
+
+  it('色 sozinho é いろ, não しょく', async () => {
+    expect(await lido(pedaco('色', '色', 'しょく', 4, '名詞', '接尾'))).toEqual(['いろ']);
+  });
+
+  it('後 é あと, não のち; その後 (ご) fica', async () => {
+    expect(await lido(pedaco('後', '後', 'のち', 3))).toEqual(['あと']);
+    expect(await lido(pedaco('後', '後', 'ご', 3))).toEqual(['ご']);
+  });
+
+  it('他 sozinho é ほか', async () => {
+    expect(await lido(pedaco('他', '他', 'た', 0))).toEqual(['ほか']);
+  });
+
+  it('風 depois de verbo ou こんな e antes de な/に é ふう; vento fica かぜ', async () => {
+    const fu = pedaco('風', '風', 'かぜ', 3);
+    const ta = pedaco('た', 'た', 'た', 2, '助動詞', '*');
+    const konna = pedaco('こんな', 'こんな', 'こんな', 0, '連体詞', '*');
+    const na = pedaco('な', 'だ', 'な', 4, '助動詞', '*');
+    const ni = pedaco('に', 'に', 'に', 4, '助詞', '格助詞');
+    const ga = pedaco('が', 'が', 'が', 4, '助詞', '格助詞');
+
+    expect(await lido(fu, ta, na)).toEqual(['ふう']);
+    expect(await lido({ ...fu, inicio: 3 }, konna, ni)).toEqual(['ふう']);
+    expect(await lido(fu, ta, ga)).toEqual(['かぜ']);
+    expect(await lido(fu, pedaco('の', 'の', 'の', 2, '助詞', '連体化'), ni)).toEqual(['かぜ']);
+  });
+});
+
 describe('furigana de um parágrafo', () => {
   it('posições no texto do parágrafo, um trecho por kanji ou grupo de kanji', async () => {
     // 最初に行った

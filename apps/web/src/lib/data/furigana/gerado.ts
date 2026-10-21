@@ -26,22 +26,43 @@ export function mostrarFurigana(modo: ModoFurigana, estado: Estado | undefined) 
   return estado !== 'conhecida';
 }
 
-// O IPADIC lê 何 sempre なに; antes de だ/で/の/と/て e de contador (何人, 何回) é なん.
+// Regras de reserva para os palpites do IPADIC em homógrafos (teste das 30 frases do R5, em
+// docs/historico/TESTES-DE-RISCO.md). A leitura do tokenizador vale quando nenhuma se aplica.
+// - 何 é sempre なに; antes de だ/で/の/と/て e de contador (何人, 何回) é なん.
+// - 行っ (行った, 行って) sai de 行う (おこなっ); num romance é quase sempre 行く.
+// - 色 sozinho sai しょく (sufixo); クリーム色 é いろ. 後 sai のち; o comum é あと (その後 já vem ご).
+// - 他 sozinho sai た; 他の, 他に são ほか.
+// - 風 depois de verbo ou こんな/そんな e antes de な/に (知った風な, こんな風に) é ふう.
 const ANTES_DE_NAN = /^[だでのとて]/;
+const TROCAS: Record<string, string> = { '色|しょく': 'いろ', '後|のち': 'あと', '他|た': 'ほか' };
 
-function leituraDoTokenizador(pedaco: Pedaco, seguinte?: Pedaco) {
+function leituraDoTokenizador(pedaco: Pedaco, seguinte?: Pedaco, anterior?: Pedaco) {
   const leitura = paraHiragana(pedaco.leitura);
-  const colado = seguinte && pedaco.inicio + pedaco.superficie.length === seguinte.inicio;
+  const { superficie } = pedaco;
+  const colado = seguinte && pedaco.inicio + superficie.length === seguinte.inicio;
+  const coladoAntes = anterior && anterior.inicio + anterior.superficie.length === pedaco.inicio;
 
   if (
-    pedaco.superficie === '何' &&
+    superficie === '何' &&
     leitura === 'なに' &&
     colado &&
     (ANTES_DE_NAN.test(seguinte.superficie) || seguinte.subclasse === '接尾')
   )
     return 'なん';
 
-  return leitura;
+  if (superficie === '行っ' && pedaco.base === '行う') return 'いっ';
+
+  if (
+    superficie === '風' &&
+    leitura === 'かぜ' &&
+    colado &&
+    coladoAntes &&
+    /^[なに]$/.test(seguinte.superficie) &&
+    ['動詞', '助動詞', '連体詞'].includes(anterior.classe)
+  )
+    return 'ふう';
+
+  return TROCAS[`${superficie}|${leitura}`] ?? leitura;
 }
 
 const lerFurigana = (pedacos: PedacoFurigana[]) =>
@@ -70,18 +91,19 @@ function furiganaDaSuperficie(fu: PedacoFurigana[], superficie: string) {
 
 /**
  * Furigana de um pedaço do tokenizador (kanji com leitura; kana sem), ou undefined quando não tem
- * kanji ou leitura. `seguinte` é o pedaço depois dele (何 + だ → なん).
+ * kanji ou leitura. `seguinte` e `anterior` são os vizinhos (何 + だ → なん; た + 風 + な → ふう).
  */
 export async function leituraDoPedaco(
   consultar: Consulta,
   pedaco: Pedaco,
-  seguinte?: Pedaco
+  seguinte?: Pedaco,
+  anterior?: Pedaco
 ): Promise<PedacoFurigana[] | undefined> {
   const { superficie, base } = pedaco;
 
   if (!KANJI.test(superficie)) return undefined;
 
-  const leitura = leituraDoTokenizador(pedaco, seguinte);
+  const leitura = leituraDoTokenizador(pedaco, seguinte, anterior);
 
   if (superficie === base || !leitura) {
     const formas = (await consultar(superficie))
@@ -138,7 +160,7 @@ export async function furiganaDoParagrafo(
 
   for (let i = 0; i < pedacos.length; i += 1) {
     const pedaco = pedacos[i];
-    const fu = await leituraDoPedaco(consultar, pedaco, pedacos[i + 1]);
+    const fu = await leituraDoPedaco(consultar, pedaco, pedacos[i + 1], pedacos[i - 1]);
 
     if (!fu) continue;
 

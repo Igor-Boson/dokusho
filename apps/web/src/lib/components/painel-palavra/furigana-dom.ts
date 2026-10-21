@@ -15,7 +15,8 @@ import { esquecerParagrafo, lerParagrafo, SELETOR_PARAGRAFO } from './texto-do-d
 // leitor-dokusho.svelte), sem entrar no texto que o ttu conta. Como o destaque, só os parágrafos
 // perto da tela são calculados, um por vez; o resultado fica em memória pelo texto do parágrafo
 // (a seção que o modo de páginas desenha de novo não é recalculada). O adaptativo é uma classe em
-// cada span (`dk-fg--conhecida`), trocada quando o hub muda.
+// cada span (`dk-fg--conhecida`), trocada quando o hub muda. O mesmo vale para o <ruby> que o EPUB
+// já traz: no adaptativo, o furigana do livro também some nas palavras conhecidas.
 
 export const CLASSE_FURIGANA = 'dk-fg';
 export const CLASSE_CONHECIDA = 'dk-fg--conhecida';
@@ -26,10 +27,26 @@ interface TrechoCalculado extends LeituraGerada {
   base: string;
 }
 
-interface Envolvido {
-  span: HTMLElement;
+interface PalavraDoPedaco {
   palavra: PalavraJmdict | null | undefined;
   base: string;
+}
+
+/** Pedaço que cai dentro de um <ruby> do EPUB. */
+interface PedacoNoRubi extends PalavraDoPedaco {
+  inicio: number;
+  fim: number;
+}
+
+interface Calculado {
+  trechos: TrechoCalculado[];
+  noRubi: PedacoNoRubi[];
+}
+
+/** Span do furigana gerado (um pedaço) ou <ruby> do EPUB (os pedaços que ele cobre). */
+interface Envolvido {
+  span: HTMLElement;
+  itens: PalavraDoPedaco[];
 }
 
 export interface OpcoesFurigana {
@@ -46,7 +63,7 @@ const LIMITE_DO_CACHE = 4000;
 export class FuriganaNoTexto {
   private readonly feitos = new Map<Element, Envolvido[]>();
 
-  private readonly calculados = new Map<string, Promise<TrechoCalculado[]>>();
+  private readonly calculados = new Map<string, Promise<Calculado>>();
 
   private readonly memo = new Map<string, Promise<PalavraJmdict | null | undefined>>();
 
@@ -104,10 +121,16 @@ export class FuriganaNoTexto {
     }
   }
 
-  private marcarEstado({ span, palavra, base }: Envolvido, indice: IndiceDoHub) {
-    // Gramática (null) não está no hub: o furigana aparece.
-    const estado = palavra === null ? undefined : indice.daPedaco(palavra, base);
-    span.classList.toggle(CLASSE_CONHECIDA, estado === 'conhecida');
+  private marcarEstado({ span, itens }: Envolvido, indice: IndiceDoHub) {
+    // Gramática (null) não está no hub. Conhecida só quando todas as palavras do trecho são; sem
+    // nenhuma palavra (só gramática), o furigana aparece.
+    const palavras = itens.filter((item) => item.palavra !== null);
+    const conhecida =
+      palavras.length > 0 &&
+      palavras.every(
+        ({ palavra, base }) => indice.daPedaco(palavra ?? undefined, base) === 'conhecida'
+      );
+    span.classList.toggle(CLASSE_CONHECIDA, conhecida);
   }
 
   private aoVer(vistos: IntersectionObserverEntry[]) {
@@ -136,15 +159,18 @@ export class FuriganaNoTexto {
           continue;
         }
         const inicio = performance.now();
-        const trechos = await this.calcular(elemento);
+        const { trechos, noRubi } = await this.calcular(elemento);
         if (!this.ligado) break;
-        const envolvidos = elemento.isConnected ? this.envolver(elemento, trechos) : [];
+        const envolvidos = elemento.isConnected
+          ? [...this.rubisDoLivro(elemento, noRubi), ...this.envolver(elemento, trechos)]
+          : [];
         this.feitos.set(elemento, envolvidos);
         this.observador?.unobserve(elemento);
         if (envolvidos.length) {
           const indice = await this.opcoes.indice();
           for (const envolvido of envolvidos) this.marcarEstado(envolvido, indice);
-          this.opcoes.aoMudar(elemento);
+          if (envolvidos.some((e) => e.span.classList.contains(CLASSE_FURIGANA)))
+            this.opcoes.aoMudar(elemento);
         }
         this.medida.paragrafos += 1;
         this.medida.ms += performance.now() - inicio;
@@ -175,6 +201,17 @@ export class FuriganaNoTexto {
   ) {
     const pedacos = await this.opcoes.pedacosDe(elemento, texto);
     const trechos: TrechoCalculado[] = [];
+    const noRubi: PedacoNoRubi[] = [];
+    for (const pedaco of pedacos) {
+      const fim = pedaco.inicio + pedaco.superficie.length;
+      if (rubis.some((r) => r.inicio < fim && pedaco.inicio < r.fim))
+        noRubi.push({
+          inicio: pedaco.inicio,
+          fim,
+          palavra: await this.casar(pedaco),
+          base: pedaco.base
+        });
+    }
     for (const { pedaco, leituras } of await furiganaDoParagrafo(
       this.opcoes.consultar,
       pedacos,
@@ -184,7 +221,26 @@ export class FuriganaNoTexto {
       for (const leitura of leituras)
         trechos.push({ ...leitura, palavra, base: pedacos[pedaco].base });
     }
-    return trechos;
+    return { trechos, noRubi };
+  }
+
+  /** Cada <ruby> do EPUB com as palavras que ele cobre (para o adaptativo esconder o <rt>). */
+  private rubisDoLivro(elemento: Element, noRubi: PedacoNoRubi[]): Envolvido[] {
+    if (!noRubi.length) return [];
+    const { trechos } = lerParagrafo(elemento);
+    const envolvidos: Envolvido[] = [];
+    for (const ruby of elemento.querySelectorAll('ruby')) {
+      const dentro = trechos.filter((t) => ruby.contains(t.no));
+      if (!dentro.length) continue;
+      const inicio = dentro[0].inicio;
+      const ultimo = dentro[dentro.length - 1];
+      const fim = ultimo.inicio + ultimo.no.length;
+      const itens = noRubi
+        .filter((p) => p.inicio < fim && inicio < p.fim)
+        .map(({ palavra, base }) => ({ palavra, base }));
+      if (itens.length) envolvidos.push({ span: ruby as HTMLElement, itens });
+    }
+    return envolvidos;
   }
 
   /** null: gramática. */
@@ -233,7 +289,7 @@ export class FuriganaNoTexto {
       span.dataset.r = trecho.leitura;
       alvo.parentNode?.insertBefore(span, alvo);
       span.appendChild(alvo);
-      envolvidos.push({ span, palavra: trecho.palavra, base: trecho.base });
+      envolvidos.push({ span, itens: [{ palavra: trecho.palavra, base: trecho.base }] });
     }
 
     if (envolvidos.length) esquecerParagrafo(elemento);

@@ -691,6 +691,11 @@
     -webkit-user-select: none;
   }
 
+  // Adaptativo também esconde o furigana do EPUB nas conhecidas (sem tirar o lugar dele).
+  :global(html[data-dk-furigana='adaptativo'] ruby.dk-fg--conhecida rt) {
+    visibility: hidden;
+  }
+
   // Vertical: à direita da coluna, centrado no kanji.
   :global(html[data-dk-furigana='todos'] .book-content--writing-vertical-rl .dk-fg::after),
   :global(
