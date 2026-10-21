@@ -676,13 +676,17 @@
     position: relative;
   }
 
+  // Sobre o kanji: o lado block-start, que é em cima no horizontal e à direita no vertical-rl
+  // (o ::after herda o writing-mode do texto, então serve aos dois sem olhar a classe do ttu).
+  // Centrada numa caixa mais larga que o kanji, para a leitura longa passar dos dois lados.
   :global(html[data-dk-furigana='todos'] .dk-fg::after),
   :global(html[data-dk-furigana='adaptativo'] .dk-fg:not(.dk-fg--conhecida)::after) {
     content: attr(data-r);
     position: absolute;
-    left: 50%;
-    bottom: 100%;
-    transform: translateX(-50%);
+    inset-block-end: 100%;
+    inset-inline: -4em;
+    display: flex;
+    justify-content: center;
     font-size: 0.5em;
     line-height: 1;
     white-space: nowrap;
@@ -694,18 +698,5 @@
   // Adaptativo também esconde o furigana do EPUB nas conhecidas (sem tirar o lugar dele).
   :global(html[data-dk-furigana='adaptativo'] ruby.dk-fg--conhecida rt) {
     visibility: hidden;
-  }
-
-  // Vertical: à direita da coluna, centrado no kanji.
-  :global(html[data-dk-furigana='todos'] .book-content--writing-vertical-rl .dk-fg::after),
-  :global(
-    html[data-dk-furigana='adaptativo']
-      .book-content--writing-vertical-rl
-      .dk-fg:not(.dk-fg--conhecida)::after
-  ) {
-    left: 100%;
-    bottom: auto;
-    top: 50%;
-    transform: translateY(-50%);
   }
 </style>
