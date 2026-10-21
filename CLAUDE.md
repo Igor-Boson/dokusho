@@ -60,6 +60,8 @@ desfazer um ADR sem um novo ADR).
   apps/web/src/lib/data/dicionario/formato.ts (sem imports: o Node roda o .ts direto).
 - Deflexão contra o JMdict inteiro (em apps/web, depois de preparar o dicionário):
   `$env:MEDIR_DEFLEXAO="1"; npx vitest run busca.medicao` (casos em dicionario/busca.casos.ts).
+- Furigana gerado nas 30 frases do R5 (em apps/web, depois de preparar o dicionário):
+  `$env:MEDIR_FURIGANA="<arquivo de saída>"; npx vitest run gerado.medicao`.
 - `pnpm check`: 15 erros antigos do ttu são o normal (não criar novos).
 
 ## Regras fixas

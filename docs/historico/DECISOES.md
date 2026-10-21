@@ -384,3 +384,27 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   do Anki real, conferir destaque e painel no leitor, juntar o PR e ver no iPad/iPhone o critério da
   v2 (passos no docs/MANHA.md).
 - 2026-10-21: v2 no ar (PR #5 juntado no `main` pelo Igor), depois de testada no PC.
+- 2026-10-21: V3.1. Furigana gerado como `<span class="dk-fg" data-r>` com a leitura num `::after`,
+  calculado no aparelho só perto da tela e guardado em memória pelo texto do parágrafo (ADR 0015).
+  Não usa `<ruby>`: a leitura não ocupa lugar (as páginas não se mexem) e não entra no texto que o
+  ttu conta. Posição pelo lado block-start (em cima no horizontal, à direita no vertical), que segue o
+  writing-mode real do texto. (autônomo, revisar)
+- 2026-10-21: V3.1. O ふ da barra abre um menu com quatro opções: Sem furigana (o hideFurigana$ do
+  ttu, como antes), Do livro (só o do EPUB, o padrão), Todos e Adaptativo. "Sem furigana" ficou
+  porque era o que o botão fazia na v1. Modo por aparelho (localStorage `dokusho-furigana`). Todos e
+  Adaptativo pedem o dicionário se ele não estiver baixado. (autônomo, revisar)
+- 2026-10-21: V3.1. Adaptativo: esconde o furigana das conhecidas (pelo hub, com "Já sei"); mostra o
+  das aprendendo, desconhecidas, gramática e palavras que o hub não conhece. A pedido do Igor, vale
+  também para o `<ruby>` que o EPUB já traz: o `<rt>` some (visibility, sem mudar o layout) quando
+  todas as palavras que o `<ruby>` cobre são conhecidas. Em Todos, o furigana do EPUB fica e o gerado
+  não cobre os trechos que ele já tem.
+- 2026-10-21: V3.1. Leitura: a do tokenizador escolhe a forma do JMdict (方 かた × ほう); se o JMdict
+  não tem essa leitura para a escrita (入り口 いりくち), vale a da entrada mais frequente. Kanji por
+  kanji pelo JmdictFurigana; no conjugado, o JmdictFurigana da forma de dicionário aplicado à
+  superfície (見詰め). Regras de reserva do teste das 30 frases: 何 → なん antes de だ/で/の/と/て e de
+  contador, 行っ → い, 色 → いろ, 後 のち → あと, 他 → ほか, 風 → ふう entre verbo e な/に.
+  (autônomo, revisar)
+- 2026-10-21: V3.1 testado no navegador do Claude (PC, livro do R4): Todos e Adaptativo no vertical e
+  no horizontal, toque e realce com o furigana ligado, "Já sei" e desfazer trocando o furigana sem
+  recarregar. A troca de vertical para horizontal sem recarregar deixava a leitura em cima do kanji
+  (a classe do ttu muda antes do layout); resolvido com o posicionamento lógico.
