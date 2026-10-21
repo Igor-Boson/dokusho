@@ -2,7 +2,8 @@
   import { goto } from '$app/navigation';
   import { onDestroy, onMount } from 'svelte';
   import { pagePath } from '$lib/data/env';
-  import { isOnline$ } from '$lib/data/store';
+  import { hideFurigana$, isOnline$ } from '$lib/data/store';
+  import { escolherModoFurigana, furiganaModo$, type OpcaoFurigana } from '$lib/data/furigana/modo';
   import { pedirDicionario } from '$lib/components/dicionario/pedir-dicionario';
   import { ajustarSelecao, selecionar, type Selecao } from '$lib/data/dicionario/busca';
   import type { Entrada } from '$lib/data/dicionario/formato';
@@ -27,6 +28,7 @@
     marcarJaSeiNaEntrada
   } from '$lib/data/vocabulario/servico';
   import { DestaqueNoTexto } from './destaque-dom';
+  import { FuriganaNoTexto } from './furigana-dom';
   import { cobertura as calcularCobertura } from '$lib/data/vocabulario/perfil';
   import {
     garantirPerfil,
@@ -51,6 +53,7 @@
   // O que o Dokusho põe no leitor do ttu (V1.3): toque na palavra e painel (ADR 0003, 0005), a
   // barra verde dos parágrafos lidos pelo Alcance e a barra do topo que aparece ao rolar para cima.
   // V2.2: destaque das palavras pelo estado do hub, o estado no painel e o "Já sei".
+  // V3.1: furigana gerado e adaptativo (ADR 0015), escolhido no ふ da barra.
 
   export let titulo: string;
   export let htmlContent: string;
@@ -90,21 +93,68 @@
 
   const tokenizados = new WeakMap<Element, Pedaco[]>();
 
+  async function pedacosDe(elemento: Element, texto: string) {
+    let pedacosDoElemento = tokenizados.get(elemento);
+
+    if (!pedacosDoElemento) {
+      pedacosDoElemento = (await tokenizador()).tokenizar(texto);
+      tokenizados.set(elemento, pedacosDoElemento);
+    }
+
+    return pedacosDoElemento;
+  }
+
   const destaque = new DestaqueNoTexto({
     raiz: conteudo,
     consultar: consultarPalavra,
     indice: indiceDoHub,
-    pedacosDe: async (elemento, texto) => {
-      let pedacosDoElemento = tokenizados.get(elemento);
+    pedacosDe
+  });
 
-      if (!pedacosDoElemento) {
-        pedacosDoElemento = (await tokenizador()).tokenizar(texto);
-        tokenizados.set(elemento, pedacosDoElemento);
+  const furigana = new FuriganaNoTexto({
+    raiz: conteudo,
+    consultar: consultarPalavra,
+    indice: indiceDoHub,
+    pedacosDe,
+    aoMudar: (elemento) => {
+      // Os nós de texto mudaram: o destaque e a seleção aberta são refeitos com os nós novos.
+      destaque.repintarDepois();
+
+      if (paragrafo?.elemento === elemento) {
+        paragrafo = lerParagrafo(elemento);
+        if (selecao) pintar(rangeDoTexto(paragrafo, selecao.inicio, selecao.fim));
       }
-
-      return pedacosDoElemento;
     }
   });
+
+  /** Aplica o modo do furigana: o CSS mostra ou esconde, e o cálculo só roda nos modos gerados. */
+  async function atualizarFurigana() {
+    const modo = $furiganaModo$;
+    const opcao: OpcaoFurigana = $hideFurigana$ ? 'nenhum' : modo;
+
+    document.documentElement.dataset.dkFurigana = opcao;
+
+    if (opcao === 'nenhum' || opcao === 'livro' || !(await verificarDicionario())) {
+      furigana.desligar();
+      return;
+    }
+
+    furigana.ligar();
+    await furigana.atualizarEstados();
+  }
+
+  /** Menu ふ da barra. Os modos gerados precisam do dicionário (pede para baixar se faltar). */
+  export async function escolherFurigana(opcao: OpcaoFurigana) {
+    if (opcao === 'nenhum') {
+      hideFurigana$.next(true);
+      return;
+    }
+
+    if (opcao !== 'livro' && !(await pedirDicionario())) return;
+
+    escolherModoFurigana(opcao);
+    hideFurigana$.next(false);
+  }
 
   /** Liga o destaque quando há dicionário e hub; sem eles, não baixa nada só para isso. */
   async function atualizarDestaque() {
@@ -489,6 +539,7 @@
 
       marcarLidos(raiz, mapa, alcance);
       destaque.observarParagrafos();
+      furigana.observarParagrafos();
     }, 300);
   }
 
@@ -542,7 +593,10 @@
         atualizarInfo();
         atualizarDestaque();
         atualizarCobertura();
+        furigana.atualizarEstados();
       }),
+      furiganaModo$.subscribe(() => atualizarFurigana()),
+      hideFurigana$.subscribe(() => atualizarFurigana()),
       perfilPronto$.subscribe((id) => id === livroId && atualizarCobertura()),
       progressoDoPerfil$.subscribe(({ livroId: id, fracao }) => {
         if (id === livroId) cobertura = `cobertura… ${Math.round(fracao * 100)}%`;
@@ -579,6 +633,8 @@
     observador?.disconnect();
     clearTimeout(marcando);
     destaque.desligar();
+    furigana.desligar();
+    delete document.documentElement.dataset.dkFurigana;
     pintar();
   });
 </script>
@@ -612,3 +668,39 @@
     on:abrirCarta={(e) => goto(`${pagePath}/fila?carta=${e.detail}`)}
   />
 {/if}
+
+<style lang="scss">
+  // Furigana gerado (ADR 0015): a leitura num ::after que não ocupa lugar nem entra no texto.
+  :global(html[data-dk-furigana='todos'] .dk-fg),
+  :global(html[data-dk-furigana='adaptativo'] .dk-fg:not(.dk-fg--conhecida)) {
+    position: relative;
+  }
+
+  :global(html[data-dk-furigana='todos'] .dk-fg::after),
+  :global(html[data-dk-furigana='adaptativo'] .dk-fg:not(.dk-fg--conhecida)::after) {
+    content: attr(data-r);
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    transform: translateX(-50%);
+    font-size: 0.5em;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  // Vertical: à direita da coluna, centrado no kanji.
+  :global(html[data-dk-furigana='todos'] .book-content--writing-vertical-rl .dk-fg::after),
+  :global(
+    html[data-dk-furigana='adaptativo']
+      .book-content--writing-vertical-rl
+      .dk-fg:not(.dk-fg--conhecida)::after
+  ) {
+    left: 100%;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+</style>
