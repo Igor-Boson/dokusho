@@ -198,6 +198,34 @@
     return document.querySelector('.book-content');
   }
 
+  /** Parágrafo do realce da seleção, para redesenhar quando ele sai. */
+  let pintado: Element | undefined;
+
+  function paragrafoDoRange(range: Range) {
+    const no = range.startContainer;
+    const elemento = no instanceof Element ? no : no.parentElement;
+
+    return elemento?.closest(SELETOR_PARAGRAFO) ?? elemento ?? undefined;
+  }
+
+  /**
+   * O Safari do iPhone deixa um resto do realce na tela quando ele sai de um trecho com o furigana
+   * gerado (span com position: relative): só redesenha a área do kanji. Mexer na opacidade do
+   * parágrafo por um quadro faz o Safari pintar o parágrafo inteiro de novo.
+   */
+  function redesenhar(elemento: Element | undefined) {
+    if (!(elemento instanceof HTMLElement) || !elemento.isConnected) return;
+
+    const antes = elemento.style.opacity;
+
+    elemento.style.opacity = '0.999';
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        elemento.style.opacity = antes;
+      })
+    );
+  }
+
   function pintar(range?: Range) {
     const css = globalThis.CSS as unknown as {
       highlights?: Map<string, unknown>;
@@ -208,6 +236,8 @@
 
     // Esvaziar antes de tirar: o Safari às vezes não redesenha só com o delete.
     (css.highlights.get(REALCE) as { clear?: () => void } | undefined)?.clear?.();
+    redesenhar(pintado);
+    pintado = range ? paragrafoDoRange(range) : undefined;
 
     if (range) {
       const realce = new Destaque(range) as { priority: number };
