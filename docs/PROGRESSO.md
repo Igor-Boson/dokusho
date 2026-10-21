@@ -26,7 +26,8 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 | V1.6      | feito    | 2026-10-21 | .apkg importa no Anki do PC e reimportar não duplica                        |
 | V1.7      | feito    | 2026-10-21 | PWA, backup, aviso de servidor pausado, deploy (só o `main` publica)        |
 | V2.1      | feito    | 2026-10-21 | Sincronizar Anki na tela Vocabulário; falta a 1ª sincronização real (👤)    |
-| V2.2–V2.4 | pendente |            |                                                                             |
+| V2.2      | feito    | 2026-10-21 | destaque, "Já sei", importação por frequência; falta ver o destaque (👤)    |
+| V2.3–V2.4 | pendente |            |                                                                             |
 
 \* Testes em aparelho dispensados pelo Igor, cobertos só pelos testes automáticos (ver abaixo).
 
@@ -52,7 +53,7 @@ Lembrete: o teto do Gemini está em 300 (~70 cartas por dia); se bater,
 ## Sem decisão (da entrevista de 20/10)
 
 - Modo de leitura no PC (o toque e o painel funcionam nos dois; a barra do topo foi resolvida no V1.3).
-- Números: frequência N do "Já sei" inicial, valor do alerta, corte da frase, intervalo do marcador,
+- Números: valor do alerta, corte da frase, intervalo do marcador,
   prazo do áudio.
 - Não discutidos: detalhes da tela inicial (início da semana, virada do dia, fuso em viagem), metas,
-  desfazer "Já sei", tela Vocabulário, restaurar backup (hoje mescla), fontes e acessibilidade.
+  tela Vocabulário, restaurar backup (hoje mescla), fontes e acessibilidade.

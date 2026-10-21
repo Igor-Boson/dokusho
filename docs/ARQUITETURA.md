@@ -70,7 +70,15 @@ telas, nunca no leitor.
 - `sincronizar-anki.ts`: o fluxo do botão (rodada do sincronizador, `sync` do AnkiWeb, leitura,
   gravação no `dokusho-sinc`, retrato, Lotes, rodada de envio); `servico.ts` liga ao app (decks lidos,
   `sincAnki$`); `vocabMudou$` (em `iniciar.ts`) avisa as telas.
-- Tela: `lib/components/vocabulario/cartao-anki.svelte` em `/vocabulario`.
+- `indice.ts`: o hub em memória para o texto (`IndiceDoHub`: estado pela entrada com qualquer
+  leitura, "no Anki como", escrita para Cards sem entrada); `servico.ts` guarda um por vez e o refaz
+  no `vocabMudou$`, e grava "Já sei"/desfazer.
+- `importacao.ts`: "Já sei" inicial pela posição no JPDB (percorre o dicionário com
+  `percorrerEntradas`) e desfazer por importação (mesmo `ja_sei_at`).
+- Leitor: `painel-palavra/destaque-dom.ts` pinta aprendendo e desconhecida (Highlight API) nos
+  parágrafos perto da tela; o painel mostra o estado e o "Já sei".
+- Tela: `lib/components/vocabulario/` (`cartao-anki.svelte`, `importar-ja-sei.svelte`) em
+  `/vocabulario`.
 
 ## Cartas (`lib/data/cartas/`, ADR 0006, 0009, 0010; formato em docs/CARDS.md)
 

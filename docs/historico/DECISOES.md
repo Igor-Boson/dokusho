@@ -325,3 +325,29 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   memória; nada gravado no hub): 1515 Cards → 1503 Palavras, 0 sem entrada, 23 em mais de uma
   entrada; 996 conhecidas, 507 aprendendo. 18,6 s no PC: 12,5 s lendo os Cards (cardsInfo/notesInfo
   em lotes de 200) e 6 s casando com o dicionário.
+- 2026-10-21: V2.2. Destaque no texto pela CSS Custom Highlight API (sem mexer no DOM do ttu):
+  desconhecida com fundo azul claro, aprendendo sublinhada em âmbar (o amarelo é da seleção, que
+  fica por cima); conhecida, gramática e palavra fora do dicionário sem nada. Só os parágrafos perto
+  da tela (IntersectionObserver, uma tela de folga) são tokenizados, um por vez; cada um é casado uma
+  vez e repintado quando o hub muda. Liga só com dicionário e hub não vazio (não baixa nada só para
+  isso); menu ⋯ "Tirar o destaque das palavras" (localStorage). Medido no PC com o livro do R4 e o
+  hub do Anki real em memória: 300 parágrafos (14 mil caracteres) casados em 6 s com o dicionário
+  frio (~20 ms por parágrafo; uma tela tem 10–20), repintura 31 ms. Não conferido visualmente: o
+  painel do navegador do Claude oculto não desenha o leitor. (autônomo, revisar)
+- 2026-10-21: V2.2. Painel: estado da entrada (conhecida/aprendendo/desconhecida, cores do D1),
+  "no Anki como <leitura>" e o botão "Já sei" só para entradas fora do Anki (no Anki aparece "No
+  Anki", desativado); com a marca, vira "Desfazer \"Já sei\"" (decide o "desfazer Já sei" que estava
+  sem decisão). Criar carta de palavra que já está no Anki pede confirmação no painel; a Fila mostra
+  "já no Anki" nas cartas cuja entrada está no Anki. (autônomo, revisar)
+- 2026-10-21: V2.2. Importação inicial (decide a "frequência N" que estava sem decisão): campo na tela
+  Vocabulário com padrão **3000** (posição no JPDB, a melhor entre escrita e kana), "Ver quantas
+  palavras" antes de marcar; pula entradas do Anki, Palavras já no hub e entradas só de gramática
+  (prt, aux, aux-v, aux-adj, cop, conj); a linha usa a forma mais vista no JPDB. Todas as linhas de uma
+  importação têm o mesmo `ja_sei_at`, e a tela lista as importações com "Desfazer". Medido no PC: ler
+  o dicionário inteiro 4,7 s; até 3000 dariam 2695 palavras (antes de tirar as do Anki). (autônomo,
+  revisar)
+- 2026-10-21: V2.2. O `dokusho-sinc` passou à v3 e, no navegador do Claude, a atualização ficou
+  travada por uma conexão v2 aberta em outra aba (versão antiga, sem tratamento). Agora o banco fecha
+  a conexão e recarrega a aba quando outra versão precisa atualizá-lo (`blocking`), e mostra "Outra
+  aba ou janela do Dokusho, com a versão antiga, está aberta…" quando é ela que espera (`blocked`).
+  Na primeira vez (v2 → v3) a aba antiga não sabe fechar: feche-a à mão. (autônomo, revisar)
