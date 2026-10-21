@@ -5,7 +5,8 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 
 ## Estado
 
-**v1 pronta** (2026-10-21), no ar em https://dokusho-kappa.vercel.app. Próximo item: **V2.1**.
+**v1 pronta** (2026-10-21), no ar em https://dokusho-kappa.vercel.app. v2 em andamento na branch
+`v2-autonomo` (chat autônomo; decisões marcadas "(autônomo, revisar)" em docs/historico/DECISOES.md).
 
 | Item      | Status   | Data       | Observação                                                                  |
 | --------- | -------- | ---------- | --------------------------------------------------------------------------- |
@@ -24,7 +25,8 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 | V1.5      | feito    | 2026-10-21 | 10 cartas geradas no PC                                                     |
 | V1.6      | feito    | 2026-10-21 | .apkg importa no Anki do PC e reimportar não duplica                        |
 | V1.7      | feito    | 2026-10-21 | PWA, backup, aviso de servidor pausado, deploy (só o `main` publica)        |
-| V2.1–V2.4 | pendente |            |                                                                             |
+| V2.1      | feito    | 2026-10-21 | Sincronizar Anki na tela Vocabulário; falta a 1ª sincronização real (👤)    |
+| V2.2–V2.4 | pendente |            |                                                                             |
 
 \* Testes em aparelho dispensados pelo Igor, cobertos só pelos testes automáticos (ver abaixo).
 
@@ -42,7 +44,9 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 
 ## Pendências
 
-Nenhuma da v1. Lembrete: o teto do Gemini está em 300 (~70 cartas por dia); se bater,
+- [ ] V2.1: primeira Sincronização do Anki real, pelo botão na tela Vocabulário (Chrome do PC)
+
+Lembrete: o teto do Gemini está em 300 (~70 cartas por dia); se bater,
 `npx supabase secrets set GEMINI_TETO_DIARIO=<n>`.
 
 ## Sem decisão (da entrevista de 20/10)

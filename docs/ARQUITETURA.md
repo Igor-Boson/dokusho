@@ -18,10 +18,10 @@ em português, ao lado do código do ttu, que segue com os nomes originais.
 | `/settings?aba=` | Configurações do ttu, mais Dicionário, Backup e Aparência (aba Data)                       |
 | `/login`         | Login por e-mail e senha (`/auth` é o callback antigo do ttu)                              |
 | `/statistics`    | Estatísticas do ttu (só deste aparelho)                                                    |
-| `/teste/anki`    | Provisória do R2 (AnkiConnect); sai no V2.1                                                |
+| `/vocabulario`   | Vocabulário: Sincronização do Anki (botão só no Windows) e o hub                           |
 
 Navegação inferior (`lib/components/navegacao/`): Início, Biblioteca, Fila (com contador) e
-Vocabulário desativado até a v2. Os avisos "Nova versão" e "Servidor pausado" ficam no topo dessas
+Vocabulário. Os avisos "Nova versão" e "Servidor pausado" ficam no topo dessas
 telas, nunca no leitor.
 
 ## Sincronização (`lib/data/supabase/sincronizacao/`, ADR 0001, 0002, 0014)
@@ -29,9 +29,10 @@ telas, nunca no leitor.
 - `sincronizador.ts`: o motor. Cada rodada recebe (cursor exclusivo no `updated_at`, páginas por
   posição) e depois envia o que mudou desde o último envio. Última escrita vence pelo `modified_at`
   do aparelho; exclusão é soft delete. Testado com um servidor falso e dois aparelhos.
-- `banco.ts`: IndexedDB `dokusho-sinc` (v2): título → hash do livro, enviados, cursores, EPUB até
+- `banco.ts`: IndexedDB `dokusho-sinc` (v3): título → hash do livro, enviados, cursores, EPUB até
   subir, Alcance, estatísticas dos outros aparelhos, marcador remoto pendente, `cartas`, `lotes`,
-  `traducoes`.
+  `traducoes`, `vocab` (chave word + reading, índice pelas entradas do JMdict) e `retratos`
+  (vocab_history). As lojas de linha seguem a mesma regra (`receberLinhas`/`enviarLinhas`).
 - `regras.ts` (LWW, Alcance, conversões ttu ↔ linha), `servidor-supabase.ts`, `livro-zip.ts`.
 - `iniciar.ts`: gatilhos (abrir o app, voltar a rede, trocar de plano, a cada 5 min, ~15 s depois de
   mudar o banco do ttu) e o estado `estadoSinc$` (inclui `sem-servidor`, que mostra o aviso de
@@ -57,7 +58,19 @@ telas, nunca no leitor.
   Safari não dispara `click` em área vazia), monta o parágrafo sem `<rt>` (`texto-do-dom.ts`) e
   realça com a CSS Custom Highlight API. `painel-palavra.svelte` (inferior até 767 px, lateral acima),
   `barra-leitor.svelte` (barra do topo do D1), `alcance-dom.ts` (barra verde).
-- Casamento texto ↔ Anki para a v2: `lib/data/vocabulario/casamento.ts` (ADR 0008, 0013).
+- Casamento texto ↔ Anki: `lib/data/vocabulario/casamento.ts` (ADR 0008, 0013).
+
+## Hub de vocabulário (`lib/data/vocabulario/`; ADR 0007, 0008, 0013)
+
+- `estados.ts`: estado de um Card (suspenso sem leech ou intervalo ≥ 21 → conhecida; leech suspenso,
+  novo ou < 21 → aprendendo) e o mais avançado.
+- `hub.ts`: Cards → Palavras (uma por Word + leituras, com as entradas do JMdict), as linhas de vocab
+  que mudam (soft delete do que sumiu, salvo "Já sei"), retrato, "Já sei"/desfazer e Lote confirmado.
+  Em vocab, `state` é o estado do Anki e `ja_sei_at` a marca; `estadoDaLinha` junta os dois.
+- `sincronizar-anki.ts`: o fluxo do botão (rodada do sincronizador, `sync` do AnkiWeb, leitura,
+  gravação no `dokusho-sinc`, retrato, Lotes, rodada de envio); `servico.ts` liga ao app (decks lidos,
+  `sincAnki$`); `vocabMudou$` (em `iniciar.ts`) avisa as telas.
+- Tela: `lib/components/vocabulario/cartao-anki.svelte` em `/vocabulario`.
 
 ## Cartas (`lib/data/cartas/`, ADR 0006, 0009, 0010; formato em docs/CARDS.md)
 

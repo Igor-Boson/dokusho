@@ -294,3 +294,34 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   Documentos reorganizados: PROGRESSO só com estado e pendências; este registro e os testes de risco em
   docs/historico/; mapa do código em docs/ARQUITETURA.md; README do Dokusho.
 - 2026-10-21: PR aberto por engano no ttu original (ttu-ttu/ebook-reader#550) fechado pelo Igor.
+
+## v2 (chat autônomo de 2026-10-21, branch `v2-autonomo`)
+
+- 2026-10-21: a branch `v2-autonomo` saiu do `main` com a `docs/organizar` por cima (fast-forward):
+  o pedido da v2 já citava docs/historico/ e docs/ARQUITETURA.md, que só existiam nela. (autônomo,
+  revisar)
+- 2026-10-21: V2.1. Migração aditiva `20261022000000_hub.sql`: `vocab.jmdict_ids` (todas as entradas
+  em que a Palavra cai) e `vocab.ja_sei_at` (a marca "Já sei"). Nas linhas do Anki, `state` é só o
+  estado dos Cards; o "Já sei" fica à parte e o estado da Palavra é o mais avançado dos dois
+  (`estadoDaLinha`). Assim, desfazer o "Já sei" volta ao estado do Anki, e uma Palavra que sai do Anki
+  com "Já sei" vira linha `ja_sei` em vez de ser apagada. (autônomo, revisar)
+- 2026-10-21: V2.1. Uma linha de vocab por Palavra = (Word sem HTML, leituras do Word Reading em
+  hiragana juntas com ・, ex. 何 なに・なん). Vários Cards da mesma Palavra: estado mais avançado,
+  `interval_days` = o maior, `suspended` só se todos estão, `leech` se algum tem. (autônomo, revisar)
+- 2026-10-21: V2.1. Suspenso **com** leech é aprendendo mesmo com intervalo ≥ 21 dias (o ESCOPO diz
+  "suspenso com leech: aprendendo" e "intervalo ≥ 21: conhecida" sem dizer qual vence; o leech é a
+  palavra que você erra). Leech ativo (tirado da suspensão) segue o intervalo. (autônomo, revisar)
+- 2026-10-21: V2.1. A Sincronização do Anki só regrava as linhas que mudaram (`synced_at` = quando
+  mudou); a data da última sincronização vem do retrato mais novo de `vocab_history`, que vale em
+  todos os aparelhos. Antes de ler o Anki, uma rodada do sincronizador recebe os "Já sei" dos outros
+  aparelhos; depois, outra envia. (autônomo, revisar)
+- 2026-10-21: V2.1. Lote confirmado no Anki quando **todas** as cartas dele (Word + Word Reading)
+  estão em algum Card dos decks lidos; marca "✓ no Anki" na aba Lotes. (autônomo, revisar)
+- 2026-10-21: V2.1. Botão "Sincronizar Anki" na tela Vocabulário (agora ligada na navegação), só
+  quando o aparelho é Windows; nos outros, a data e os números do último retrato. Opções: decks lidos
+  (localStorage, padrão `日本語` com subdecks) e pular o sync do AnkiWeb. Saíram a `/teste/anki` e o
+  `listarDecks` do cliente, que só ela usava. (autônomo, revisar)
+- 2026-10-21: V2.1, ensaio com o Anki real **só em leitura** (sem `sync`, com um banco falso em
+  memória; nada gravado no hub): 1515 Cards → 1503 Palavras, 0 sem entrada, 23 em mais de uma
+  entrada; 996 conhecidas, 507 aprendendo. 18,6 s no PC: 12,5 s lendo os Cards (cardsInfo/notesInfo
+  em lotes de 200) e 6 s casando com o dicionário.
