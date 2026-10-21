@@ -351,3 +351,19 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   a conexão e recarrega a aba quando outra versão precisa atualizá-lo (`blocking`), e mostra "Outra
   aba ou janela do Dokusho, com a versão antiga, está aberta…" quando é ela que espera (`blocked`).
   Na primeira vez (v2 → v3) a aba antiga não sabe fechar: feche-a à mão. (autônomo, revisar)
+- 2026-10-21: V2.3. Cobertura = porcentagem das **ocorrências** de Palavras conhecidas no texto, sem
+  gramática (é a medida que diz quanto do texto você entende; a tela também mostra quantas palavras
+  diferentes são conhecidas, aprendendo e desconhecidas). Pedaço sem entrada no dicionário (quase
+  sempre nome próprio) só entra na conta quando o Anki tem a escrita. (autônomo, revisar)
+- 2026-10-21: V2.3. "Perfil do livro" (cada Palavra e quantas vezes aparece) calculado uma vez por
+  aparelho e por versão do dicionário, em segundo plano 3 s depois de abrir o livro, num banco próprio
+  `dokusho-perfis` fora da sincronização (é refeito igual em cada aparelho, e um novo store no
+  `dokusho-sinc` exigiria outra atualização do banco). Cobertura e lista saem do perfil + hub na hora.
+  Medido no PC com o livro do R4 (152 mil caracteres, 2679 parágrafos): **11,3 s**, 33.331
+  ocorrências e 3.121 Palavras (bate com o R4); a tela fica livre (fatias de 30 ms), salvo uma pausa
+  de ~0,6 s na primeira carga do tokenizador, que já existe no primeiro toque. (autônomo, revisar)
+- 2026-10-21: V2.3. Onde aparece: barra do topo do leitor ("· cobertura 87%", ou o progresso do
+  cálculo), selo na capa da Biblioteca, seção "Livros" da tela Vocabulário e a tela
+  `/vocabulario/livro?id=<hash>` ("Palavras do livro" no menu ⋯ do leitor), com as desconhecidas da
+  mais frequente no livro para a menos, glosa, número de vezes e "Já sei" em cada uma (50 por vez).
+  Livro sem perfil: "Calcular agora" na própria tela. (autônomo, revisar)

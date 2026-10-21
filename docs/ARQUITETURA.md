@@ -9,16 +9,17 @@ em português, ao lado do código do ttu, que segue com os nomes originais.
 
 ## Telas
 
-| Rota             | O que é                                                                                    |
-| ---------------- | ------------------------------------------------------------------------------------------ |
-| `/` → `/inicio`  | Início: calendário da semana, meta, tempo e caracteres somando os aparelhos, por livro     |
-| `/manage`        | Biblioteca do ttu (livro na nuvem como placeholder com ícone; apagar com confirmação)      |
-| `/b?id=`         | Leitor do ttu com a barra própria, o toque na palavra, o painel e a barra verde do Alcance |
-| `/fila`          | Fila de cartas e aba Lotes; `/fila?carta=<id>` abre a edição                               |
-| `/settings?aba=` | Configurações do ttu, mais Dicionário, Backup e Aparência (aba Data)                       |
-| `/login`         | Login por e-mail e senha (`/auth` é o callback antigo do ttu)                              |
-| `/statistics`    | Estatísticas do ttu (só deste aparelho)                                                    |
-| `/vocabulario`   | Vocabulário: Sincronização do Anki (botão só no Windows) e o hub                           |
+| Rota                     | O que é                                                                                    |
+| ------------------------ | ------------------------------------------------------------------------------------------ |
+| `/` → `/inicio`          | Início: calendário da semana, meta, tempo e caracteres somando os aparelhos, por livro     |
+| `/manage`                | Biblioteca do ttu (livro na nuvem como placeholder com ícone; apagar com confirmação)      |
+| `/b?id=`                 | Leitor do ttu com a barra própria, o toque na palavra, o painel e a barra verde do Alcance |
+| `/fila`                  | Fila de cartas e aba Lotes; `/fila?carta=<id>` abre a edição                               |
+| `/settings?aba=`         | Configurações do ttu, mais Dicionário, Backup e Aparência (aba Data)                       |
+| `/login`                 | Login por e-mail e senha (`/auth` é o callback antigo do ttu)                              |
+| `/statistics`            | Estatísticas do ttu (só deste aparelho)                                                    |
+| `/vocabulario`           | Vocabulário: Sincronização do Anki (botão só no Windows) e o hub                           |
+| `/vocabulario/livro?id=` | Palavras do livro: cobertura e desconhecidas por frequência                                |
 
 Navegação inferior (`lib/components/navegacao/`): Início, Biblioteca, Fila (com contador) e
 Vocabulário. Os avisos "Nova versão" e "Servidor pausado" ficam no topo dessas
@@ -77,8 +78,11 @@ telas, nunca no leitor.
   `percorrerEntradas`) e desfazer por importação (mesmo `ja_sei_at`).
 - Leitor: `painel-palavra/destaque-dom.ts` pinta aprendendo e desconhecida (Highlight API) nos
   parágrafos perto da tela; o painel mostra o estado e o "Já sei".
-- Tela: `lib/components/vocabulario/` (`cartao-anki.svelte`, `importar-ja-sei.svelte`) em
-  `/vocabulario`.
+- `perfil.ts` (puro: perfil do livro, cobertura, desconhecidas) e `perfis.ts` (banco
+  `dokusho-perfis`, fora da sincronização: o cálculo em fatias de 30 ms, `perfilPronto$`).
+- Tela: `lib/components/vocabulario/` (`cartao-anki.svelte`, `livros-cobertura.svelte`,
+  `importar-ja-sei.svelte`) em `/vocabulario`; `/vocabulario/livro?id=` com as desconhecidas. A
+  Biblioteca (`book-card-list.svelte`) mostra a cobertura na capa.
 
 ## Cartas (`lib/data/cartas/`, ADR 0006, 0009, 0010; formato em docs/CARDS.md)
 

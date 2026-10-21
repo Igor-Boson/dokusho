@@ -8,26 +8,27 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 **v1 pronta** (2026-10-21), no ar em https://dokusho-kappa.vercel.app. v2 em andamento na branch
 `v2-autonomo` (chat autônomo; decisões marcadas "(autônomo, revisar)" em docs/historico/DECISOES.md).
 
-| Item      | Status   | Data       | Observação                                                                  |
-| --------- | -------- | ---------- | --------------------------------------------------------------------------- |
-| S1        | feito    | 2026-10-20 | ttu roda; vitest; supabase init + link                                      |
-| S2        | feito    | 2026-10-21 | schema, login, cadastro desligado; rls_check conferido no SQL Editor        |
-| D1        | feito    | 2026-10-20 | telas aprovadas; regra dos toques B; protótipo no branch prototype/d1-telas |
-| R1        | feito\*  | 2026-10-21 | guid e .apkg iguais ao genanki; Anki do PC ok; AnkiMobile dispensado        |
-| R2        | feito    | 2026-10-21 | AnkiConnect pelo Chrome; URL de produção no `webCorsOriginList`             |
-| R3        | feito\*  | 2026-10-20 | lindera; 32 MB; PC dentro das metas; medida no iPhone dispensada            |
-| R4        | feito    | 2026-10-20 | 97,5% do texto acha entrada; 0 Cards sem entrada                            |
-| R5        | feito    | 2026-10-21 | 30 cartas aprovadas; US$ 0,0038/carta; alerta de orçamento criado           |
-| V1.1      | feito\*  | 2026-10-21 | sincronização por linha (ADR 0014)                                          |
-| V1.2      | feito    | 2026-10-21 | 103/103 formas com o JMdict inteiro                                         |
-| V1.3      | feito\*  | 2026-10-21 | toque, painel, carta local, barra verde                                     |
-| V1.4      | feito    | 2026-10-21 | Início somando os aparelhos; números conferidos no PC                       |
-| V1.5      | feito    | 2026-10-21 | 10 cartas geradas no PC                                                     |
-| V1.6      | feito    | 2026-10-21 | .apkg importa no Anki do PC e reimportar não duplica                        |
-| V1.7      | feito    | 2026-10-21 | PWA, backup, aviso de servidor pausado, deploy (só o `main` publica)        |
-| V2.1      | feito    | 2026-10-21 | Sincronizar Anki na tela Vocabulário; falta a 1ª sincronização real (👤)    |
-| V2.2      | feito    | 2026-10-21 | destaque, "Já sei", importação por frequência; falta ver o destaque (👤)    |
-| V2.3–V2.4 | pendente |            |                                                                             |
+| Item | Status   | Data       | Observação                                                                  |
+| ---- | -------- | ---------- | --------------------------------------------------------------------------- |
+| S1   | feito    | 2026-10-20 | ttu roda; vitest; supabase init + link                                      |
+| S2   | feito    | 2026-10-21 | schema, login, cadastro desligado; rls_check conferido no SQL Editor        |
+| D1   | feito    | 2026-10-20 | telas aprovadas; regra dos toques B; protótipo no branch prototype/d1-telas |
+| R1   | feito\*  | 2026-10-21 | guid e .apkg iguais ao genanki; Anki do PC ok; AnkiMobile dispensado        |
+| R2   | feito    | 2026-10-21 | AnkiConnect pelo Chrome; URL de produção no `webCorsOriginList`             |
+| R3   | feito\*  | 2026-10-20 | lindera; 32 MB; PC dentro das metas; medida no iPhone dispensada            |
+| R4   | feito    | 2026-10-20 | 97,5% do texto acha entrada; 0 Cards sem entrada                            |
+| R5   | feito    | 2026-10-21 | 30 cartas aprovadas; US$ 0,0038/carta; alerta de orçamento criado           |
+| V1.1 | feito\*  | 2026-10-21 | sincronização por linha (ADR 0014)                                          |
+| V1.2 | feito    | 2026-10-21 | 103/103 formas com o JMdict inteiro                                         |
+| V1.3 | feito\*  | 2026-10-21 | toque, painel, carta local, barra verde                                     |
+| V1.4 | feito    | 2026-10-21 | Início somando os aparelhos; números conferidos no PC                       |
+| V1.5 | feito    | 2026-10-21 | 10 cartas geradas no PC                                                     |
+| V1.6 | feito    | 2026-10-21 | .apkg importa no Anki do PC e reimportar não duplica                        |
+| V1.7 | feito    | 2026-10-21 | PWA, backup, aviso de servidor pausado, deploy (só o `main` publica)        |
+| V2.1 | feito    | 2026-10-21 | Sincronizar Anki na tela Vocabulário; falta a 1ª sincronização real (👤)    |
+| V2.2 | feito    | 2026-10-21 | destaque, "Já sei", importação por frequência; falta ver o destaque (👤)    |
+| V2.3 | feito    | 2026-10-21 | cobertura no leitor, Biblioteca e Vocabulário; desconhecidas por frequência |
+| V2.4 | pendente |            |                                                                             |
 
 \* Testes em aparelho dispensados pelo Igor, cobertos só pelos testes automáticos (ver abaixo).
 
