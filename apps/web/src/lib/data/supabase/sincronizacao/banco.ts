@@ -11,7 +11,9 @@ import type {
   LinhaEstatistica,
   LinhaLote,
   LinhaMarcador,
-  LinhaTraducao
+  LinhaRetrato,
+  LinhaTraducao,
+  LinhaVocab
 } from './regras';
 
 // Banco próprio da sincronização, ao lado do books-db do ttu (ADR 0014).
@@ -52,6 +54,10 @@ interface SincDb extends DBSchema {
   lotes: { key: string; value: LinhaLote };
   /** Cache das Traduções da frase (só o servidor grava). */
   traducoes: { key: string; value: LinhaTraducao };
+  /** Hub de vocabulário (vocab), pela Palavra; `entradas` acha as linhas de uma entrada do JMdict. */
+  vocab: { key: [string, string]; value: LinhaVocab; indexes: { entradas: number } };
+  /** Retratos da Sincronização do Anki (vocab_history). */
+  retratos: { key: string; value: LinhaRetrato };
 }
 
 export type BancoSinc = IDBPDatabase<SincDb>;
@@ -59,7 +65,7 @@ export type BancoSinc = IDBPDatabase<SincDb>;
 export const NOME_BANCO_SINC = 'dokusho-sinc';
 
 export function abrirBancoSinc(nome = NOME_BANCO_SINC) {
-  return openDB<SincDb>(nome, 2, {
+  return openDB<SincDb>(nome, 3, {
     upgrade(db, versaoAntiga) {
       if (versaoAntiga < 1) {
         db.createObjectStore('livros', { keyPath: 'id' }).createIndex('titulo', 'titulo');
@@ -79,6 +85,15 @@ export function abrirBancoSinc(nome = NOME_BANCO_SINC) {
         ]);
         db.createObjectStore('lotes', { keyPath: 'id' });
         db.createObjectStore('traducoes', { keyPath: 'sentence_sha256' });
+      }
+
+      if (versaoAntiga < 3) {
+        db.createObjectStore('vocab', { keyPath: ['word', 'reading'] }).createIndex(
+          'entradas',
+          'jmdict_ids',
+          { multiEntry: true }
+        );
+        db.createObjectStore('retratos', { keyPath: 'id' });
       }
     }
   });

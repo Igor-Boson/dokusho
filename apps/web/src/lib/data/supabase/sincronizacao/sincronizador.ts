@@ -33,6 +33,8 @@ import {
   type LinhaCarta,
   type LinhaLote,
   type LinhaTraducao,
+  type LinhaRetrato,
+  type LinhaVocab,
   type NovaLinhaEstatistica,
   type NovaLinhaLivro,
   type NovaLinhaMarcador,
@@ -51,6 +53,8 @@ export interface Linhas {
   batch_items: LinhaCarta;
   lotes: LinhaLote;
   translations: LinhaTraducao;
+  vocab: LinhaVocab;
+  vocab_history: LinhaRetrato;
 }
 
 export interface NovasLinhas {
@@ -61,27 +65,44 @@ export interface NovasLinhas {
   batch_items: Omit<LinhaCarta, 'user_id' | 'updated_at'>;
   lotes: Omit<LinhaLote, 'user_id' | 'updated_at'>;
   translations: never;
+  vocab: Omit<LinhaVocab, 'user_id' | 'updated_at'>;
+  vocab_history: Omit<LinhaRetrato, 'user_id' | 'updated_at'>;
 }
 
 export type TabelaSinc = keyof Linhas;
 
-interface LojasDeLinhas {
+export interface LojasDeLinhas {
   cartas: LinhaCarta;
   lotes: LinhaLote;
   traducoes: LinhaTraducao;
+  vocab: LinhaVocab;
+  retratos: LinhaRetrato;
 }
+
+/** Lojas que este aparelho também escreve (as traduções, só o servidor). */
+export type LojaEditavel = Exclude<keyof LojasDeLinhas, 'traducoes'>;
 
 const TABELA_DA_LOJA: Record<keyof LojasDeLinhas, TabelaSinc> = {
   cartas: 'batch_items',
   lotes: 'lotes',
-  traducoes: 'translations'
+  traducoes: 'translations',
+  vocab: 'vocab',
+  retratos: 'vocab_history'
 };
 
-function chaveDaLinha<L extends keyof LojasDeLinhas>(loja: L, linha: LojasDeLinhas[L]) {
-  return loja === 'traducoes'
-    ? (linha as LinhaTraducao).sentence_sha256
-    : (linha as LinhaCarta | LinhaLote).id;
+/** Chave da linha no IndexedDB: a Palavra (word, reading) no vocab, um texto nas outras. */
+export type ChaveDeLinha = string | [string, string];
+
+function chaveDaLinha<L extends keyof LojasDeLinhas>(
+  loja: L,
+  linha: LojasDeLinhas[L]
+): ChaveDeLinha {
+  if (loja === 'traducoes') return (linha as LinhaTraducao).sentence_sha256;
+  if (loja === 'vocab') return [(linha as LinhaVocab).word, (linha as LinhaVocab).reading];
+  return (linha as LinhaCarta | LinhaLote | LinhaRetrato).id;
 }
+
+const textoDaChave = (k: ChaveDeLinha) => (Array.isArray(k) ? k.join('|') : k);
 
 export interface Servidor {
   userId: string;
@@ -109,6 +130,8 @@ export interface Avisos {
   estatisticas(): void;
   /** Cartas, Lotes ou traduções chegaram do servidor. */
   cartas(): void;
+  /** O hub de vocabulário (vocab ou vocab_history) mudou com o que veio do servidor. */
+  vocab?(): void;
 }
 
 export interface OpcoesSincronizador {
@@ -358,6 +381,10 @@ export class Sincronizador {
     await this.receber(servidor, 'translations', (linhas) =>
       this.receberLinhas('traducoes', linhas)
     );
+    await this.receber(servidor, 'vocab', (linhas) => this.receberLinhas('vocab', linhas));
+    await this.receber(servidor, 'vocab_history', (linhas) =>
+      this.receberLinhas('retratos', linhas)
+    );
 
     await this.registrarLivrosLocais();
     await this.enviarApagamentos(servidor);
@@ -367,15 +394,23 @@ export class Sincronizador {
     await this.enviarMetas(servidor);
     await this.enviarLinhas(servidor, 'batch_items', 'cartas');
     await this.enviarLinhas(servidor, 'lotes', 'lotes');
+    await this.enviarLinhas(servidor, 'vocab', 'vocab');
+    await this.enviarLinhas(servidor, 'vocab_history', 'retratos');
 
     return 'feito';
   }
 
-  /** Grava uma Carta ou um Lote feito ou editado aqui; a próxima rodada envia. */
-  async salvar<L extends 'cartas' | 'lotes'>(loja: L, linha: LojasDeLinhas[L]) {
-    const sinc = await this.opcoes.sinc;
+  /** Grava uma linha feita ou editada aqui (Carta, Lote, vocab); a próxima rodada envia. */
+  async salvar<L extends LojaEditavel>(loja: L, linha: LojasDeLinhas[L]) {
+    await this.salvarVarias(loja, [linha]);
+  }
 
-    await sinc.put(loja, linha as never);
+  /** Várias linhas numa transação só (a Sincronização do Anki grava centenas). */
+  async salvarVarias<L extends LojaEditavel>(loja: L, linhas: LojasDeLinhas[L][]) {
+    const sinc = await this.opcoes.sinc;
+    const tx = sinc.transaction(loja, 'readwrite');
+
+    await Promise.all([...linhas.map((linha) => tx.store.put(linha as never)), tx.done]);
   }
 
   async listar<L extends keyof LojasDeLinhas>(loja: L): Promise<LojasDeLinhas[L][]> {
@@ -385,9 +420,9 @@ export class Sincronizador {
     return linhas.filter((linha) => !linha.deleted_at);
   }
 
-  async ler<L extends keyof LojasDeLinhas>(loja: L, chave: string) {
+  async ler<L extends keyof LojasDeLinhas>(loja: L, chave: ChaveDeLinha) {
     const sinc = await this.opcoes.sinc;
-    const linha = (await sinc.get(loja, chave)) as LojasDeLinhas[L] | undefined;
+    const linha = (await sinc.get(loja, chave as string)) as LojasDeLinhas[L] | undefined;
 
     return linha?.deleted_at ? undefined : linha;
   }
@@ -400,7 +435,14 @@ export class Sincronizador {
     return cartas.filter((carta) => !carta.deleted_at);
   }
 
-  /** Linhas que só têm a última escrita (Cartas, Lotes, traduções): vale a mais nova. */
+  /** Todas as linhas da loja, inclusive as apagadas (o hub compara com elas). */
+  async listarComApagadas<L extends keyof LojasDeLinhas>(loja: L): Promise<LojasDeLinhas[L][]> {
+    const sinc = await this.opcoes.sinc;
+
+    return (await sinc.getAll(loja)) as LojasDeLinhas[L][];
+  }
+
+  /** Linhas que só têm a última escrita (Cartas, Lotes, traduções, vocab): vale a mais nova. */
   private async receberLinhas<L extends keyof LojasDeLinhas>(loja: L, linhas: LojasDeLinhas[L][]) {
     const sinc = await this.opcoes.sinc;
     const tabela = TABELA_DA_LOJA[loja];
@@ -409,28 +451,31 @@ export class Sincronizador {
 
     for (const linha of linhas) {
       const chaveLinha = chaveDaLinha(loja, linha);
-      const local = (await sinc.get(loja, chaveLinha)) as LojasDeLinhas[L] | undefined;
+      const local = (await sinc.get(loja, chaveLinha as string)) as LojasDeLinhas[L] | undefined;
 
       if (local && !remotoVence(deIso(local.modified_at), linha.modified_at)) continue;
 
       await sinc.put(loja, linha as never);
-      await sinc.put('enviados', deIso(linha.modified_at), chave(tabela, chaveLinha));
+      await sinc.put('enviados', deIso(linha.modified_at), chave(tabela, textoDaChave(chaveLinha)));
       mudou = true;
     }
 
-    if (mudou) this.opcoes.avisos.cartas();
+    if (!mudou) return;
+    if (loja === 'vocab' || loja === 'retratos') this.opcoes.avisos.vocab?.();
+    else this.opcoes.avisos.cartas();
   }
 
-  private async enviarLinhas<T extends 'batch_items' | 'lotes'>(
+  private async enviarLinhas<T extends TabelaSinc, L extends LojaEditavel>(
     servidor: Servidor,
     tabela: T,
-    loja: 'cartas' | 'lotes'
+    loja: L
   ) {
     const sinc = await this.opcoes.sinc;
     const linhas: NovasLinhas[T][] = [];
+    const chaves: string[] = [];
 
-    for (const linha of await sinc.getAll(loja)) {
-      const chaveLinha = chave(tabela, linha.id);
+    for (const linha of (await sinc.getAll(loja)) as LojasDeLinhas[L][]) {
+      const chaveLinha = chave(tabela, textoDaChave(chaveDaLinha(loja, linha)));
 
       if (!precisaEnviar(deIso(linha.modified_at), await sinc.get('enviados', chaveLinha))) {
         continue;
@@ -439,15 +484,21 @@ export class Sincronizador {
       const { user_id: _, updated_at: __, ...semServidor } = linha;
 
       linhas.push(semServidor as NovasLinhas[T]);
+      chaves.push(chaveLinha);
     }
 
     if (!linhas.length) return;
 
     await servidor.enviar(tabela, linhas);
 
-    for (const linha of linhas as { id: string; modified_at: string }[]) {
-      await sinc.put('enviados', deIso(linha.modified_at), chave(tabela, linha.id));
-    }
+    const tx = sinc.transaction('enviados', 'readwrite');
+
+    await Promise.all([
+      ...linhas.map((linha, i) =>
+        tx.store.put(deIso((linha as { modified_at: string }).modified_at), chaves[i])
+      ),
+      tx.done
+    ]);
   }
 
   private async receber<T extends TabelaSinc>(

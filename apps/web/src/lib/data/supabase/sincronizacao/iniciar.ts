@@ -35,6 +35,9 @@ export const estatisticasRecebidas$ = new Subject<void>();
 /** Cartas, Lotes ou traduções chegaram do servidor (a Fila e o painel releem). */
 export const cartasRecebidas$ = new Subject<void>();
 
+/** O hub de vocabulário mudou (chegou do servidor ou foi gravado aqui): destaque, painel e telas releem. */
+export const vocabMudou$ = new Subject<void>();
+
 const CHAVE_APARELHO = 'dokusho-aparelho';
 const ESPERA_DEPOIS_DE_MUDAR = 15_000;
 const INTERVALO_EM_PRIMEIRO_PLANO = 5 * 60_000;
@@ -80,7 +83,8 @@ export function sincronizador() {
         marcadores: () => database.bookmarksChanged$.next(),
         metas: async () => readingGoal$.next(await getCurrentReadingGoal()),
         estatisticas: () => estatisticasRecebidas$.next(),
-        cartas: () => cartasRecebidas$.next()
+        cartas: () => cartasRecebidas$.next(),
+        vocab: () => vocabMudou$.next()
       },
       apagarLivroLocal: async (dataId) => {
         const livro = await database.getData(dataId);

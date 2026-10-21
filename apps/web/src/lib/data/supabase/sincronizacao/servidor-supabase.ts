@@ -16,7 +16,9 @@ const CONFLITO: Record<TabelaSinc, string> = {
   reading_goals: 'user_id,goal_start_date',
   batch_items: 'user_id,id',
   lotes: 'user_id,id',
-  translations: 'user_id,sentence_sha256'
+  translations: 'user_id,sentence_sha256',
+  vocab: 'user_id,word,reading',
+  vocab_history: 'user_id,id'
 };
 
 const CHAVE: Record<TabelaSinc, string[]> = {
@@ -26,7 +28,9 @@ const CHAVE: Record<TabelaSinc, string[]> = {
   reading_goals: ['goal_start_date'],
   batch_items: ['id'],
   lotes: ['id'],
-  translations: ['sentence_sha256']
+  translations: ['sentence_sha256'],
+  vocab: ['word', 'reading'],
+  vocab_history: ['id']
 };
 
 const POR_ENVIO = 500;
