@@ -175,6 +175,27 @@ export async function consultar(db: BancoDicionario, termo: string): Promise<Ent
   return ordenarPorFrequencia(entradas, termo);
 }
 
+/**
+ * Todas as entradas, um bloco por vez (a importação inicial do "Já sei"): lê e descarta, sem
+ * guardar o dicionário inteiro na memória.
+ */
+export async function percorrerEntradas(
+  db: BancoDicionario,
+  aoLer: (entradas: Entrada[]) => void,
+  aoProgredir?: (fracao: number) => void
+) {
+  const total = await db.count('entradas');
+  let lidos = 0;
+  let cursor = await db.transaction('entradas').store.openCursor();
+  while (cursor) {
+    aoLer(JSON.parse(cursor.value) as Entrada[]);
+    lidos += 1;
+    if (lidos % 200 === 0) aoProgredir?.(lidos / total);
+    cursor = await cursor.continue();
+  }
+  aoProgredir?.(1);
+}
+
 /** Da entrada mais frequente para a menos, pela forma que bate com o termo (estável). */
 export function ordenarPorFrequencia(entradas: Entrada[], termo: string) {
   return entradas

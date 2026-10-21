@@ -66,7 +66,11 @@
           {daqui.length === 1 ? 'carta' : 'cartas'}</small
         >
       </span>
-      {#if lote.audio_deleted_at}<small>áudio fora da nuvem</small>{/if}
+      <span class="dokusho-lote__marcas">
+        {#if lote.confirmed_in_anki_at}<small class="dokusho-lote__confirmado">✓ no Anki</small
+          >{/if}
+        {#if lote.audio_deleted_at}<small>áudio fora da nuvem</small>{/if}
+      </span>
     </button>
     {#if aberto === lote.id}
       <div class="dokusho-lote__corpo">
@@ -106,6 +110,17 @@
 {/if}
 
 <style lang="scss">
+  .dokusho-lote__marcas {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .dokusho-lote__confirmado {
+    color: var(--dk-read) !important;
+    font-weight: 700;
+  }
+
   .dokusho-lote {
     margin-top: 10px;
     border-radius: 14px;

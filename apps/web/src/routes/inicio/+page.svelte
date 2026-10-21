@@ -18,12 +18,25 @@
   import { capasDosLivros, linhasDeLeitura } from '$lib/data/estatisticas/carregar';
   import { getReadingGoalWindow } from '$lib/data/reading-goal';
   import { database, readingGoal$, startDayHoursForTracker$ } from '$lib/data/store';
-  import { estatisticasRecebidas$ } from '$lib/data/supabase/sincronizacao/iniciar';
+  import {
+    estatisticasRecebidas$,
+    sincronizador,
+    vocabMudou$
+  } from '$lib/data/supabase/sincronizacao/iniciar';
+  import {
+    barrasDeConhecidas,
+    conhecidasPorDia,
+    type RetratoDoDia
+  } from '$lib/data/estatisticas/palavras';
+  import { contarRetrato } from '$lib/data/vocabulario/hub';
+  import { coberturasPorTitulo } from '$lib/data/vocabulario/servico';
+  import { perfilPronto$ } from '$lib/data/vocabulario/perfis';
   import { formatPageTitle } from '$lib/functions/format-page-title';
   import { getDateKey } from '$lib/functions/statistic-util';
 
   // Tela Início (ESCOPO "Tela inicial"; desenho do D1): calendário da semana, meta, progresso de
-  // tempo e caracteres somando os aparelhos, gráfico por dia, filtro e lista por livro.
+  // tempo e caracteres somando os aparelhos, gráfico por dia, filtro e lista por livro. A aba
+  // Palavras (V2.4) mostra as palavras conhecidas do hub, com o histórico dos retratos.
 
   const DIAS_CURTOS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
   const DIAS_LONGOS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
@@ -33,18 +46,35 @@
   let capas = new Map<string, string>();
   let semana = 0;
   let diaEscolhido: string | undefined;
-  let medida: Medida = 'tempo';
+  let medida: Medida | 'palavras' = 'tempo';
+  let retratos: RetratoDoDia[] = [];
+  let conhecidasAgora = 0;
+  let coberturas: { livro: string; valor: number }[] = [];
   let periodo: Periodo = 7;
   let carregado = false;
 
   $: hoje = getDateKey($startDayHoursForTracker$);
   $: dias = diasDaSemana(hoje, semana);
-  $: diasDoFiltro = diasDoPeriodo(hoje, periodo, primeiroDia);
-  $: total = somarDias(porDia, diasDoFiltro)[medida];
-  $: barras = barrasDoGrafico(porDia, diasDoFiltro, medida);
+  $: primeiroRetrato = retratos.reduce<string | undefined>(
+    (menor, r) => (!menor || r.dia < menor ? r.dia : menor),
+    undefined
+  );
+  $: diasDoFiltro = diasDoPeriodo(
+    hoje,
+    periodo,
+    medida === 'palavras' ? primeiroRetrato : primeiroDia
+  );
+  $: total = medida === 'palavras' ? conhecidasAgora : somarDias(porDia, diasDoFiltro)[medida];
+  $: barras =
+    medida === 'palavras'
+      ? barrasDeConhecidas(
+          diasDoFiltro,
+          conhecidasPorDia(retratos, diasDoFiltro, hoje, conhecidasAgora)
+        )
+      : barrasDoGrafico(porDia, diasDoFiltro, medida);
   $: maiorBarra = Math.max(1, ...barras.map((barra) => barra.valor));
-  $: livros = porLivro(porDia, diasDoFiltro, medida);
-  $: maiorLivro = livros[0]?.valor || 1;
+  $: livros = medida === 'palavras' ? coberturas : porLivro(porDia, diasDoFiltro, medida);
+  $: maiorLivro = medida === 'palavras' ? 100 : livros[0]?.valor || 1;
   $: meta = $readingGoal$;
   $: janela = meta?.goalStartDate
     ? getReadingGoalWindow(hoje, $startDayHoursForTracker$, meta)
@@ -65,8 +95,26 @@
         ? 'Semana passada'
         : `${dataCurta(dias[0])} a ${dataCurta(dias[6])}`;
 
-  const formatar = (valor: number, qual: Medida) =>
+  const formatar = (valor: number, qual: Medida | 'palavras') =>
     qual === 'tempo' ? formatarTempo(valor) : `${valor.toLocaleString('pt-BR')}`;
+
+  async function carregarPalavras() {
+    const [linhas, doHistorico, porTitulo] = await Promise.all([
+      sincronizador().listar('vocab'),
+      sincronizador().listar('retratos'),
+      coberturasPorTitulo()
+    ]);
+
+    conhecidasAgora = contarRetrato(linhas).known_count;
+    retratos = doHistorico.map((r) => ({
+      dia: getDateKey($startDayHoursForTracker$, new Date(r.synced_at)),
+      quando: r.synced_at,
+      conhecidas: r.known_count
+    }));
+    coberturas = [...porTitulo]
+      .map(([livro, { porcentagem }]) => ({ livro, valor: porcentagem }))
+      .sort((x, y) => y.valor - x.valor);
+  }
 
   function dataCurta(dia: string) {
     const [, mes, d] = dia.split('-');
@@ -88,10 +136,13 @@
   onMount(() => {
     const assinaturas = [
       estatisticasRecebidas$.subscribe(carregar),
-      database.mudou$.subscribe(carregar)
+      database.mudou$.subscribe(carregar),
+      vocabMudou$.subscribe(carregarPalavras),
+      perfilPronto$.subscribe(carregarPalavras)
     ];
 
     carregar();
+    carregarPalavras();
     capasDosLivros().then((achadas) => (capas = achadas));
 
     return () => assinaturas.forEach((assinatura) => assinatura.unsubscribe());
@@ -188,16 +239,24 @@
       <button class:ativa={medida === 'caracteres'} on:click={() => (medida = 'caracteres')}
         >Caracteres</button
       >
-      <button disabled title="Chega na v2">Palavras <small>v2</small></button>
+      <button class:ativa={medida === 'palavras'} on:click={() => (medida = 'palavras')}
+        >Palavras</button
+      >
     </div>
-    <p class="dokusho-inicio__total">
-      <b>{formatar(total, medida)}</b>
-      {medida === 'caracteres' ? 'caracteres ' : ''}{periodo === 'tudo'
-        ? primeiroDia
-          ? `desde ${dataCurta(primeiroDia)}`
-          : ''
-        : `nos últimos ${periodo} dias`}
-    </p>
+    {#if medida === 'palavras'}
+      <p class="dokusho-inicio__total">
+        <b>{formatar(total, medida)}</b> palavras conhecidas
+      </p>
+    {:else}
+      <p class="dokusho-inicio__total">
+        <b>{formatar(total, medida)}</b>
+        {medida === 'caracteres' ? 'caracteres ' : ''}{periodo === 'tudo'
+          ? primeiroDia
+            ? `desde ${dataCurta(primeiroDia)}`
+            : ''
+          : `nos últimos ${periodo} dias`}
+      </p>
+    {/if}
     <div class="dokusho-cartao">
       <svg class="dokusho-inicio__grafico" viewBox="0 0 320 110" role="img" aria-label="Gráfico">
         {#each barras as barra, i}
@@ -231,7 +290,7 @@
   </section>
 
   <section>
-    <h2>Por livro</h2>
+    <h2>{medida === 'palavras' ? 'Cobertura por livro' : 'Por livro'}</h2>
     {#each livros as { livro, valor }}
       <div class="dokusho-inicio__livro">
         {#if capas.get(livro)}
@@ -243,10 +302,16 @@
           <div class="dokusho-inicio__titulo">{livro}</div>
           <div class="dokusho-inicio__parte"><i style:width="{(100 * valor) / maiorLivro}%" /></div>
         </div>
-        <small>{formatar(valor, medida)}</small>
+        <small>{medida === 'palavras' ? `${valor}%` : formatar(valor, medida)}</small>
       </div>
     {:else}
-      <p class="dokusho-inicio__vazio">{carregado ? 'Nada lido neste período.' : 'Carregando…'}</p>
+      <p class="dokusho-inicio__vazio">
+        {#if medida === 'palavras'}
+          A cobertura aparece depois de abrir o livro no Leitor.
+        {:else}
+          {carregado ? 'Nada lido neste período.' : 'Carregando…'}
+        {/if}
+      </p>
     {/each}
   </section>
 </main>

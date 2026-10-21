@@ -381,7 +381,9 @@ export type Database = {
         Row: {
           deleted_at: string | null;
           interval_days: number | null;
+          ja_sei_at: string | null;
           jmdict_id: number | null;
+          jmdict_ids: number[] | null;
           leech: boolean;
           modified_at: string;
           reading: string;
@@ -396,7 +398,9 @@ export type Database = {
         Insert: {
           deleted_at?: string | null;
           interval_days?: number | null;
+          ja_sei_at?: string | null;
           jmdict_id?: number | null;
+          jmdict_ids?: number[] | null;
           leech?: boolean;
           modified_at?: string;
           reading: string;
@@ -411,7 +415,9 @@ export type Database = {
         Update: {
           deleted_at?: string | null;
           interval_days?: number | null;
+          ja_sei_at?: string | null;
           jmdict_id?: number | null;
+          jmdict_ids?: number[] | null;
           leech?: boolean;
           modified_at?: string;
           reading?: string;

@@ -122,6 +122,7 @@
   import { sincronizador } from '$lib/data/supabase/sincronizacao/iniciar';
   import LeitorDokusho from '$lib/components/painel-palavra/leitor-dokusho.svelte';
   import BarraLeitor from '$lib/components/painel-palavra/barra-leitor.svelte';
+  import { destaqueLigado$ } from '$lib/data/vocabulario/servico';
   import { textoMarcadorRemoto } from '$lib/data/supabase/sincronizacao/regras';
   import NumberDialog from '$lib/components/number-dialog.svelte';
   import { mergeEntries } from '$lib/components/merged-header-icon/merged-entries';
@@ -189,6 +190,8 @@
   let showSpinner = true;
   let showHeader = false;
   let leitorDokusho: LeitorDokusho | undefined;
+  let coberturaDoLivro = '';
+  let livroIdDokusho = '';
   // Dokusho: a barra do topo é a do protótipo D1; a do ttu abre pelo menu ⋯ ("Mais ferramentas").
   let mostrarFerramentasTtu = false;
   const MOSTRAR_RODAPE_DO_TTU = false;
@@ -210,7 +213,11 @@
 
     showHeader = false;
 
-    if (acao === 'desmarcar') {
+    if (acao === 'destaque') {
+      leitorDokusho?.alternarDestaqueDoLeitor();
+    } else if (acao === 'palavras') {
+      leaveReader(`/vocabulario/livro?id=${encodeURIComponent(livroIdDokusho)}`, false);
+    } else if (acao === 'desmarcar') {
       await leitorDokusho?.desmarcarAPartirDaqui();
       await bookmarkPage();
     } else if (acao === 'sumario') {
@@ -1664,6 +1671,8 @@
   capitulo={capituloAtual}
   porcentagem={bookCharCount ? Math.floor((100 * exploredCharCount) / bookCharCount) : 0}
   furiganaLigado={!$hideFurigana$}
+  destaqueLigado={$destaqueLigado$}
+  cobertura={coberturaDoLivro}
   corFundo={$backgroundColor$}
   corTexto={$themeOption$?.fontColor ?? 'rgba(0, 0, 0, 0.87)'}
   on:voltar={() => leaveReader(mergeEntries.MANAGE.routeId)}
@@ -1845,6 +1854,8 @@
     corFundo={$backgroundColor$}
     corTexto={$themeOption$?.fontColor ?? 'rgba(0, 0, 0, 0.87)'}
     bind:mostrarBarra={showHeader}
+    bind:cobertura={coberturaDoLivro}
+    bind:livroId={livroIdDokusho}
     bind:this={leitorDokusho}
   />
   {$initBookmarkData$ ?? ''}

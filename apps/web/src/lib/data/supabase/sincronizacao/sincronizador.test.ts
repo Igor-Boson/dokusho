@@ -30,7 +30,9 @@ const CHAVES: Record<TabelaSinc, string[]> = {
   reading_goals: ['goal_start_date'],
   batch_items: ['id'],
   lotes: ['id'],
-  translations: ['sentence_sha256']
+  translations: ['sentence_sha256'],
+  vocab: ['word', 'reading'],
+  vocab_history: ['id']
 };
 
 const PADRAO: Record<TabelaSinc, Record<string, unknown>> = {
@@ -40,7 +42,9 @@ const PADRAO: Record<TabelaSinc, Record<string, unknown>> = {
   reading_goals: { time_goal: 0, character_goal: 0 },
   batch_items: {},
   lotes: {},
-  translations: {}
+  translations: {},
+  vocab: {},
+  vocab_history: {}
 };
 
 class ServidorFalso {
@@ -659,5 +663,70 @@ describe('cursor', () => {
     });
 
     expect(await semLogin.sincronizar()).toBe('sem-login');
+  });
+});
+
+describe('hub de vocabulário', () => {
+  const palavra = (word: string, reading: string, quando: string) => ({
+    user_id: 'u1',
+    word,
+    reading,
+    jmdict_id: 1,
+    jmdict_ids: [1],
+    source: 'anki',
+    state: 'aprendendo',
+    interval_days: 3,
+    suspended: false,
+    leech: false,
+    synced_at: quando,
+    ja_sei_at: null,
+    modified_at: quando,
+    updated_at: quando,
+    deleted_at: null
+  });
+
+  it('vocab e retratos gravados no PC chegam ao iPad; a mudança mais nova vence', async () => {
+    const pc = criarAparelho(servidor, 'Windows');
+    const ipad = criarAparelho(servidor, 'iPad');
+    const quando = '2026-10-22T10:00:00.000Z';
+
+    await pc.sincronizador.salvarVarias('vocab', [
+      palavra('食べる', 'たべる', quando),
+      palavra('何', 'なに・なん', quando)
+    ]);
+    await pc.sincronizador.salvar('retratos', {
+      user_id: 'u1',
+      id: 'r1',
+      synced_at: quando,
+      known_count: 0,
+      learning_count: 2,
+      modified_at: quando,
+      updated_at: quando,
+      deleted_at: null
+    });
+    await pc.sincronizador.sincronizar();
+
+    expect(servidor.tabela('vocab').get('何|なに・なん')).toMatchObject({ state: 'aprendendo' });
+
+    await ipad.sincronizador.sincronizar();
+
+    expect(await ipad.sincronizador.listar('vocab')).toHaveLength(2);
+    expect(await ipad.sincronizador.listar('retratos')).toHaveLength(1);
+    expect(ipad.avisos.cartas).toBe(0);
+
+    // "Já sei" no iPad depois da sincronização do PC.
+    const depois = '2026-10-22T11:00:00.000Z';
+
+    await ipad.sincronizador.salvar('vocab', {
+      ...palavra('食べる', 'たべる', quando),
+      ja_sei_at: depois,
+      modified_at: depois
+    });
+    await ipad.sincronizador.sincronizar();
+    await pc.sincronizador.sincronizar();
+
+    expect(await pc.sincronizador.ler('vocab', ['食べる', 'たべる'])).toMatchObject({
+      ja_sei_at: depois
+    });
   });
 });

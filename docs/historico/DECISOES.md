@@ -294,3 +294,92 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   Documentos reorganizados: PROGRESSO só com estado e pendências; este registro e os testes de risco em
   docs/historico/; mapa do código em docs/ARQUITETURA.md; README do Dokusho.
 - 2026-10-21: PR aberto por engano no ttu original (ttu-ttu/ebook-reader#550) fechado pelo Igor.
+
+## v2 (chat autônomo de 2026-10-21, branch `v2-autonomo`)
+
+- 2026-10-21: a branch `v2-autonomo` saiu do `main` com a `docs/organizar` por cima (fast-forward):
+  o pedido da v2 já citava docs/historico/ e docs/ARQUITETURA.md, que só existiam nela. (autônomo,
+  revisar)
+- 2026-10-21: V2.1. Migração aditiva `20261022000000_hub.sql`: `vocab.jmdict_ids` (todas as entradas
+  em que a Palavra cai) e `vocab.ja_sei_at` (a marca "Já sei"). Nas linhas do Anki, `state` é só o
+  estado dos Cards; o "Já sei" fica à parte e o estado da Palavra é o mais avançado dos dois
+  (`estadoDaLinha`). Assim, desfazer o "Já sei" volta ao estado do Anki, e uma Palavra que sai do Anki
+  com "Já sei" vira linha `ja_sei` em vez de ser apagada. (autônomo, revisar)
+- 2026-10-21: V2.1. Uma linha de vocab por Palavra = (Word sem HTML, leituras do Word Reading em
+  hiragana juntas com ・, ex. 何 なに・なん). Vários Cards da mesma Palavra: estado mais avançado,
+  `interval_days` = o maior, `suspended` só se todos estão, `leech` se algum tem. (autônomo, revisar)
+- 2026-10-21: V2.1. Suspenso **com** leech é aprendendo mesmo com intervalo ≥ 21 dias (o ESCOPO diz
+  "suspenso com leech: aprendendo" e "intervalo ≥ 21: conhecida" sem dizer qual vence; o leech é a
+  palavra que você erra). Leech ativo (tirado da suspensão) segue o intervalo. (autônomo, revisar)
+- 2026-10-21: V2.1. A Sincronização do Anki só regrava as linhas que mudaram (`synced_at` = quando
+  mudou); a data da última sincronização vem do retrato mais novo de `vocab_history`, que vale em
+  todos os aparelhos. Antes de ler o Anki, uma rodada do sincronizador recebe os "Já sei" dos outros
+  aparelhos; depois, outra envia. (autônomo, revisar)
+- 2026-10-21: V2.1. Lote confirmado no Anki quando **todas** as cartas dele (Word + Word Reading)
+  estão em algum Card dos decks lidos; marca "✓ no Anki" na aba Lotes. (autônomo, revisar)
+- 2026-10-21: V2.1. Botão "Sincronizar Anki" na tela Vocabulário (agora ligada na navegação), só
+  quando o aparelho é Windows; nos outros, a data e os números do último retrato. Opções: decks lidos
+  (localStorage, padrão `日本語` com subdecks) e pular o sync do AnkiWeb. Saíram a `/teste/anki` e o
+  `listarDecks` do cliente, que só ela usava. (autônomo, revisar)
+- 2026-10-21: V2.1, ensaio com o Anki real **só em leitura** (sem `sync`, com um banco falso em
+  memória; nada gravado no hub): 1515 Cards → 1503 Palavras, 0 sem entrada, 23 em mais de uma
+  entrada; 996 conhecidas, 507 aprendendo. 18,6 s no PC: 12,5 s lendo os Cards (cardsInfo/notesInfo
+  em lotes de 200) e 6 s casando com o dicionário.
+- 2026-10-21: V2.2. Destaque no texto pela CSS Custom Highlight API (sem mexer no DOM do ttu):
+  desconhecida com fundo azul claro, aprendendo sublinhada em âmbar (o amarelo é da seleção, que
+  fica por cima); conhecida, gramática e palavra fora do dicionário sem nada. Só os parágrafos perto
+  da tela (IntersectionObserver, uma tela de folga) são tokenizados, um por vez; cada um é casado uma
+  vez e repintado quando o hub muda. Liga só com dicionário e hub não vazio (não baixa nada só para
+  isso); menu ⋯ "Tirar o destaque das palavras" (localStorage). Medido no PC com o livro do R4 e o
+  hub do Anki real em memória: 300 parágrafos (14 mil caracteres) casados em 6 s com o dicionário
+  frio (~20 ms por parágrafo; uma tela tem 10–20), repintura 31 ms. Não conferido visualmente: o
+  painel do navegador do Claude oculto não desenha o leitor. (autônomo, revisar)
+- 2026-10-21: V2.2. Painel: estado da entrada (conhecida/aprendendo/desconhecida, cores do D1),
+  "no Anki como <leitura>" e o botão "Já sei" só para entradas fora do Anki (no Anki aparece "No
+  Anki", desativado); com a marca, vira "Desfazer \"Já sei\"" (decide o "desfazer Já sei" que estava
+  sem decisão). Criar carta de palavra que já está no Anki pede confirmação no painel; a Fila mostra
+  "já no Anki" nas cartas cuja entrada está no Anki. (autônomo, revisar)
+- 2026-10-21: V2.2. Importação inicial (decide a "frequência N" que estava sem decisão): campo na tela
+  Vocabulário com padrão **3000** (posição no JPDB, a melhor entre escrita e kana), "Ver quantas
+  palavras" antes de marcar; pula entradas do Anki, Palavras já no hub e entradas só de gramática
+  (prt, aux, aux-v, aux-adj, cop, conj); a linha usa a forma mais vista no JPDB. Todas as linhas de uma
+  importação têm o mesmo `ja_sei_at`, e a tela lista as importações com "Desfazer". Medido no PC: ler
+  o dicionário inteiro 4,7 s; até 3000 dariam 2695 palavras (antes de tirar as do Anki). (autônomo,
+  revisar)
+- 2026-10-21: V2.2. O `dokusho-sinc` passou à v3 e, no navegador do Claude, a atualização ficou
+  travada por uma conexão v2 aberta em outra aba (versão antiga, sem tratamento). Agora o banco fecha
+  a conexão e recarrega a aba quando outra versão precisa atualizá-lo (`blocking`), e mostra "Outra
+  aba ou janela do Dokusho, com a versão antiga, está aberta…" quando é ela que espera (`blocked`).
+  Na primeira vez (v2 → v3) a aba antiga não sabe fechar: feche-a à mão. (autônomo, revisar)
+- 2026-10-21: V2.3. Cobertura = porcentagem das **ocorrências** de Palavras conhecidas no texto, sem
+  gramática (é a medida que diz quanto do texto você entende; a tela também mostra quantas palavras
+  diferentes são conhecidas, aprendendo e desconhecidas). Pedaço sem entrada no dicionário (quase
+  sempre nome próprio) só entra na conta quando o Anki tem a escrita. (autônomo, revisar)
+- 2026-10-21: V2.3. "Perfil do livro" (cada Palavra e quantas vezes aparece) calculado uma vez por
+  aparelho e por versão do dicionário, em segundo plano 3 s depois de abrir o livro, num banco próprio
+  `dokusho-perfis` fora da sincronização (é refeito igual em cada aparelho, e um novo store no
+  `dokusho-sinc` exigiria outra atualização do banco). Cobertura e lista saem do perfil + hub na hora.
+  Medido no PC com o livro do R4 (152 mil caracteres, 2679 parágrafos): **11,3 s**, 33.331
+  ocorrências e 3.121 Palavras (bate com o R4); a tela fica livre (fatias de 30 ms), salvo uma pausa
+  de ~0,6 s na primeira carga do tokenizador, que já existe no primeiro toque. (autônomo, revisar)
+- 2026-10-21: V2.3. Onde aparece: barra do topo do leitor ("· cobertura 87%", ou o progresso do
+  cálculo), selo na capa da Biblioteca, seção "Livros" da tela Vocabulário e a tela
+  `/vocabulario/livro?id=<hash>` ("Palavras do livro" no menu ⋯ do leitor), com as desconhecidas da
+  mais frequente no livro para a menos, glosa, número de vezes e "Já sei" em cada uma (50 por vez).
+  Livro sem perfil: "Calcular agora" na própria tela. (autônomo, revisar)
+- 2026-10-21: V2.4. Aba Palavras do Início: o total é o de conhecidas no hub agora (com os "Já sei"
+  feitos depois da última sincronização); o gráfico não soma por dia (é um total acumulado): cada
+  dia vale o último retrato de `vocab_history` até ele, hoje vale o hub agora, e acima de 60 dias uma
+  barra por semana com o valor do fim dela. Nessa aba, "Por livro" vira "Cobertura por livro" (só os
+  livros com perfil neste aparelho). O calendário e a meta seguem a leitura. (autônomo, revisar)
+- 2026-10-21: V2.4. Tela Vocabulário (decide a "tela Vocabulário" que estava sem decisão), de cima
+  para baixo: Anki (sincronização e último retrato), Livros (cobertura), "Já sei" pela frequência e
+  Palavras: filtros Conhecidas / Aprendendo / Já sei com contagem, busca pela escrita ou leitura
+  (hiragana ou katakana), mais recentes primeiro, 100 por vez; cada linha mostra a origem (Anki,
+  suspenso, leech, intervalo; data do "Já sei") e "Desfazer" quando tem "Já sei" (desfaz a entrada
+  inteira). Sem gráfico próprio (o histórico está no Início). (autônomo, revisar)
+- 2026-10-21: V2.4. O aviso de banco bloqueado também aparece se o `dokusho-sinc` não abrir em 5 s:
+  no navegador do Claude, a aba antiga congelada nem disparava o evento `blocked`. (autônomo, revisar)
+- 2026-10-21: v2 encerrada no código (chat autônomo). Falta só o que é 👤: a primeira Sincronização
+  do Anki real, conferir destaque e painel no leitor, juntar o PR e ver no iPad/iPhone o critério da
+  v2 (passos no docs/MANHA.md).

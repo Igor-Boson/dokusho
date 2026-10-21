@@ -23,6 +23,8 @@ export type LinhaMeta = Tabelas['reading_goals']['Row'];
 export type LinhaCarta = Tabelas['batch_items']['Row'];
 export type LinhaLote = Tabelas['lotes']['Row'];
 export type LinhaTraducao = Tabelas['translations']['Row'];
+export type LinhaVocab = Tabelas['vocab']['Row'];
+export type LinhaRetrato = Tabelas['vocab_history']['Row'];
 
 export type NovaLinhaLivro = Tabelas['books']['Insert'];
 export type NovaLinhaMarcador = Tabelas['bookmarks']['Insert'];

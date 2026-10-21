@@ -9,6 +9,8 @@
   export let capitulo = '';
   export let porcentagem = 0;
   export let furiganaLigado = true;
+  export let destaqueLigado = true;
+  export let cobertura = '';
   export let corFundo = '#fff';
   export let corTexto = 'rgba(0, 0, 0, 0.87)';
 
@@ -19,7 +21,9 @@
     acao: string;
   }>();
 
-  const ACOES = [
+  $: ACOES = [
+    ['destaque', destaqueLigado ? 'Tirar o destaque das palavras' : 'Destacar as palavras'],
+    ['palavras', 'Palavras do livro'],
     ['desmarcar', 'Desmarcar a partir daqui'],
     ['sumario', 'Sumário'],
     ['marcador', 'Marcar este ponto'],
@@ -54,7 +58,8 @@
   </button>
   <div class="dokusho-barra__titulo">
     <b>{titulo}</b>
-    <span>{capitulo ? `${capitulo} · ` : ''}{porcentagem}%</span>
+    <span>{capitulo ? `${capitulo} · ` : ''}{porcentagem}%{cobertura ? ` · ${cobertura}` : ''}</span
+    >
   </div>
   <button
     class="dokusho-barra__texto"

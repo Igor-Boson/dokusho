@@ -11,6 +11,7 @@ import {
   apagarDicionario,
   consultar,
   gravarDicionario,
+  percorrerEntradas,
   versaoGravada
 } from './banco';
 import { linhasDoArquivo, prepararDicionario, type LinhaTermo } from './formato';
@@ -58,6 +59,15 @@ describe('banco do dicionário', () => {
     expect((await consultar(db, '方')).map((e) => e.seq)).toEqual([1516930, 1516925, 2253290]);
     expect((await consultar(db, 'わかる')).map((e) => e.seq)).toEqual([1606560]);
     expect(await consultar(db, 'ない')).toEqual([]);
+    db.close();
+  });
+
+  it('percorre todas as entradas, bloco a bloco', async () => {
+    const db = await abrirDicionario(nome);
+    await gravarDicionario(db, emFluxo());
+    const seqs: number[] = [];
+    await percorrerEntradas(db, (entradas) => seqs.push(...entradas.map((e) => e.seq)));
+    expect(seqs.sort()).toEqual([1516925, 1516930, 1606560, 2253290]);
     db.close();
   });
 

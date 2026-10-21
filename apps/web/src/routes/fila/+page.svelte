@@ -8,7 +8,13 @@
   import { pagePath } from '$lib/data/env';
   import { isOnline$ } from '$lib/data/store';
   import { geracao, gerandoAgora$, gerarPendentes, htmlDaFrase } from '$lib/data/cartas/fila';
-  import { cartasRecebidas$, sincronizador } from '$lib/data/supabase/sincronizacao/iniciar';
+  import {
+    cartasRecebidas$,
+    sincronizador,
+    vocabMudou$
+  } from '$lib/data/supabase/sincronizacao/iniciar';
+  import { indiceDoHub } from '$lib/data/vocabulario/servico';
+  import { paraHiragana } from '$lib/data/dicionario/tokenizador';
   import type { LinhaCarta, LinhaLote } from '$lib/data/supabase/sincronizacao/regras';
   import BarraExportar from '$lib/components/fila/barra-exportar.svelte';
   import ListaLotes from '$lib/components/fila/lista-lotes.svelte';
@@ -22,6 +28,8 @@
   let carregado = false;
   let tentando = '';
   let aba: 'fila' | 'lotes' = 'fila';
+  /** Cartas cuja entrada do JMdict já está no Anki (aviso na fila, ESCOPO "Regras da fila"). */
+  let noAnki = new Set<string>();
 
   $: idAberto = browser ? $page.url.searchParams.get('carta') : null;
   $: aberta = idAberto ? cartas.find((carta) => carta.id === idAberto) : undefined;
@@ -33,6 +41,22 @@
     cartas = await sincronizador().listar('cartas');
     lotes = await sincronizador().listar('lotes');
     carregado = true;
+    await marcarNoAnki();
+  }
+
+  async function marcarNoAnki() {
+    const indice = await indiceDoHub();
+
+    noAnki = new Set(
+      cartas
+        .filter(
+          (carta) =>
+            carta.jmdict_id &&
+            indice.daPalavra({ seq: carta.jmdict_id, leitura: paraHiragana(carta.word_reading) })
+              .noAnki
+        )
+        .map((carta) => carta.id)
+    );
   }
 
   async function tentarDeNovo(carta: LinhaCarta) {
@@ -52,7 +76,11 @@
   const voltar = () => goto(`${pagePath}/fila`);
 
   onMount(() => {
-    const assinaturas = [cartasRecebidas$.subscribe(carregar), gerandoAgora$.subscribe(carregar)];
+    const assinaturas = [
+      cartasRecebidas$.subscribe(carregar),
+      gerandoAgora$.subscribe(carregar),
+      vocabMudou$.subscribe(marcarNoAnki)
+    ];
 
     carregar();
     gerarPendentes();
@@ -92,6 +120,7 @@
       >
         <div class="dokusho-fila__palavra" lang="ja">
           {carta.word}<small>{carta.word_reading}</small>
+          {#if noAnki.has(carta.id)}<span class="dokusho-fila__no-anki">já no Anki</span>{/if}
         </div>
         <span class="dokusho-estado dokusho-estado--{gerando ? 'gerando' : carta.state}">
           {gerando ? 'gerando' : carta.state}
@@ -207,6 +236,17 @@
   .dokusho-fila__significado,
   .dokusho-fila__erro {
     grid-column: 1 / -1;
+  }
+
+  .dokusho-fila__no-anki {
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 99px;
+    vertical-align: middle;
+    background: var(--dk-warn-soft);
+    color: var(--dk-warn);
   }
 
   .dokusho-fila__frase {

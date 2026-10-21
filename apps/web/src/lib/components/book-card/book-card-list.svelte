@@ -4,8 +4,11 @@
   import type { BookCardProps } from '$lib/components/book-card/book-card-props';
   import Popover from '$lib/components/popover/popover.svelte';
   import { dummyFn } from '$lib/functions/utils';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import Fa from 'svelte-fa';
+  import { vocabMudou$ } from '$lib/data/supabase/sincronizacao/iniciar';
+  import { perfilPronto$ } from '$lib/data/vocabulario/perfis';
+  import { coberturasPorTitulo } from '$lib/data/vocabulario/servico';
 
   export let bookCards: BookCardProps[] = [];
   export let currentBookId: number | undefined;
@@ -21,6 +24,22 @@
   }>();
 
   let hoveringBookId: number | undefined;
+
+  /** Cobertura de vocabulário dos livros com perfil neste aparelho (V2.3). */
+  let coberturas = new Map<string, { livroId: string; porcentagem: number }>();
+
+  async function carregarCoberturas() {
+    coberturas = await coberturasPorTitulo().catch(() => coberturas);
+  }
+
+  onMount(() => {
+    carregarCoberturas();
+    const assinaturas = [
+      vocabMudou$.subscribe(carregarCoberturas),
+      perfilPronto$.subscribe(carregarCoberturas)
+    ];
+    return () => assinaturas.forEach((a) => a.unsubscribe());
+  });
 
   function onBookCardClick(id: number) {
     dispatch('bookClick', { id });
@@ -46,6 +65,15 @@
         class:mdc-elevation--z4={selectedBookIds.has(bookCard.id) || bookCard.id === currentBookId}
       >
         <BookCard {...bookCard} on:click={() => onBookCardClick(bookCard.id)} />
+
+        {#if coberturas.has(bookCard.title)}
+          <div
+            class="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-gray-800 bg-opacity-80 px-2 py-0.5 text-xs font-bold text-white"
+            title="Cobertura de vocabulário"
+          >
+            {coberturas.get(bookCard.title)?.porcentagem}%
+          </div>
+        {/if}
 
         {#if bookCard.isPlaceholder}
           <div

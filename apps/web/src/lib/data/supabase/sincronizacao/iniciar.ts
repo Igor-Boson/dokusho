@@ -32,8 +32,17 @@ export const estadoSinc$ = new BehaviorSubject<EstadoSinc>({ tipo: 'parado' });
 /** Estatísticas de outro aparelho chegaram (a tela inicial soma). */
 export const estatisticasRecebidas$ = new Subject<void>();
 
+/**
+ * O banco local espera outra aba (com a versão antiga do app) fechar para se atualizar; até lá, a
+ * sincronização e o hub não abrem.
+ */
+export const bancoBloqueado$ = new BehaviorSubject(false);
+
 /** Cartas, Lotes ou traduções chegaram do servidor (a Fila e o painel releem). */
 export const cartasRecebidas$ = new Subject<void>();
+
+/** O hub de vocabulário mudou (chegou do servidor ou foi gravado aqui): destaque, painel e telas releem. */
+export const vocabMudou$ = new Subject<void>();
 
 const CHAVE_APARELHO = 'dokusho-aparelho';
 const ESPERA_DEPOIS_DE_MUDAR = 15_000;
@@ -68,11 +77,29 @@ async function atualizarListaDeLivros() {
   database.dataListChanged$.next(undefined);
 }
 
+const ESPERA_DO_BANCO = 5000;
+
+function abrirSinc() {
+  // Sem resposta em 5 s também é bloqueio: uma aba congelada no meio de uma abertura não dispara o
+  // evento `blocked`.
+  const espera = setTimeout(() => bancoBloqueado$.next(true), ESPERA_DO_BANCO);
+
+  return abrirBancoSinc(undefined, {
+    bloqueado: () => bancoBloqueado$.next(true),
+    // Uma aba com a versão nova precisa atualizar o banco: esta, desatualizada, recarrega.
+    substituido: () => location.reload()
+  }).then((db) => {
+    clearTimeout(espera);
+    bancoBloqueado$.next(false);
+    return db;
+  });
+}
+
 export function sincronizador() {
   if (!instancia) {
     instancia = new Sincronizador({
       ttu: database.db,
-      sinc: abrirBancoSinc(),
+      sinc: abrirSinc(),
       servidor: () => servidorSupabase(supabase),
       aparelho: aparelho(),
       avisos: {
@@ -80,7 +107,8 @@ export function sincronizador() {
         marcadores: () => database.bookmarksChanged$.next(),
         metas: async () => readingGoal$.next(await getCurrentReadingGoal()),
         estatisticas: () => estatisticasRecebidas$.next(),
-        cartas: () => cartasRecebidas$.next()
+        cartas: () => cartasRecebidas$.next(),
+        vocab: () => vocabMudou$.next()
       },
       apagarLivroLocal: async (dataId) => {
         const livro = await database.getData(dataId);

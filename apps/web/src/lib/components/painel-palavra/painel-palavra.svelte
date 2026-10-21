@@ -4,6 +4,7 @@
   import type { Selecao } from '$lib/data/dicionario/busca';
   import { formaDaEntrada } from '$lib/data/cartas/palavra';
   import type { LinhaCarta } from '$lib/data/supabase/sincronizacao/regras';
+  import type { InfoDaPalavra } from '$lib/data/vocabulario/indice';
 
   // Painel da palavra (ESCOPO "Toque e painel"; desenho do D1): inferior no celular, lateral na
   // tela larga. Só mostra; o leitor (leitor-dokusho.svelte) decide o que cada botão faz.
@@ -15,13 +16,16 @@
   export let rubi: string | undefined = undefined;
   export let carregando = '';
   export let cartas: LinhaCarta[] = [];
+  /** Estado da entrada aberta no hub; undefined para gramática e fora do dicionário. */
+  export let info: InfoDaPalavra | undefined = undefined;
   export let traducao: { frase: string; texto: string; cache: boolean } | undefined = undefined;
   export let traduzindo = false;
   export let erro = '';
   export let online = true;
   export let podeEncurtar = false;
   export let podeAlongar = false;
-  export let confirmarDuplicada = false;
+  /** Pedido de confirmação antes de criar a carta. */
+  export let confirmar: 'exportada' | 'anki' | undefined = undefined;
   export let corFundo = '#fff';
   export let corTexto = 'rgba(0, 0, 0, 0.87)';
   /** Na tela larga, o painel fica do lado oposto ao da palavra tocada. */
@@ -34,6 +38,7 @@
     fechar: void;
     traduzir: void;
     criarCarta: { mesmoAssim: boolean };
+    jaSei: void;
     abrirCarta: string;
   }>();
 
@@ -159,6 +164,15 @@
       <div class="dokusho-painel__linha">
         {#if selecao.gramatica}
           <span class="dokusho-painel__marca">gramática · fora da cobertura</span>
+        {:else if info}
+          <span class="dokusho-painel__estado">
+            <span class="dokusho-painel__marca dokusho-painel__marca--{info.estado}"
+              >{info.estado}{#if info.jaSei && !info.noAnki}&nbsp;· já sei{/if}</span
+            >
+            {#if info.comoNoAnki}
+              <small lang="ja">no Anki como {info.comoNoAnki}</small>
+            {/if}
+          </span>
         {:else}
           <span />
         {/if}
@@ -189,10 +203,15 @@
         <p class="dokusho-painel__erro">{erro}</p>
       {/if}
 
-      {#if confirmarDuplicada && exportada}
+      {#if (confirmar === 'exportada' && exportada) || (confirmar === 'anki' && info)}
         <div class="dokusho-painel__confirmar">
-          Esta palavra já foi exportada em {dataCurta(exportada.modified_at)}. Uma carta nova
-          sobrescreve o Card no Anki quando importada.
+          {#if confirmar === 'exportada' && exportada}
+            Esta palavra já foi exportada em {dataCurta(exportada.modified_at)}. Uma carta nova
+            sobrescreve o Card no Anki quando importada.
+          {:else if info}
+            Esta palavra já está no Anki ({info.estadoNoAnki}{#if info.comoNoAnki}, como
+              <span lang="ja">{info.comoNoAnki}</span>{/if}). Criar outra carta mesmo assim?
+          {/if}
           <div>
             <button on:click={() => dispatch('fechar')}>Cancelar</button>
             <button
@@ -205,7 +224,15 @@
       {/if}
 
       <div class="dokusho-painel__acoes">
-        <button disabled title="Chega na v2">Já sei <small>v2</small></button>
+        {#if info?.jaSei}
+          <button on:click={() => dispatch('jaSei')}>Desfazer "Já sei"</button>
+        {:else}
+          <button
+            disabled={!info || info.noAnki}
+            title={info?.noAnki ? 'Já está no Anki' : undefined}
+            on:click={() => dispatch('jaSei')}>{info?.noAnki ? 'No Anki' : 'Já sei'}</button
+          >
+        {/if}
         {#if naFila}
           <button on:click={() => dispatch('abrirCarta', naFila?.id ?? '')}>Na fila · abrir</button>
         {:else}
@@ -396,6 +423,30 @@
     opacity: 0.8;
   }
 
+  .dokusho-painel__estado {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    small {
+      font-size: 12px;
+      opacity: 0.65;
+    }
+  }
+
+  // Cores do protótipo D1 (st-k, st-a, st-u).
+  .dokusho-painel__marca--conhecida {
+    background: #e0f1e7;
+    color: #2f7d53;
+    opacity: 1;
+  }
+
+  .dokusho-painel__marca--aprendendo {
+    background: #fbefd8;
+    color: #8a5a10;
+    opacity: 1;
+  }
+
   .dokusho-painel__traduzir {
     min-height: 36px;
     padding: 0 12px;
@@ -480,11 +531,6 @@
       &:disabled {
         opacity: 0.45;
       }
-    }
-
-    small {
-      font-size: 10px;
-      opacity: 0.7;
     }
   }
 
