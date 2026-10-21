@@ -20,7 +20,7 @@ Atualize ao fim de cada chat. Curto: o próximo chat lê isto primeiro.
 | V1.4      | feito    | 2026-10-21 | Início somando os aparelhos; números conferidos no PC pelo Igor             |
 | V1.5      | feito    | 2026-10-21 | Fila, geração, edição, Refazer áudio; 10 cartas geradas no PC pelo Igor     |
 | V1.6      | feito    | 2026-10-21 | .apkg importa no Anki do PC e reimportar não duplica (Igor)                 |
-| V1.7      | quase    | 2026-10-21 | código pronto; falta só o deploy na Vercel (👤)                             |
+| V1.7      | feito    | 2026-10-21 | no ar em dokusho-kappa.vercel.app; só main publica (vercel.json)            |
 | V2.1–V2.4 | pendente |            |                                                                             |
 
 ## Decisões tomadas durante a construção
@@ -302,6 +302,10 @@ Atualize ao fim de cada chat. Curto: o próximo chat lê isto primeiro.
   Início batendo). Teste no iPhone (dicionário, 30 toques, AnkiMobile) e entre dois aparelhos (mesmo
   ponto, soma do tempo, apagar livro): **dispensados pelo Igor** ("deve estar certo"); cobertos só
   pelos testes automáticos (sincronizador com dois aparelhos, deflexão, .apkg).
+- 2026-10-21: deploy da v1 em https://dokusho-kappa.vercel.app (PR #1). Previews desligados no
+  `apps/web/vercel.json` (`git.deploymentEnabled`: `**` false, `main` true; com mais de uma regra,
+  basta uma ser true), porque o painel da Vercel não tem mais a opção do passo antigo. O PR aberto por
+  engano no ttu original (ttu-ttu/ebook-reader#550) deve ser fechado.
 - 2026-10-21: o leitor não desenha o texto no painel do navegador do Claude quando a janela está oculta
   (o livro está no IndexedDB, mas a página não pinta). Teste visual do leitor fica para o Igor.
 
@@ -430,7 +434,7 @@ Atualize ao fim de cada chat. Curto: o próximo chat lê isto primeiro.
 - [x] Dicionários em dicts/ (JMdict_english, JPDB v2.2 Frequency Kana)
 - [x] Secret GEMINI_API_KEY no Supabase
 - [x] Hospedagem: Vercel
-- [ ] Conectar o repo na Vercel e cadastrar as env vars (V1.7)
+- [x] Conectar o repo na Vercel e cadastrar as env vars (V1.7)
 - [x] Criar a conta, entrar em `/login` e desligar o cadastro (S2)
 - [ ] Colar `supabase/tests/rls_check.sql` no SQL Editor e conferir dono = 1, outro = 0 (S2)
 - [x] R1: importar o Lote de teste no Anki do PC, reimportar e conferir tipos de nota
@@ -444,9 +448,9 @@ Atualize ao fim de cada chat. Curto: o próximo chat lê isto primeiro.
       Data › Dicionário › "Medir velocidade")
 - [ ] Alerta de orçamento no Google Cloud e confirmar que a GEMINI_API_KEY é do projeto pago (R5)
 - [x] R5: rodada final das 30 cartas e veredito
-- [ ] Escolher o subdomínio da Vercel e desligar previews (V1.7)
+- [x] Escolher o subdomínio da Vercel (dokusho-kappa.vercel.app); previews desligados pelo vercel.json
 - [ ] Supabase › Authentication › URL Configuration: Site URL = a URL da Vercel (V1.7)
-- [ ] Juntar o PR do `v1-autonomo` no `main` (a Vercel publica o `main`)
+- [x] Juntar o PR do `v1-autonomo` no `main` (PR #1)
 - [x] V1.4: conferir os números do Início contra a tela de estatísticas do ttu (um aparelho só)
 - [x] V1.5: logado, criar 10 cartas no leitor e ver as 10 virarem "gerada" com significado em
       português e os dois áudios; editar uma; "Refazer áudio" numa

@@ -16,11 +16,11 @@ AnkiConnect → Configuração:
 
 ```json
 {
-  "webCorsOriginList": ["http://localhost:5173", "https://<subdominio>.vercel.app"]
+  "webCorsOriginList": ["http://localhost:5173", "https://dokusho-kappa.vercel.app"]
 }
 ```
 
-- Só as URLs exatas: a do `pnpm dev` e a de produção (subdomínio fixo escolhido no V1.7). Nunca `*`:
+- Só as URLs exatas: a do `pnpm dev` e a de produção (`dokusho-kappa.vercel.app`, V1.7). Nunca `*`:
   qualquer site aberto no navegador poderia ler e alterar a coleção.
 - Sem barra no fim; esquema, host e porta iguais aos do endereço do app.
 - Os outros campos da configuração ficam como estão. Reiniciar o Anki depois de mudar.
