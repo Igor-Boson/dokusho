@@ -383,3 +383,4 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
 - 2026-10-21: v2 encerrada no código (chat autônomo). Falta só o que é 👤: a primeira Sincronização
   do Anki real, conferir destaque e painel no leitor, juntar o PR e ver no iPad/iPhone o critério da
   v2 (passos no docs/MANHA.md).
+- 2026-10-21: v2 no ar (PR #5 juntado no `main` pelo Igor), depois de testada no PC.

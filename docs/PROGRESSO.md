@@ -5,10 +5,9 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 
 ## Estado
 
-**v1 pronta** (2026-10-21), no ar em https://dokusho-kappa.vercel.app. **v2 pronta** e testada
-pelo Igor no PC (app local), na branch `v2-autonomo` (PR #5). Decisões marcadas "(autônomo,
-revisar)" em docs/historico/DECISOES.md. Próximo: juntar o PR #5 e ver no iPad; depois, v3
-(opcional).
+**v1 pronta** (2026-10-21), no ar em https://dokusho-kappa.vercel.app. **v2 pronta** e no ar
+(PR #5, 2026-10-21). Decisões marcadas "(autônomo, revisar)" em docs/historico/DECISOES.md.
+Próximo: v3 (opcional).
 
 | Item | Status  | Data       | Observação                                                                  |
 | ---- | ------- | ---------- | --------------------------------------------------------------------------- |
@@ -48,8 +47,6 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 
 ## Pendências
 
-- [ ] v2: juntar o PR #5 (`v2-autonomo`) no `main`; no iPad, tocar em "Atualizar" e ver o critério
-      da v2 (cobertura em % ao abrir um livro; destaque pelo estado)
 - [ ] Revisar as decisões "(autônomo, revisar)" da v2 em docs/historico/DECISOES.md
 - Conhecido: na primeira abertura da v2, uma aba ou janela antiga do Dokusho (v1) aberta trava a
   atualização do banco local; o app avisa e é só fechá-la.
