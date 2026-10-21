@@ -113,6 +113,11 @@
       gap: 2px;
       padding: 8px 0 6px;
       font-size: 11px;
+
+      // iPhone: 15% mais alta (56 → 64 px) para o polegar.
+      @media (pointer: coarse) and (max-width: 767px) {
+        padding: 12px 0 10px;
+      }
     }
 
     svg {
