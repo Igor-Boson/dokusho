@@ -82,8 +82,43 @@
     const Destaque = (globalThis as unknown as { Highlight?: new (r: Range) => unknown }).Highlight;
 
     if (!css?.highlights || !Destaque) return;
+
+    // Esvaziar antes de tirar: o Safari às vezes não redesenha só com o delete.
+    (css.highlights.get(REALCE) as { clear?: () => void } | undefined)?.clear?.();
+
     if (range) css.highlights.set(REALCE, new Destaque(range));
     else css.highlights.delete(REALCE);
+  }
+
+  // No iOS, tocar num lugar sem nada clicável (margem, fim da tela) não gera "click"; o toque é
+  // reconhecido pelo pointerdown/pointerup (sem arrastar), só para fechar o painel.
+  let inicioDoToque: { x: number; y: number; quando: number } | undefined;
+
+  function aoApertar(evento: PointerEvent) {
+    inicioDoToque = { x: evento.clientX, y: evento.clientY, quando: Date.now() };
+  }
+
+  function aoSoltar(evento: PointerEvent) {
+    const inicio = inicioDoToque;
+
+    inicioDoToque = undefined;
+
+    if (!inicio || !selecao) return;
+
+    const arrastou =
+      Math.abs(evento.clientX - inicio.x) > 10 || Math.abs(evento.clientY - inicio.y) > 10;
+
+    if (arrastou || Date.now() - inicio.quando > 600) return;
+
+    const alvo = evento.target as Element | null;
+
+    if (!alvo || alvo.closest('.dokusho-painel, .dokusho-barra, button, a, input, textarea'))
+      return;
+
+    // Toque num caractere do livro: o click que vem depois troca a palavra.
+    if (caractereNoPonto(evento.clientX, evento.clientY)) return;
+
+    fechar();
   }
 
   export function fechar() {
@@ -104,7 +139,7 @@
 
     if (!raiz || !raiz.contains(alvo)) {
       // Fora do texto: só fecha o painel (regra B). Botões do leitor seguem com o ttu.
-      if (aberto && !alvo.closest('button, a, input, [role="button"]')) fechar();
+      if (!alvo.closest('button, a, input, textarea, .dokusho-barra')) fechar();
       return;
     }
 
@@ -114,7 +149,7 @@
     const elemento = ponto && paragrafoDe(ponto.no, raiz);
 
     if (!ponto || !elemento) {
-      if (aberto) fechar();
+      fechar();
       return;
     }
 
@@ -153,7 +188,7 @@
 
     if (!achada) {
       // Pontuação: só fecha o painel.
-      if (aberto) fechar();
+      fechar();
       return;
     }
 
@@ -375,6 +410,8 @@
 
   onMount(() => {
     window.addEventListener('click', aoTocar);
+    window.addEventListener('pointerdown', aoApertar, { passive: true });
+    window.addEventListener('pointerup', aoSoltar, { passive: true });
     window.addEventListener('scroll', aoRolar, { passive: true });
 
     const assinatura = cartasRecebidas$.subscribe(() => atualizarCartas());
@@ -400,6 +437,8 @@
     if (typeof window === 'undefined') return;
 
     window.removeEventListener('click', aoTocar);
+    window.removeEventListener('pointerdown', aoApertar);
+    window.removeEventListener('pointerup', aoSoltar);
     window.removeEventListener('scroll', aoRolar);
     observador?.disconnect();
     clearTimeout(marcando);

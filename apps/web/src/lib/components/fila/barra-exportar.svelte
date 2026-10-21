@@ -104,6 +104,11 @@
     left: 0;
     right: 0;
     bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+
+    // Acompanha a navegação inferior, mais alta no iPhone.
+    @media (pointer: coarse) and (max-width: 767px) {
+      bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+    }
     z-index: 25;
     display: flex;
     flex-direction: column;
