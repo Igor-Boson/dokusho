@@ -79,6 +79,11 @@ export class IndiceDoHub {
     return this.porEscrita.get(base) ?? 'desconhecida';
   }
 
+  /** O hub tem uma Palavra sem entrada com esta escrita (Card que não casou com o JMdict). */
+  temEscrita(escrita: string) {
+    return this.porEscrita.has(escrita);
+  }
+
   /** Sem nenhuma linha (o Anki nunca foi sincronizado e não há "Já sei"). */
   get vazio() {
     return !this.porEntrada.size && !this.porEscrita.size;
