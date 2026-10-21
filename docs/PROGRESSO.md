@@ -7,14 +7,20 @@ Atualize ao fim de cada chat. Curto: o próximo chat lê isto primeiro.
 | Item      | Status   | Data       | Observação                                                                  |
 | --------- | -------- | ---------- | --------------------------------------------------------------------------- |
 | S1        | feito    | 2026-10-20 | ttu roda; vitest; supabase init + link                                      |
-| S2        | quase    | 2026-10-20 | schema aplicado, login ok; falta conta + cadastro desligado (👤)            |
+| S2        | feito    | 2026-10-20 | schema aplicado, login ok, conta criada e cadastro desligado                |
 | D1        | feito    | 2026-10-20 | telas aprovadas; regra dos toques B; protótipo no branch prototype/d1-telas |
 | R1        | quase    | 2026-10-20 | guid e .apkg batem com o genanki; Anki do PC ok; falta AnkiMobile e iPhone  |
 | R2        | feito    | 2026-10-20 | Chrome lê 1514 Cards pelo AnkiConnect; falta repetir pela Vercel no V1.7    |
 | R3        | quase    | 2026-10-20 | lindera; 32 MB; PC pelo bucket dentro das metas; falta iPhone (👤)          |
 | R4        | feito    | 2026-10-20 | 97,5% do texto acha entrada; 0 Cards sem entrada; regras ajustadas          |
 | R5        | feito    | 2026-10-21 | 30 cartas aprovadas; US$ 0,0038/carta; 31 MB/100 cartas; falta alerta (👤)  |
-| V1.1–V1.7 | pendente |            |                                                                             |
+| V1.1      | feito    | 2026-10-21 | sincronização por linha (ADR 0014); teste em dois aparelhos dispensado      |
+| V1.2      | feito    | 2026-10-21 | 103/103 formas com o JMdict inteiro; medida no iPhone dispensada            |
+| V1.3      | feito    | 2026-10-21 | toque, painel, carta local, barra verde; teste de 30 toques dispensado      |
+| V1.4      | feito    | 2026-10-21 | Início somando os aparelhos; números conferidos no PC pelo Igor             |
+| V1.5      | feito    | 2026-10-21 | Fila, geração, edição, Refazer áudio; 10 cartas geradas no PC pelo Igor     |
+| V1.6      | feito    | 2026-10-21 | .apkg importa no Anki do PC e reimportar não duplica (Igor)                 |
+| V1.7      | quase    | 2026-10-21 | código pronto; falta só o deploy na Vercel (👤)                             |
 | V2.1–V2.4 | pendente |            |                                                                             |
 
 ## Decisões tomadas durante a construção
@@ -132,6 +138,173 @@ Atualize ao fim de cada chat. Curto: o próximo chat lê isto primeiro.
   pronúncia (em inglês, como nos exemplos do Google): `Say this Japanese word, pronounced 「<leitura>」: <palavra>`.
   Resposta do `generate`: `{ estado, motivo?, campos, medidas }` (409 `ocupada` se outra chamada gera).
 
+- 2026-10-21: V1.1 (autônomo, revisar). **ADR 0014**: a sincronização não é um handler do ttu (eles
+  copiam arquivos, pelo título, num gesto manual); é o módulo `lib/data/supabase/sincronizacao/`, que lê
+  e grava o IndexedDB do ttu direto e troca linhas com o Supabase. `sincronizador.ts` (motor, testado com
+  um servidor falso e dois aparelhos), `regras.ts` (LWW, Alcance, conversões), `banco.ts` (IndexedDB
+  `dokusho-sinc`: título → hash, enviados, cursores, EPUB até subir, Alcance, estatísticas dos outros
+  aparelhos, marcador remoto pendente), `servidor-supabase.ts`, `iniciar.ts` (gatilhos). Cada rodada
+  recebe (cursor `updated_at`, páginas por posição) e depois envia o que mudou desde o último envio.
+  Gatilhos: ao abrir o app, ao voltar a rede, ao trocar de plano (ida e volta), a cada 5 min em primeiro
+  plano e ~15 s depois de uma mudança no banco do ttu (`database.mudou$`, novo). Migração
+  `20261021120000_sincronizacao.sql`: `bookmarks.device_id/device_name`, `books.processed_size`,
+  `reading_goals.goal_frequency`.
+  Livro: hash SHA-256 do EPUB calculado na importação (antes de gravar no ttu); livros sem EPUB (de antes
+  do V1.1, TXT, HTMLZ) usam o hash do texto processado e sobem sem original. No bucket `epubs`:
+  `<user_id>/<hash>/processado.zip` (mesmo desenho do zip do ttu), `original.epub`, `capa`. No aparelho
+  novo o livro vira um placeholder do ttu (sem texto, com capa) com ícone de nuvem; tocar baixa o
+  processado com progresso. Dois livros com o mesmo título continuam impossíveis no mesmo aparelho (o
+  ttu indexa pelo título); o segundo não desce.
+  Marcador: sobe com Alcance (máximo pela leitura; um "desmarcar" mais novo vence), aparelho e nome. Ao
+  abrir o livro, o leitor espera até 4 s pela sincronização; se outro aparelho tem marcador mais novo,
+  pergunta "Você parou no iPad, cap. 3 (42%). Ir para lá?" (Ficar aqui / Ir para lá). Aparelho sem
+  marcador recebe direto.
+  Estatísticas: as do ttu são só deste aparelho (`device_id` aleatório no localStorage); as dos outros
+  ficam em `dokusho-sinc` para a tela inicial somar (V1.4). Estatística apagada aqui é apagada no
+  servidor. Aparelho que perdeu o banco recebe de volta as próprias. Metas: por `goal_start_date`, LWW.
+  Apagar livro: confirmação ("some de todos os aparelhos… estatísticas e cartas ficam"), soft delete do
+  livro e do marcador, arquivos do bucket apagados; reimportar depois devolve o livro.
+  Padrões mudados no ttu: estatísticas ligadas e livros "placeholder" visíveis. `ConfirmDialog` aceita
+  rótulos. Sem login, nada é sincronizado (o app segue local).
+- 2026-10-21: V1.2 (autônomo, revisar). Busca em `lib/data/dicionario/busca.ts`: o toque escolhe o
+  pedaço do tokenizador (começo); o fim é o trecho mais longo (até 6 pedaços, 14 caracteres, sem
+  atravessar pontuação ou espaço) cujo termo "pedaços inteiros + forma de dicionário do último" está
+  no dicionário; depois a superfície e as reservas (verbo do potencial, sem alongamento すごーい, sem っ
+  final, katakana → hiragana). **Regra nova**: um trecho que só acrescenta flexão ao verbo ou adjetivo
+  (auxiliar, て/で, verbo sufixo, verbo auxiliar depois de て) não vale, mesmo que o JMdict tenha a
+  expressão (知らず, 急いで, 信じられない, 持ってくる, 呼ばれる): a palavra a estudar é o verbo; a seta ›
+  alcança a expressão. Verbo composto (読み|終わる) continua inteiro. A seleção cobre a forma conjugada
+  (立ち止まった, 食べさせられたくなかった), que vai em `<b>` na Frase. Setas: ‹ encurta e › alonga o
+  fim em um pedaço; o começo é sempre o do pedaço tocado. Casos em `busca.casos.ts` (103 frases no
+  estilo dos romances; o EPUB do R4 não está no repositório): 103/103 com um dicionário mínimo e com o
+  JMdict inteiro (`busca.medicao.test.ts`, `MEDIR_DEFLEXAO=1`), busca no toque com mediana 0,08 ms e
+  máximo 2,5 ms no Node. Lexicalizadas aceitas: 眠れる (o JMdict tem; o IPADIC dá o potencial como
+  verbo), すごーい e カワイイ (formas do JMdict). O casamento do R4 usa as mesmas regras (potencial e
+  gramática). `banco.ts` guarda na memória os últimos 64 blocos de índice e de entradas.
+  `servico.ts`: estado do dicionário, `pedirDicionario()` (diálogo com o tamanho: dicionário + 18 MB do
+  tokenizador se ainda não está no cache), `consultarPalavra` com as últimas 500 respostas,
+  `medirConsultas()`. Configurações › Data › Dicionário: versão, data da versão, data do download,
+  Baixar/Atualizar (compara com `atual.json`), Apagar deste aparelho, Medir velocidade (substitui a
+  `/teste/dicionario`, que saiu). `dialog-template.svelte` ganhou `<script lang="ts">`: `pnpm check`
+  caiu de 27 para **15** erros, todos antigos do ttu.
+- 2026-10-21: V1.3 (autônomo, revisar). `lib/components/painel-palavra/`: `leitor-dokusho.svelte`
+  (entra no leitor do ttu ao lado do BookReader) escuta o clique na janela; `caractereNoPonto`
+  (caretRangeFromPoint/caretPositionFromPoint, 6 px de folga) acha o caractere; o parágrafo (p, h\*,
+  li…) vira texto sem `<rt>` com o mapa de volta aos nós e os `<ruby>`; o tokenizador corta o
+  parágrafo (guardado por parágrafo) e `selecionar` (V1.2) escolhe a palavra. Realce pela CSS Custom
+  Highlight API (`::highlight(dokusho-selecao)`; Safari 17.2+); sem ela, sem realce. Regra B: palavra
+  abre ou troca o painel; pontuação, margem ou fora do texto só fecham; arrastar a alça fecha. O
+  primeiro toque sem dicionário abre o aviso de download (V1.2). Painel (`painel-palavra.svelte`, no
+  desenho do D1): inferior até 767 px; na tela larga, lateral (360 px) **do lado oposto ao da palavra
+  tocada** (com texto vertical o começo fica à direita). Mostra leitura e escrita da entrada aberta,
+  "seleção: X → Y", entradas pela frequência (a que bate com o `<ruby>` do EPUB ou com a leitura do
+  tokenizador primeiro, marcada "furigana do livro"), até 6 sentidos com etiquetas, JPDB, "não está no
+  dicionário", "gramática · fora da cobertura", "Traduzir frase" (cache local de `translations`,
+  depois a ação `translate`; desativado offline), "Na fila · <estado>" ou "Exportada em <data>",
+  "Já sei" desativado (v2), "Criar carta" (ou "Na fila · abrir", que vai para `/fila?carta=<id>`);
+  carta já exportada pede "Criar mesmo assim". Setas: ‹ e › mexem só no fim, por pedaço.
+  Carta (`lib/data/cartas/palavra.ts`, `frase.ts`, `furigana.ts`): Word é a escrita da entrada (texto
+  em kana pega a escrita mais frequente com a leitura: わかる → 分かる; entrada "uk" do JMdict fica em
+  kana); Word Furigana pelo JmdictFurigana ou pelo alinhamento do okurigana (立[た]ち 止[ど]まる);
+  Frase pelo ESCOPO (。！？ fora de 「」, corte em ~150 caracteres num 、 com "…"); Sentence com `<b>` na
+  forma conjugada; Sentence Furigana pelos pedaços do tokenizador, com JmdictFurigana quando a escrita
+  e a leitura batem; contexto (frase anterior e seguinte, inclusive dos parágrafos vizinhos); Frequency;
+  `jmdict_id`; `book_id` = hash do livro. Gravada como `pendente` no `dokusho-sinc` (lojas novas
+  `cartas`, `lotes`, `traducoes`, banco v2) e sincronizada por linha com `batch_items`/`lotes`
+  (`translations` só desce). Barra do topo: no modo contínuo aparece ao rolar para trás (para cima, ou
+  para a direita no vertical) e some ao avançar; no modo de páginas e no começo do capítulo vale a
+  faixa do topo do ttu (32 px), que já existia. Barra verde: `alcance-dom.ts` conta o fim de cada
+  parágrafo como o ttu conta o marcador, no HTML inteiro do livro (por seção, para o modo de páginas);
+  `::before` com propriedades lógicas (à esquerda no horizontal, em cima no vertical), sem mudar o
+  layout. O Alcance sobe com o `exploredCharCount`; "Desmarcar a partir daqui" é um ícone de borracha
+  na barra do leitor (baixa o Alcance para o ponto atual e grava o marcador, que leva o Alcance aos
+  outros aparelhos). Testado no painel do navegador com o dicionário local e um EPUB de teste
+  (substituindo o `requestAnimationFrame`, que não roda com a janela oculta): 食べた → 食べる,
+  気がついた → 気がつく, 漢字 com o furigana do livro, setas, pontuação fechando, carta gravada como o
+  CARDS.md pede.
+- 2026-10-21: V1.4 (autônomo, revisar). Rota `/inicio` (a raiz `/` passou a abrir o Início; o ttu
+  abria o último livro). Navegação inferior (`lib/components/navegacao/`) em Início, Biblioteca
+  (`/manage`) e Fila, com o número de cartas na fila; Vocabulário aparece desativado (v2). Contas em
+  `lib/data/estatisticas/inicio.ts` (testadas): soma das linhas por dia e livro (as do ttu, que são
+  deste aparelho, mais as dos outros aparelhos da sincronização), semana de segunda a domingo com
+  setas, 7/30 dias/tudo (desde o primeiro dia lido), uma barra por dia (acima de 60 dias, por semana),
+  lista por livro (com a capa do ttu; livro de outro aparelho que já foi apagado aparece como "Livro
+  apagado"). Meta: a do ttu (`readingGoal$`, janela diária/semanal/mensal pelo `getReadingGoalWindow`),
+  tempo e/ou caracteres; "Definir meta" abre Configurações na aba Statistics (`/settings?aba=`). Dias
+  pela chave do ttu (com a hora de virada do dia das configurações). Tela clara, sem tema escuro.
+- 2026-10-21: V1.5 (autônomo, revisar). Rota `/fila` (lista "Na fila") e `/fila?carta=<id>` (edição).
+  Geração em `lib/data/cartas/geracao.ts` (testada): uma carta por vez, só com rede e login;
+  sincroniza antes (a carta tem que estar no servidor) e depois (traz os campos); 409 `ocupada` fica
+  para depois; as 3 tentativas ficam na função (R5). Gatilhos: ao abrir o app, ao voltar a rede, ao
+  criar a carta no painel e ao abrir a Fila. "Tentar de novo" e "Refazer áudio" voltam a carta para
+  `pendente` (a trava da função só aceita pendente/erro) e chamam `generate` (com `refazer: ['audio']`
+  no segundo, levando o "Texto para a voz"). Edição: cada campo com a origem (dicionário, livro,
+  JmdictFurigana, Gemini, JPDB, você, vazio), gravação ao sair do campo (LWW por linha), áudios pelo
+  bucket `audio` com URL assinada de 1 h, marca "confira a voz" na lista e na edição, "Tirar da fila"
+  (soft delete), carta exportada só para leitura. A Frase na lista mostra só o `<b>` (o resto do texto
+  é escapado). A edição fica bloqueada enquanto a carta gera.
+- 2026-10-21: V1.6 (autônomo, revisar). Regras em `lib/data/cartas/exportar.ts` (testadas): entram as
+  geradas sem Lote (e as com erro, se marcar "Incluir a carta com erro"); nota com os 14 campos do
+  CARDS.md, `[sound:<arquivo do bucket>]`, Frequency em texto, etiquetas `dokusho` e
+  `dokusho::<título>` (livro desconhecido: só `dokusho`); tamanho estimado pelos áudios presentes
+  (36 KB + 279 KB, R5); aviso acima de 100 cartas. `lib/data/cartas/lotes.ts`: baixa os áudios do
+  bucket `audio` (o que faltar sai da nota e é contado), monta com o `gerarApkg` do R1 e só grava o
+  Lote (`lotes`: data, `device_id`, `device_name`) e marca as cartas `exportada` + `lote_id` **depois**
+  que o arquivo é entregue (compartilhar cancelado não marca nada). Dois toques: "Exportar .apkg"
+  monta, "Compartilhar com o Anki"/"Baixar .apkg" entrega (Safari, R1). Aba "Lotes": data, aparelho,
+  cartas, "Baixar este Lote de novo" (com aviso "Importe cada Lote num lugar só" quando o Lote é de
+  outro aparelho). Carta exportada: "Reexportar (sobrescreve o Card no Anki)" volta para gerada sem
+  Lote (se o áudio do Lote já saiu do bucket, refaz o áudio antes). Áudio: ao abrir a Fila, Lotes com
+  mais de 30 dias têm os áudios apagados do bucket (menos os que outra carta ainda usa: mesmo nome de
+  arquivo) e ganham `audio_deleted_at`. Migração `20261021180000_lotes.sql`. Saíram a `/teste/apkg`,
+  o `wav-teste.ts` e a opção `deck` do `gerarApkg`; o R1 no iPhone passa a ser pela exportação de
+  verdade (FASES V1.7 atualizado). Testado no navegador: o .apkg de uma carta abre no sql.js com o deck
+  `日本語::1. Dokusho`, as etiquetas e os campos certos; o Lote aparece na aba.
+- 2026-10-21: V1.7 (autônomo, revisar; **parcial**: o limite de uso acabou). Feito: service worker sem
+  skipWaiting automático (espera a mensagem ATUALIZAR) e aviso "Nova versão do app · Atualizar" no topo
+  de Início, Biblioteca e Fila, nunca no leitor (ADR 0011; `lib/data/atualizacao.ts`, verifica a cada
+  hora e ao voltar ao app); manifesto do Dokusho (standalone, start_url ./inicio) e ícone próprio
+  (livro aberto com marcador verde, gerado por script descartável); metas do iOS; título "Dokusho".
+  Configurações: Drive, OneDrive e pasta local saem (`isStorageSourceAvailable` só aceita o
+  navegador; grupos de sincronização do ttu escondidos); Backup (`lib/data/backup/`): zip com as 9
+  tabelas em JSON, restauração por mescla (upsert; a última escrita vence, nada é apagado), "último
+  backup: há N dias" (por aparelho). **Falta**: mensagem "servidor pausado; reative no painel" (ideia:
+  erro de rede com navigator.onLine → aviso com o link do painel, ref tirado do PUBLIC_SUPABASE_URL);
+  tudo o que é 👤 (Vercel, subdomínio, redirect do Auth, webCorsOriginList, testes no iPhone).
+- 2026-10-21: o teto diário de 300 bateu ao criar cartas: `GEMINI_TETO_DIARIO` subiu para 100000
+  (na prática, sem teto) a pedido do Igor, por enquanto. A Fila e o "Traduzir frase" agora mostram a
+  mensagem da função (ex.: "teto diário … atingido") em vez de "non-2xx status code". Cartas que
+  ficaram em erro pelo teto voltam com "Tentar de novo".
+- 2026-10-21: modo escuro (pedido do Igor): cores do protótipo D1 como variáveis `--dk-*` no
+  app.scss, escuras com o sistema em modo escuro; Configurações › Data › Aparência escolhe Sistema,
+  Claro ou Escuro (`lib/data/tema.ts`, aplicado no app.html antes de desenhar). Vale para Início,
+  Fila, edição, navegação e as telas do ttu que usam --background-color/--font-color (Biblioteca,
+  Configurações). O leitor e o painel da palavra seguem o tema do ttu (aba Reader).
+- 2026-10-21: "Por livro" vazio: o rastreador do ttu começa pausado e o `trackerAutoStartTime` era 0, então
+  só contava tempo depois de tocar no ▶ do rodapé. Agora começa sozinho 1 s depois da primeira virada
+  de página (pausa e volta sozinho com o app em segundo plano, como já fazia). O marcador (posição)
+  já era salvo pelo auto-marcador do ttu.
+- 2026-10-21: leitor como no protótipo D1 (pedido do Igor): barra do topo própria
+  (`barra-leitor.svelte`: ‹ Biblioteca, título com capítulo e %, Aa 20→23→17, ふ liga/desliga o
+  furigana do livro, menu ⋯ com Desmarcar a partir daqui, Sumário, Marcar este ponto, Ir para o
+  marcador, Estatísticas, Opções de leitura e "Mais ferramentas do leitor", que abre a barra do ttu);
+  sem o rodapé do ttu; padrões: Shippori Mincho, altura de linha 2,15, tema claro/escuro seguindo o
+  app, e em tela de toque horizontal com rolagem (no PC, vertical com páginas, como o ESCOPO
+  sugere). No celular: margens laterais maiores, 1,15 em entre parágrafos, folga de 55vh no fim, barra
+  verde a 14 px do texto. Os padrões entram **uma vez por aparelho** (marca
+  `dokusho-padroes-do-leitor` no localStorage), porque a tela de configurações do ttu já tinha gravado
+  os antigos; depois, o que você mudar fica.
+- 2026-10-21: V1.7 fechado no código: aviso "Servidor pausado ou fora do ar" (estado `sem-servidor` da
+  sincronização quando há rede e o servidor não responde: "Failed to fetch", 54x, "paused") no topo de
+  Início, Biblioteca e Fila, com o link do painel do projeto (ref tirado do PUBLIC_SUPABASE_URL) e
+  "Tentar". O app segue com o que está no aparelho.
+- 2026-10-21: teste da v1 no PC feito pelo Igor (10 cartas geradas, .apkg no Anki do PC sem duplicar,
+  Início batendo). Teste no iPhone (dicionário, 30 toques, AnkiMobile) e entre dois aparelhos (mesmo
+  ponto, soma do tempo, apagar livro): **dispensados pelo Igor** ("deve estar certo"); cobertos só
+  pelos testes automáticos (sincronizador com dois aparelhos, deflexão, .apkg).
+- 2026-10-21: o leitor não desenha o texto no painel do navegador do Claude quando a janela está oculta
+  (o livro está no IndexedDB, mas a página não pinta). Teste visual do leitor fica para o Igor.
+
 ## Testes de risco
 
 ### R1 · guid e .apkg (2026-10-20)
@@ -247,6 +420,11 @@ Atualize ao fim de cada chat. Curto: o próximo chat lê isto primeiro.
 
 ## Pendências do usuário
 
+- [ ] Executar docs/MANHA.md e depois apagá-lo
+- [ ] Reorganizar docs/: PROGRESSO.md está longo; mover as 'Decisões' e 'Testes de risco' já
+      resolvidas para um histórico (ou ADRs) e deixar no PROGRESSO só estado e pendências
+- [ ] Voltar o teto do Gemini: `npx supabase secrets set GEMINI_TETO_DIARIO=300` (hoje está 100000)
+
 - [x] docs/CARDS.md
 - [x] apps/web/.env com URL e anon key
 - [x] Dicionários em dicts/ (JMdict_english, JPDB v2.2 Frequency Kana)
@@ -256,21 +434,26 @@ Atualize ao fim de cada chat. Curto: o próximo chat lê isto primeiro.
 - [x] Criar a conta, entrar em `/login` e desligar o cadastro (S2)
 - [ ] Colar `supabase/tests/rls_check.sql` no SQL Editor e conferir dono = 1, outro = 0 (S2)
 - [x] R1: importar o Lote de teste no Anki do PC, reimportar e conferir tipos de nota
-- [ ] R1: AnkiMobile e Lote de 100 no iPhone pela PWA (depois de ligar a Vercel); apagar o deck de teste (passo a passo no V1.7 do FASES.md)
+- [ ] R1: AnkiMobile no iPhone pela PWA e Lote de 100 (dispensado por enquanto; o .apkg já importa no
+      Anki do PC sem duplicar)
 - [x] R2: rodar `/teste/anki` com o Anki aberto
 - [ ] V1.7: pôr a URL de produção no `webCorsOriginList` (docs/ANKI-CONNECT.md)
 - [x] R3: na raiz, `node tools/subir-dicionario.ts` (e-mail e senha no terminal); depois, logado no
       app, `/teste/dicionario` → "Baixar dicionário" e anotar download e preparação
-- [ ] R3: na PWA do iPhone (depois da Vercel), `/teste/dicionario`: baixar, carregar tokenizador,
-      "Medir consultas"; anotar em "Testes de risco" › R3 e marcar R3 como feito
+- [ ] R3 e V1.2: medir o dicionário no iPhone (dispensado por enquanto; quando quiser: Configurações ›
+      Data › Dicionário › "Medir velocidade")
 - [ ] Alerta de orçamento no Google Cloud e confirmar que a GEMINI_API_KEY é do projeto pago (R5)
 - [x] R5: rodada final das 30 cartas e veredito
 - [ ] Escolher o subdomínio da Vercel e desligar previews (V1.7)
+- [ ] Supabase › Authentication › URL Configuration: Site URL = a URL da Vercel (V1.7)
+- [ ] Juntar o PR do `v1-autonomo` no `main` (a Vercel publica o `main`)
+- [x] V1.4: conferir os números do Início contra a tela de estatísticas do ttu (um aparelho só)
+- [x] V1.5: logado, criar 10 cartas no leitor e ver as 10 virarem "gerada" com significado em
+      português e os dois áudios; editar uma; "Refazer áudio" numa
 
 ## Sem decisão (da entrevista de 20/10)
 
-- Modo de leitura no PC; como mostrar a barra do topo onde não há rolagem (modo de páginas, começo de
-  capítulo): decidir no V1.3 (sugestão: faixa do topo ou mouse no topo).
+- Modo de leitura no PC (o toque e o painel funcionam nos dois; a barra do topo foi resolvida no V1.3).
 - Números: frequência N do "Já sei" inicial, teto diário do Gemini, valor do alerta, corte da frase,
   intervalo do marcador, prazo do áudio.
 - Não discutidos: detalhes da tela inicial (início da semana, virada do dia, fuso em viagem), metas,

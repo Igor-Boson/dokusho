@@ -119,6 +119,10 @@
   } from '$lib/components/book-reader/book-toc/book-toc';
   import BookToc from '$lib/components/book-reader/book-toc/book-toc.svelte';
   import ConfirmDialog from '$lib/components/confirm-dialog.svelte';
+  import { sincronizador } from '$lib/data/supabase/sincronizacao/iniciar';
+  import LeitorDokusho from '$lib/components/painel-palavra/leitor-dokusho.svelte';
+  import BarraLeitor from '$lib/components/painel-palavra/barra-leitor.svelte';
+  import { textoMarcadorRemoto } from '$lib/data/supabase/sincronizacao/regras';
   import NumberDialog from '$lib/components/number-dialog.svelte';
   import { mergeEntries } from '$lib/components/merged-header-icon/merged-entries';
   import { preFilteredTitlesForStatistics$ } from '$lib/components/statistics/statistics-types';
@@ -184,6 +188,45 @@
 
   let showSpinner = true;
   let showHeader = false;
+  let leitorDokusho: LeitorDokusho | undefined;
+  // Dokusho: a barra do topo é a do protótipo D1; a do ttu abre pelo menu ⋯ ("Mais ferramentas").
+  let mostrarFerramentasTtu = false;
+  const MOSTRAR_RODAPE_DO_TTU = false;
+
+  $: if (!showHeader) mostrarFerramentasTtu = false;
+  $: capituloAtual = (() => {
+    if (!$sectionData$?.length) return '';
+
+    const [capitulos, indice] = getChapterData($sectionData$);
+
+    return capitulos[indice]?.label ?? '';
+  })();
+
+  async function acaoDaBarra(acao: string) {
+    if (acao === 'ttu') {
+      mostrarFerramentasTtu = true;
+      return;
+    }
+
+    showHeader = false;
+
+    if (acao === 'desmarcar') {
+      await leitorDokusho?.desmarcarAPartirDaqui();
+      await bookmarkPage();
+    } else if (acao === 'sumario') {
+      pauseTracker();
+      tocIsOpen$.next(true);
+    } else if (acao === 'marcador') {
+      await bookmarkPage();
+    } else if (acao === 'irMarcador') {
+      await scrollToBookmark();
+    } else if (acao === 'estatisticas') {
+      if ($rawBookData$) $preFilteredTitlesForStatistics$ = new Set([$rawBookData$.title]);
+      leaveReader(mergeEntries.STATISTICS.routeId, false);
+    } else if (acao === 'configuracoes') {
+      leaveReader(mergeEntries.SETTINGS.routeId, false);
+    }
+  }
   let isBookmarkScreen = false;
   let showFooter = true;
   let exploredCharCount = 0;
@@ -282,6 +325,7 @@
 
         await localStorageHandler.updateLastRead(bookData);
         await syncDownData(externalStorageHandler, currentContext);
+        await perguntarMarcadorDeOutroAparelho(bookData);
 
         if (!$statisticsEnabled$) {
           const wasNew = (
@@ -1129,6 +1173,39 @@
     ev.preventDefault();
   }
 
+  /** Outro aparelho tem marcador mais novo: pergunta antes de pular (ESCOPO "Outros comportamentos"). */
+  async function perguntarMarcadorDeOutroAparelho(livro: BooksDbBookData) {
+    const linha = await sincronizador()
+      .marcadorDeOutroAparelho(livro.id)
+      .catch(() => undefined);
+
+    if (!linha) return;
+
+    const ficar = await new Promise<boolean>((resolver) => {
+      dialogManager.dialogs$.next([
+        {
+          component: ConfirmDialog,
+          props: {
+            dialogHeader: 'Continuar de outro aparelho',
+            dialogMessage: textoMarcadorRemoto(linha, livro),
+            cancelLabel: 'Ficar aqui',
+            confirmLabel: 'Ir para lá',
+            resolver
+          },
+          disableCloseOnClick: true
+        }
+      ]);
+    });
+
+    dialogManager.dialogs$.next([]);
+
+    if (ficar) {
+      await sincronizador().dispensarMarcadorRemoto(linha);
+    } else {
+      await sincronizador().aplicarMarcadorRemoto(livro.id, linha);
+    }
+  }
+
   function getBookIdSync() {
     let bookId: number | undefined;
     bookId$.subscribe((x) => (bookId = x)).unsubscribe();
@@ -1581,7 +1658,20 @@
 {$collectReaderImageGallerySpoilerToggles$ ?? ''}
 {$handleUpdateImageGalleryPictureSpoilers$ ?? ''}
 <button class="fixed inset-x-0 top-0 z-10 h-8 w-full" on:click={() => (showHeader = true)} />
-{#if showHeader}
+<BarraLeitor
+  visivel={showHeader && !mostrarFerramentasTtu}
+  titulo={$rawBookData$?.title ?? ''}
+  capitulo={capituloAtual}
+  porcentagem={bookCharCount ? Math.floor((100 * exploredCharCount) / bookCharCount) : 0}
+  furiganaLigado={!$hideFurigana$}
+  corFundo={$backgroundColor$}
+  corTexto={$themeOption$?.fontColor ?? 'rgba(0, 0, 0, 0.87)'}
+  on:voltar={() => leaveReader(mergeEntries.MANAGE.routeId)}
+  on:tamanho={() => ($fontSize$ = $fontSize$ === 20 ? 23 : $fontSize$ === 23 ? 17 : 20)}
+  on:furigana={() => ($hideFurigana$ = !$hideFurigana$)}
+  on:acao={({ detail }) => acaoDaBarra(detail)}
+/>
+{#if showHeader && mostrarFerramentasTtu}
   <div
     class="elevation-4 writing-horizontal-tb fixed inset-x-0 top-0 z-10 w-full"
     transition:fly|local={{ y: -300, easing: quintInOut }}
@@ -1604,6 +1694,12 @@
 
         showHeader = false;
         tocIsOpen$.next(true);
+      }}
+      on:desmarcarClick={async () => {
+        showHeader = false;
+        await leitorDokusho?.desmarcarAPartirDaqui();
+        // O marcador leva o Alcance novo aos outros aparelhos.
+        await bookmarkPage();
       }}
       on:jumpClick={handleJump}
       on:completeBook={completeBook}
@@ -1740,6 +1836,17 @@
     on:bookmark={bookmarkPage}
     on:trackerPause={() => pauseTracker(true)}
   />
+  <LeitorDokusho
+    titulo={$rawBookData$.title}
+    htmlContent={$bookData$.htmlContent}
+    {exploredCharCount}
+    verticalMode={$verticalMode$}
+    {isPaginated}
+    corFundo={$backgroundColor$}
+    corTexto={$themeOption$?.fontColor ?? 'rgba(0, 0, 0, 0.87)'}
+    bind:mostrarBarra={showHeader}
+    bind:this={leitorDokusho}
+  />
   {$initBookmarkData$ ?? ''}
   {$setBackgroundColor$ ?? ''}
   {$setWritingMode$ ?? ''}
@@ -1812,89 +1919,93 @@
   </div>
 {/if}
 
-<div
-  id="ttu-page-footer"
-  tabindex="0"
-  role="button"
-  class="writing-horizontal-tb fixed bottom-0 left-0 z-10 flex h-8 w-full items-center justify-between text-xs leading-none"
-  style:color={$themeOption$?.tooltipTextFontColor}
-  on:click={() => (showFooter = !showFooter)}
-  on:keyup={dummyFn}
->
-  <div class="flex h-full">
-    {#if showTrackerIcon}
-      <div
-        role="button"
-        title="Click to open Tracker Menu or Double Click to toggle Tracker"
-        class="flex h-full w-8 items-center justify-center text-sm sm:text-lg"
-        class:text-red-500={$isTrackerPaused$}
-        class:animate-pulse={frozenPosition > -1}
-        use:multiClickHandler={[trackerSingleClickHandler, trackerDblClickHandler]}
-      >
-        <Fa icon={$isTrackerPaused$ ? faPlay : faPause} />
-      </div>
-    {/if}
-    {#if dataToReplicate.length}
+<!-- Dokusho: sem o rodapé do ttu (o tempo de leitura conta sozinho; o progresso fica na barra). -->
+{#if MOSTRAR_RODAPE_DO_TTU}
+  <div
+    id="ttu-page-footer"
+    tabindex="0"
+    role="button"
+    class="writing-horizontal-tb fixed bottom-0 left-0 z-10 flex h-8 w-full items-center justify-between text-xs leading-none"
+    style:color={$themeOption$?.tooltipTextFontColor}
+    on:click={() => (showFooter = !showFooter)}
+    on:keyup={dummyFn}
+  >
+    <div class="flex h-full">
+      {#if showTrackerIcon}
+        <div
+          role="button"
+          title="Click to open Tracker Menu or Double Click to toggle Tracker"
+          class="flex h-full w-8 items-center justify-center text-sm sm:text-lg"
+          class:text-red-500={$isTrackerPaused$}
+          class:animate-pulse={frozenPosition > -1}
+          use:multiClickHandler={[trackerSingleClickHandler, trackerDblClickHandler]}
+        >
+          <Fa icon={$isTrackerPaused$ ? faPlay : faPause} />
+        </div>
+      {/if}
+      {#if dataToReplicate.length}
+        <div
+          tabindex="0"
+          role="button"
+          class="flex h-full w-8 items-center justify-center text-sm sm:text-lg"
+          class:text-red-500={externalStorageErrors > 1}
+          class:animate-pulse={externalStorageErrors > 1 || isReplicating}
+          on:click|stopPropagation={() => {
+            if ($statisticsEnabled$) {
+              wasTrackerPaused = $isTrackerPaused$;
+              isTrackerPaused$.next(true);
+            }
+
+            executeReplication(false).finally(() => {
+              if ($statisticsEnabled$ && !wasTrackerPaused) {
+                isTrackerPaused$.next(false);
+              }
+            });
+          }}
+          on:keyup={dummyFn}
+        >
+          <Fa icon={faCloudBolt} />
+        </div>
+      {/if}
+    </div>
+    {#if showFooter && bookCharCount}
+      {@const currentProgress = [
+        $showCharacterCounter$ ? `${exploredCharCount} / ${bookCharCount}` : '',
+        $showPercentage$ ? `${((exploredCharCount / bookCharCount) * 100).toFixed(2)}%` : '',
+        $showFooterChapterCharacterCounter$ || $showFooterChapterPercentage$ ? 'T' : ''
+      ]
+        .filter(Boolean)
+        .join(' ')}
       <div
         tabindex="0"
         role="button"
-        class="flex h-full w-8 items-center justify-center text-sm sm:text-lg"
-        class:text-red-500={externalStorageErrors > 1}
-        class:animate-pulse={externalStorageErrors > 1 || isReplicating}
-        on:click|stopPropagation={() => {
-          if ($statisticsEnabled$) {
-            wasTrackerPaused = $isTrackerPaused$;
-            isTrackerPaused$.next(true);
+        title="Click to copy Progress"
+        class="writing-horizontal-tb fixed bottom-2 right-2 z-10 text-xs leading-none select-none whitespace-pre"
+        class:invisible={!$showCharacterCounter$ &&
+          !$showPercentage$ &&
+          !$showFooterChapterCharacterCounter$ &&
+          !$showFooterChapterPercentage$}
+        style:color={$themeOption$?.tooltipTextFontColor}
+        on:click|stopPropagation={({ target }) => {
+          if (!$showCharacterCounter$ && !$showPercentage$) {
+            return;
           }
 
-          executeReplication(false).finally(() => {
-            if ($statisticsEnabled$ && !wasTrackerPaused) {
-              isTrackerPaused$.next(false);
-            }
-          });
+          copyCurrentProgress(currentProgress.replace(/ T$/, ''));
+
+          if (target instanceof HTMLElement) {
+            pulseElement(target.parentElement || target, 'add', 0.5, 500);
+          }
         }}
         on:keyup={dummyFn}
       >
-        <Fa icon={faCloudBolt} />
+        <span class="mr-4" class:invisible={!footerChapterProgress}>{footerChapterProgress}</span>
+        <span class:invisible={!$showCharacterCounter$ && !$showPercentage$}>{currentProgress}</span
+        >
       </div>
     {/if}
   </div>
-  {#if showFooter && bookCharCount}
-    {@const currentProgress = [
-      $showCharacterCounter$ ? `${exploredCharCount} / ${bookCharCount}` : '',
-      $showPercentage$ ? `${((exploredCharCount / bookCharCount) * 100).toFixed(2)}%` : '',
-      $showFooterChapterCharacterCounter$ || $showFooterChapterPercentage$ ? 'T' : ''
-    ]
-      .filter(Boolean)
-      .join(' ')}
-    <div
-      tabindex="0"
-      role="button"
-      title="Click to copy Progress"
-      class="writing-horizontal-tb fixed bottom-2 right-2 z-10 text-xs leading-none select-none whitespace-pre"
-      class:invisible={!$showCharacterCounter$ &&
-        !$showPercentage$ &&
-        !$showFooterChapterCharacterCounter$ &&
-        !$showFooterChapterPercentage$}
-      style:color={$themeOption$?.tooltipTextFontColor}
-      on:click|stopPropagation={({ target }) => {
-        if (!$showCharacterCounter$ && !$showPercentage$) {
-          return;
-        }
-
-        copyCurrentProgress(currentProgress.replace(/ T$/, ''));
-
-        if (target instanceof HTMLElement) {
-          pulseElement(target.parentElement || target, 'add', 0.5, 500);
-        }
-      }}
-      on:keyup={dummyFn}
-    >
-      <span class="mr-4" class:invisible={!footerChapterProgress}>{footerChapterProgress}</span>
-      <span class:invisible={!$showCharacterCounter$ && !$showPercentage$}>{currentProgress}</span>
-    </div>
-  {/if}
-</div>
+{/if}
 
 {#if bookCompleted}
   <BookCompletionConfetti {confettiWidthModifier} {confettiMaxRuns} {window} />

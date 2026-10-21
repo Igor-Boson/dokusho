@@ -9,13 +9,16 @@ desfazer um ADR sem um novo ADR).
 
 - Fork do ttu ebook-reader (SvelteKit 2 + Svelte 4, Tailwind, adapter-static, pnpm). App em apps/web.
 - Dados locais do ttu: IndexedDB (apps/web/src/lib/data/database/books-db).
-- Sincronização do ttu: handlers em apps/web/src/lib/data/storage/handler. O Supabase entra como um
-  handler novo nesse padrão e é a única sincronização (Drive, OneDrive e pasta local saem da interface;
-  audiobook e legendas viram no-op).
+- Sincronização: módulo próprio em apps/web/src/lib/data/supabase/sincronizacao (ADR 0014), por linha,
+  ao lado do IndexedDB do ttu, com banco próprio `dokusho-sinc`. É a única sincronização (os handlers
+  de Drive, OneDrive e pasta local do ttu ficam no código e saem da interface; audiobook e legendas
+  também).
 - Supabase: Auth (e-mail + senha, cadastro desligado), Postgres com RLS, Storage (buckets `epubs`,
   `audio`, `dicts`), Edge Function `gemini` (ações `translate` e `generate`).
   Schema em supabase/migrations/. Cliente: @supabase/supabase-js.
-- Hospedagem: Vercel (build estático do adapter-static), só `main`, sem previews.
+- Hospedagem: Vercel (build estático do adapter-static), só `main`, sem previews. Configuração em
+  apps/web/vercel.json (Root Directory `apps/web`, saída `build`, cleanUrls); env vars na Vercel:
+  PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY e ENABLE_EXPERIMENTAL_COREPACK=1.
 - .apkg: port do genanki em apps/web/src/lib/functions/anki (sql.js + @zip.js), testado contra a
   saída do genanki.
 - Dicionários: zips Yomitan em dicts/ (local, fora do git) → script em tools/ converte para o formato
@@ -52,6 +55,9 @@ desfazer um ADR sem um novo ADR).
 - Dicionário (na raiz, Node 24): node tools/preparar-dicionario.ts (zips de dicts/ → dicts/saida/<versao>/);
   node tools/subir-dicionario.ts (pede e-mail e senha no terminal; quem roda é o usuário). Formato em
   apps/web/src/lib/data/dicionario/formato.ts (sem imports: o Node roda o .ts direto).
+- Deflexão contra o JMdict inteiro (em apps/web, depois de preparar o dicionário):
+  `$env:MEDIR_DEFLEXAO="1"; npx vitest run busca.medicao` (casos em dicionario/busca.casos.ts).
+- `pnpm check`: 15 erros antigos do ttu são o normal (não criar novos).
 
 ## Regras fixas
 

@@ -8,6 +8,58 @@
   --font-color: rgba(0, 0, 0, 0.87);
   --background-color: #eceff1;
   scrollbar-color: #c1c1c1 #c1c1c100;
+
+  // Dokusho: cores das telas Início, Biblioteca, Fila e Configurações (as do protótipo D1). O leitor
+  // segue o tema do ttu.
+  --dk-surface: #ffffff;
+  --dk-sunk: #edf0ee;
+  --dk-ink: #1b2220;
+  --dk-ink2: #59635f;
+  --dk-ink3: #8c9591;
+  --dk-line: #dce1de;
+  --dk-accent: #2d4f86;
+  --dk-accent-ink: #ffffff;
+  --dk-accent-soft: #e2e8f3;
+  --dk-read: #3a9866;
+  --dk-read-soft: #e0f1e7;
+  --dk-warn: #a66a12;
+  --dk-warn-soft: #fbefd8;
+  --dk-err: #b93a2e;
+  --dk-err-soft: #f8e1dd;
+  --dk-shadow: rgba(20, 32, 28, 0.16);
+}
+
+@mixin dokusho-escuro {
+  --font-color: #e6ebe8;
+  --background-color: #141918;
+  scrollbar-color: #3a4341 #3a434100;
+  color-scheme: dark;
+  --dk-surface: #1c2221;
+  --dk-sunk: #111514;
+  --dk-ink: #e6ebe8;
+  --dk-ink2: #a3ada9;
+  --dk-ink3: #6f7975;
+  --dk-line: #2b3331;
+  --dk-accent: #93b2e8;
+  --dk-accent-ink: #0e1413;
+  --dk-accent-soft: #223049;
+  --dk-read: #5cc08b;
+  --dk-read-soft: #1b3125;
+  --dk-warn: #e2ae58;
+  --dk-warn-soft: #382d18;
+  --dk-err: #ef7b6d;
+  --dk-err-soft: #3b211f;
+  --dk-shadow: rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) {
+    @include dokusho-escuro;
+  }
+}
+
+:root[data-tema='escuro'] {
+  @include dokusho-escuro;
 }
 
 .book-cover {
@@ -216,4 +268,74 @@
     local(''),
     url('$lib/assets/fonts/ShipporiMincho-Bold.woff2') format('woff2'),
     url('$lib/assets/fonts/ShipporiMincho-Bold.woff') format('woff');
+}
+
+// Dokusho: palavra selecionada pelo toque (CSS Custom Highlight API) e barra verde dos parágrafos
+// lidos pelo Alcance (V1.3). A barra fica no começo da linha: à esquerda no horizontal, em cima no
+// vertical; não muda o layout (o ttu conta os caracteres pelo layout).
+::highlight(dokusho-selecao) {
+  background-color: rgba(255, 210, 70, 0.5);
+  color: inherit;
+}
+
+// Leitura no celular como no protótipo D1: margens largas, espaço entre parágrafos e folga no fim
+// para o painel da palavra não cobrir as últimas linhas.
+@media (max-width: 767px) {
+  .book-content--writing-horizontal-rl {
+    padding-inline: 14px;
+    padding-bottom: 55vh;
+  }
+
+  .book-content--writing-horizontal-rl p {
+    margin-block-end: 1.15em;
+  }
+}
+
+.book-content .dokusho-lido {
+  position: relative;
+}
+
+.book-content .dokusho-lido::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: -14px;
+  inset-block-start: 0.5em;
+  inset-block-end: 0.5em;
+  inline-size: 3px;
+  border-radius: 2px;
+  background: #3a9866;
+  pointer-events: none;
+}
+
+// Dokusho: estado da carta na Fila (desenho do D1).
+.dokusho-estado {
+  display: inline-flex;
+  align-items: center;
+  height: fit-content;
+  padding: 3px 8px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: var(--dk-sunk);
+  color: var(--dk-ink2);
+}
+
+.dokusho-estado--gerando {
+  background: var(--dk-accent-soft);
+  color: var(--dk-accent);
+}
+
+.dokusho-estado--gerada {
+  background: var(--dk-read-soft);
+  color: var(--dk-read);
+}
+
+.dokusho-estado--erro {
+  background: var(--dk-err-soft);
+  color: var(--dk-err);
+}
+
+.dokusho-estado--exportada {
+  color: var(--dk-ink3);
 }

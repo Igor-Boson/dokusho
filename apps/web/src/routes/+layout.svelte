@@ -6,7 +6,11 @@
   import { dialogManager, type Dialog } from '$lib/data/dialog-manager';
   import { userFontsCacheName, type UserFont } from '$lib/data/fonts';
   import { fontFamilyGroupOne$, isOnline$, userFonts$ } from '$lib/data/store';
+  import { iniciarAtualizacao } from '$lib/data/atualizacao';
+  import { gerarPendentes } from '$lib/data/cartas/fila';
+  import { iniciarSincronizacao } from '$lib/data/supabase/sincronizacao/iniciar';
   import { dummyFn, isMobile, isMobile$ } from '$lib/functions/utils';
+  import { onMount } from 'svelte';
   import { MetaTags } from 'svelte-meta-tags';
   import '../app.scss';
 
@@ -82,13 +86,23 @@
   });
 
   page.subscribe((p) => (path = p.url.pathname));
+
+  onMount(() => {
+    iniciarSincronizacao();
+    iniciarAtualizacao();
+    // Cartas criadas offline (ou em outro aparelho) geram quando há rede (ADR 0010).
+    gerarPendentes();
+    window.addEventListener('online', gerarPendentes);
+
+    return () => window.removeEventListener('online', gerarPendentes);
+  });
 </script>
 
 <svelte:window bind:online={$isOnline$} />
 
 <MetaTags
-  title="ッツ Ebook Reader"
-  description="Online e-book reader that supports dictionary extensions like Yomitan"
+  title="Dokusho"
+  description="Leitor de EPUB japonês com dicionário e cartas para o Anki"
   canonical="{basePath}{path !== '/' ? path : ''}"
   openGraph={{
     type: 'website',
