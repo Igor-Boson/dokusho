@@ -1,6 +1,6 @@
 # Leitor de EPUB japonês com hub de vocabulário: escopo e plano de construção
 
-Atualizado em 2026-10-20, depois da entrevista de escopo (registro em `docs/ENTREVISTA.md`, decisões com motivo em `docs/adr/`, termos em `GLOSSARY.md`). Este arquivo é a especificação do projeto. **Backend: Supabase.**
+Atualizado em 2026-10-20, depois da entrevista de escopo (registro em `docs/historico/ENTREVISTA.md`, decisões com motivo em `docs/adr/`, termos em `GLOSSARY.md`). Este arquivo é a especificação do projeto. **Backend: Supabase.**
 
 ## Visão
 
@@ -316,7 +316,7 @@ Licença: o ttu é BSD-3, sem restrição para o fork. O código do Yomitan é G
 
 ## Decisões recentes
 
-As decisões de 15/10 continuam valendo, com duas mudanças em 20/10: o significado da palavra na carta passou a ser em português, pelo Gemini (antes: glosa em inglês); e a etiqueta ganhou o livro (`dokusho::<título>`). As demais decisões de 20/10 estão em `docs/ENTREVISTA.md` e em `docs/adr/`.
+As decisões de 15/10 continuam valendo, com duas mudanças em 20/10: o significado da palavra na carta passou a ser em português, pelo Gemini (antes: glosa em inglês); e a etiqueta ganhou o livro (`dokusho::<título>`). As demais decisões de 20/10 estão em `docs/historico/ENTREVISTA.md` e em `docs/adr/`.
 
 1. **Deck de destino:** `日本語::1. Dokusho`, prefixo de guid `leituras-igor`, conforme docs/CARDS.md. O Anki casa o deck pelo nome na importação.
 2. **Cards novos:** um Card adicionado como novo e ainda não estudado conta como aprendendo.

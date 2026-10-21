@@ -4,7 +4,8 @@ Cada item abaixo é **um chat novo** no Claude Code, com o modelo **Sonnet** (Op
 bug travado). Os itens são pequenos de propósito: o Sonnet rende bem quando o contexto é curto e o
 critério de pronto é claro.
 
-Atualizado em 2026-10-20 depois da entrevista de escopo (docs/ENTREVISTA.md, docs/adr/, GLOSSARY.md).
+Atualizado em 2026-10-20 depois da entrevista de escopo (docs/historico/ENTREVISTA.md, docs/adr/, GLOSSARY.md).
+Preparação, testes de risco e v1 concluídos em 2026-10-21 (estado em docs/PROGRESSO.md). Próximo: V2.1.
 
 ## Como rodar cada chat
 
@@ -13,8 +14,8 @@ Atualizado em 2026-10-20 depois da entrevista de escopo (docs/ENTREVISTA.md, doc
 
    ```
    Vamos fazer o item <CÓDIGO> de docs/FASES.md.
-   Leia CLAUDE.md, docs/PROGRESSO.md, GLOSSARY.md, os ADRs que o item cita e só as seções do
-   docs/ESCOPO.md que o item cita. Faça um plano curto, espere eu aprovar, implemente com commits
+   Leia CLAUDE.md, docs/PROGRESSO.md, docs/ARQUITETURA.md, GLOSSARY.md, os ADRs que o item cita e
+   só as seções do docs/ESCOPO.md que o item cita. Faça um plano curto, espere eu aprovar, implemente com commits
    pequenos, rode os testes/checagens e, no fim, atualize docs/PROGRESSO.md.
    Sempre que algo depender de mim (login, chave, painel de site, teste em aparelho, comando que só
    eu posso rodar), pare e me dê um passo a passo numerado: onde clicar ou qual comando colar (em
@@ -31,7 +32,7 @@ desde que não mexam nos mesmos arquivos.
 
 ---
 
-## S. Preparação
+## S. Preparação (concluída)
 
 ### S1 · Ambiente e Supabase 👤
 
@@ -61,9 +62,9 @@ desde que não mexam nos mesmos arquivos.
 - Confirmar a regra dos toques (ESCOPO "Toque e painel"), o conteúdo do painel e os estados da carta.
 - **Pronto quando:** você aprovou as telas no iPhone; decisões e ajustes anotados no ESCOPO.
 
-## 0. Testes de risco (ESCOPO: "Riscos e testes antes de construir")
+## 0. Testes de risco, concluídos (ESCOPO: "Riscos e testes antes de construir")
 
-Resultados de cada teste vão para docs/PROGRESSO.md, na seção "Testes de risco".
+Resultados de cada teste em docs/historico/TESTES-DE-RISCO.md.
 
 ### R1 · guid e .apkg 👤 (docs/CARDS.md; ADR 0006)
 
@@ -110,10 +111,11 @@ Resultados de cada teste vão para docs/PROGRESSO.md, na seção "Testes de risc
 - **Pronto quando:** você ouviu/leu as 30 e anotou o veredito (inclusive a instrução de pronúncia);
   estimativa de storage e custo anotada; chamada com outro usuário é recusada.
 
-## 1. v1
+## 1. v1 (concluída em 2026-10-21)
 
 ### V1.1 · Sincronização do ttu pelo Supabase (ADR 0001, 0002)
 
+- Feito como módulo próprio, não como handler do ttu (ADR 0014). O pedido original:
 - Novo handler em apps/web/src/lib/data/storage/handler no padrão dos existentes: books (id = hash do
   EPUB; processado + original no bucket), bookmarks (Marcador e Alcance), reading_stats (por livro +
   dia + aparelho), reading_goals. LWW pelo horário do aparelho + soft delete. Audiobook e legendas
@@ -177,7 +179,7 @@ Resultados de cada teste vão para docs/PROGRESSO.md, na seção "Testes de risc
 - 👤 Assim que o deploy estiver no ar, fechar o R1 pela exportação de verdade (a `/teste/apkg` saiu
   no V1.6): na PWA instalada no iPhone, Fila › "Exportar .apkg" → "Compartilhar com o Anki";
   conferir que não trava, importa no AnkiMobile e reimportar ("Baixar este Lote de novo") não
-  duplica; anotar em PROGRESSO "Testes de risco" › R1 e marcar R1 como feito. O Lote de 100 cartas
+  duplica; anotar em docs/historico/TESTES-DE-RISCO.md › R1 e marcar R1 como feito. O Lote de 100 cartas
   fica para quando a fila tiver 100.
 - **Pronto quando:** critério da v1 no ESCOPO ("Roadmap por versão") cumprido de ponta a ponta.
 

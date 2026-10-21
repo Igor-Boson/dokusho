@@ -124,6 +124,7 @@ Registro das decisões da entrevista sobre o escopo inteiro, área por área. No
 ### Mudanças para os documentos
 
 **ESCOPO.md**
+
 1. Princípios: "o Anki é a fonte da verdade; o app só lê" → o Anki manda nas Palavras dele, "Já sei" cobre as outras (ADR 0007). Repositório público: nada sensível nos docs.
 2. Interface: botão "Criar carta" (não "Virar cartão"); painel com várias entradas por frequência, setas ‹ ›, "Já sei" (v2), "na fila / exportada em"; barra verde de parágrafos lidos; regra dos toques; furigana da v1 só o do EPUB; aviso ao apagar livro; aviso "Nova versão" fora do leitor; configurações com versão do dicionário e backup.
 3. Decisões fechadas: dicionário preparado no PC (ADR 0004); deflexão pelo tokenizador (ADR 0005); seleção híbrida (ADR 0003); Gemini faz tradução, significado em português e áudio.

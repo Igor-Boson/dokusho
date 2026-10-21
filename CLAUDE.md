@@ -2,6 +2,8 @@
 
 Especificação: docs/ESCOPO.md. Formato dos cards: docs/CARDS.md (fonte única).
 Roteiro de chats: docs/FASES.md. Estado atual: docs/PROGRESSO.md (ler no início de todo chat).
+Mapa do código: docs/ARQUITETURA.md. Histórico (decisões datadas, testes de risco, entrevista):
+docs/historico/ (consultar só quando o item pedir).
 Termos: GLOSSARY.md (usar esses nomes no código e nos docs). Decisões com motivo: docs/adr/ (não
 desfazer um ADR sem um novo ADR).
 
@@ -91,5 +93,6 @@ desfazer um ADR sem um novo ADR).
 
 - Um chat por item de docs/FASES.md. Começar em plan mode, implementar, testar.
 - Um commit por passo pequeno (Conventional Commits: o repo usa commitlint).
-- Ao terminar o item: atualizar docs/PROGRESSO.md (feito, decisões, pendências) e este arquivo
-  se mudou stack, comando ou regra.
+- Ao terminar o item: atualizar docs/PROGRESSO.md (só estado e pendências), anotar as decisões
+  datadas em docs/historico/DECISOES.md, ajustar docs/ARQUITETURA.md se um módulo mudou de forma e
+  este arquivo se mudou stack, comando ou regra.

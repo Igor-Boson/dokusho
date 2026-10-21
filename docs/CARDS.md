@@ -2,7 +2,7 @@
 
 Fonte única do formato dos cards que o Dokusho exporta. Quando o formato mudar, muda aqui, uma vez só, e o app segue.
 
-Histórico: veio do artefato "Cards de Anki: formato e gerador" (14/10/2026). Em 20/10/2026 o fluxo de cards pelas conversas do Claude (tarefa agendada de áudio, página de pedido, deck do RPG) foi abandonado e saiu deste documento; só o app gera cards. As decisões de 20/10 estão em `docs/ENTREVISTA.md` e `docs/adr/`.
+Histórico: veio do artefato "Cards de Anki: formato e gerador" (14/10/2026). Em 20/10/2026 o fluxo de cards pelas conversas do Claude (tarefa agendada de áudio, página de pedido, deck do RPG) foi abandonado e saiu deste documento; só o app gera cards. As decisões de 20/10 estão em `docs/historico/ENTREVISTA.md` e `docs/adr/`.
 
 ## Regras que não mudam
 
