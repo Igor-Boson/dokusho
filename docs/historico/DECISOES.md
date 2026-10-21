@@ -408,3 +408,6 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   no horizontal, toque e realce com o furigana ligado, "Já sei" e desfazer trocando o furigana sem
   recarregar. A troca de vertical para horizontal sem recarregar deixava a leitura em cima do kanji
   (a classe do ttu muda antes do layout); resolvido com o posicionamento lógico.
+- 2026-10-21: V3.1 no ar (PRs #6 e #7). No iPhone, o realce da seleção deixava um resto amarelo sob
+  o texto ao soltar a palavra (o Safari só redesenhava a área do kanji, dentro do span do furigana);
+  resolvido redesenhando o parágrafo (opacidade 0,999 por um quadro). Conferido pelo Igor no iPhone.
