@@ -424,3 +424,5 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   se o Safari não consegue mais ler o arquivo guardado no IndexedDB (lido antes de enviar,
   NotReadableError, defeito conhecido do WebKit), o backup é descartado e a rodada segue. O aviso
   mostra a mensagem inteira ao tocar. A causa exata do "N…" só se confirma no iPhone.
+- 2026-10-22: correção no ar e conferida pelo Igor: o livro importado no celular chegou aos outros
+  aparelhos.
