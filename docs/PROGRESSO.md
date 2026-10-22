@@ -49,6 +49,8 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 
 ## Pendências
 
+- [ ] Sincronização: juntar o PR `fix/sincronizacao`; no celular, abrir o app (fora do leitor) e ver
+      se o livro novo sobe; se aparecer "A sincronização falhou: …", mandar a mensagem
 - [ ] V3.1: testar o menu ふ no PC e no iPhone/iPad (Do livro, Todos, Adaptativo, Sem furigana) e
       juntar o PR; no iPhone, ver se a leitura do furigana gerado não fica cortada no topo da página
 
