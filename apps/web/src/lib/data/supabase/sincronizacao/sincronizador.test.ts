@@ -5,7 +5,7 @@
  */
 
 import 'fake-indexeddb/auto';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   BooksDbBookData,
   BooksDbStatistic
@@ -105,6 +105,10 @@ class ServidorFalso {
           .slice(pulo, pulo + limite) as unknown as Linhas[T][];
       },
       subir: async (caminho, dados) => {
+        if (this.falhas.has(`subir:${caminho.split('/').pop()}`)) {
+          throw new Error(`Subir ${caminho}: Network connection was lost`);
+        }
+
         this.arquivos.set(caminho, dados);
       },
       baixar: async (caminho) => {
@@ -778,5 +782,57 @@ describe('falhas na rodada', () => {
 
     await expect(iphone.sincronizador.sincronizar()).rejects.toThrow(/Enviar books: falhou/);
     expect(servidor.tabela('vocab_history').get('r9')).toBeTruthy();
+  });
+});
+
+describe('EPUB original', () => {
+  it('falha ao subir o original: o livro sobe sem ele, o erro é relatado e o original sobe depois', async () => {
+    const iphone = criarAparelho(servidor, 'iPhone');
+    const pc = criarAparelho(servidor, 'Windows');
+    const { hash } = await importar(iphone, '夢');
+
+    servidor.falhas.add('subir:original.epub');
+
+    await expect(iphone.sincronizador.sincronizar()).rejects.toThrow(
+      /EPUB original de "夢".*Network connection was lost/
+    );
+    expect(servidor.tabela('books').get(hash)).toMatchObject({
+      title: '夢',
+      original_path: null,
+      deleted_at: null
+    });
+
+    await pc.sincronizador.sincronizar();
+    expect(await (await pc.ttu).getAll('data')).toEqual([expect.objectContaining({ title: '夢' })]);
+
+    servidor.falhas.clear();
+    await iphone.sincronizador.sincronizar();
+    expect(servidor.tabela('books').get(hash)).toMatchObject({
+      original_path: `u1/${hash}/original.epub`
+    });
+  });
+
+  it('original ilegível no aparelho (Safari): descarta o backup e não tenta de novo', async () => {
+    const iphone = criarAparelho(servidor, 'iPhone');
+    const { hash } = await importar(iphone, '夢');
+
+    // Como no Safari: o EPUB guardado no IndexedDB não pode mais ser lido (só ele tem esse tamanho;
+    // o zip do processado lê pedaços sem tipo das imagens, que não podem falhar).
+    const tamanhoDoEpub = new Blob(['epub de 夢']).size;
+    const lerDeVerdade = Blob.prototype.arrayBuffer;
+    const leitura = vi.spyOn(Blob.prototype, 'arrayBuffer').mockImplementation(function (
+      this: Blob
+    ) {
+      return this.size !== tamanhoDoEpub
+        ? lerDeVerdade.call(this)
+        : Promise.reject(new DOMException('The I/O read operation failed.', 'NotReadableError'));
+    });
+
+    await expect(iphone.sincronizador.sincronizar()).rejects.toThrow(/não dá mais para ler/);
+    leitura.mockRestore();
+    expect(servidor.tabela('books').get(hash)).toMatchObject({ original_path: null });
+
+    // Na rodada seguinte não há mais erro: o livro segue só com o processado.
+    await expect(iphone.sincronizador.sincronizar()).resolves.toBe('feito');
   });
 });
