@@ -54,10 +54,15 @@ class ServidorFalso {
 
   relogio = 0;
 
+  /** Passos que falham, como `receber:vocab` ou `enviar:vocab` (rede caindo, tabela com erro). */
+  falhas = new Set<string>();
+
   servidor(userId = 'u1'): Servidor {
     return {
       userId,
       enviar: async <T extends TabelaSinc>(tabela: T, linhas: NovasLinhas[T][]) => {
+        if (this.falhas.has(`enviar:${tabela}`)) throw new Error(`Enviar ${tabela}: falhou`);
+
         const dados = this.tabela(tabela);
 
         // Um upsert é uma transação: todas as linhas ganham o mesmo updated_at.
@@ -88,14 +93,17 @@ class ServidorFalso {
         desde: string | undefined,
         limite: number,
         pulo: number
-      ) =>
-        [...this.tabela(tabela).entries()]
+      ) => {
+        if (this.falhas.has(`receber:${tabela}`)) throw new Error(`Receber ${tabela}: falhou`);
+
+        return [...this.tabela(tabela).entries()]
           .filter(([, linha]) => !desde || (linha.updated_at as string) > desde)
           .sort(([chaveA, a], [chaveB, b]) =>
             `${a.updated_at}|${chaveA}` < `${b.updated_at}|${chaveB}` ? -1 : 1
           )
           .map(([, linha]) => linha)
-          .slice(pulo, pulo + limite) as unknown as Linhas[T][],
+          .slice(pulo, pulo + limite) as unknown as Linhas[T][];
+      },
       subir: async (caminho, dados) => {
         this.arquivos.set(caminho, dados);
       },
@@ -728,5 +736,47 @@ describe('hub de vocabulário', () => {
     expect(await pc.sincronizador.ler('vocab', ['食べる', 'たべる'])).toMatchObject({
       ja_sei_at: depois
     });
+  });
+});
+
+describe('falhas na rodada', () => {
+  it('erro ao receber o vocab não impede o livro e o marcador de subirem, e é relatado', async () => {
+    const iphone = criarAparelho(servidor, 'iPhone');
+    const pc = criarAparelho(servidor, 'Windows');
+    const { hash } = await importar(iphone, '夢');
+
+    servidor.falhas.add('receber:vocab');
+
+    await expect(iphone.sincronizador.sincronizar()).rejects.toThrow(/Receber vocab: falhou/);
+    expect(servidor.tabela('books').get(hash)).toMatchObject({ title: '夢', deleted_at: null });
+
+    servidor.falhas.clear();
+    await pc.sincronizador.sincronizar();
+
+    const [noPc] = await (await pc.ttu).getAll('data');
+
+    expect(noPc).toMatchObject({ title: '夢' });
+  });
+
+  it('erro ao enviar uma tabela não impede as outras', async () => {
+    const iphone = criarAparelho(servidor, 'iPhone');
+
+    const quando = '2026-10-21T10:00:00.000Z';
+
+    await iphone.sincronizador.salvar('retratos', {
+      user_id: 'u1',
+      id: 'r9',
+      synced_at: quando,
+      known_count: 1,
+      learning_count: 0,
+      modified_at: quando,
+      updated_at: quando,
+      deleted_at: null
+    });
+    servidor.falhas.add('enviar:books');
+    await importar(iphone, '夢');
+
+    await expect(iphone.sincronizador.sincronizar()).rejects.toThrow(/Enviar books: falhou/);
+    expect(servidor.tabela('vocab_history').get('r9')).toBeTruthy();
   });
 });

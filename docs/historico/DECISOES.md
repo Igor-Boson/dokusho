@@ -408,3 +408,12 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   no horizontal, toque e realce com o furigana ligado, "Já sei" e desfazer trocando o furigana sem
   recarregar. A troca de vertical para horizontal sem recarregar deixava a leitura em cima do kanji
   (a classe do ttu muda antes do layout); resolvido com o posicionamento lógico.
+- 2026-10-22: livro importado no celular não aparecia no iPad nem no PC. No servidor, nada do
+  celular desde 21/10 20:27 (o livro não subiu); o servidor e o PC sincronizam normalmente. Causa
+  provável: no celular a rodada falhava ou era interrompida antes da parte de envio (desde a v2 ela
+  recebia antes milhares de linhas do hub, uma transação por linha), e o erro não aparecia na tela.
+  Correção (`fix/sincronizacao`): cada passo da rodada roda mesmo que outro falhe, e os erros voltam
+  juntos no fim; livros, marcadores, estatísticas e cartas antes do hub, que é enviado e recebido por
+  último, numa transação por página (aparelho novo recebe as 2.790 linhas em 3,4 s no PC); aviso "A
+  sincronização falhou: <mensagem> · Tentar" no topo das telas, fora do leitor. A causa exata no
+  iPhone só se confirma lá: se o aviso aparecer, a mensagem diz qual passo falhou.
