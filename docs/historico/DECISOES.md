@@ -417,3 +417,10 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   último, numa transação por página (aparelho novo recebe as 2.790 linhas em 3,4 s no PC); aviso "A
   sincronização falhou: <mensagem> · Tentar" no topo das telas, fora do leitor. A causa exata no
   iPhone só se confirma lá: se o aviso aparecer, a mensagem diz qual passo falhou.
+- 2026-10-22: o aviso novo mostrou a falha no iPhone: subir o `original.epub` do livro novo para o
+  bucket (mensagem cortada, começando por "N…"). Como o original subia antes da linha do livro, o
+  livro inteiro ficava preso. Agora (`fix/original-epub`) o EPUB original, que é só backup (ADR
+  0001), não trava mais nada: o livro sobe sem ele; erro de envio tenta de novo na rodada seguinte;
+  se o Safari não consegue mais ler o arquivo guardado no IndexedDB (lido antes de enviar,
+  NotReadableError, defeito conhecido do WebKit), o backup é descartado e a rodada segue. O aviso
+  mostra a mensagem inteira ao tocar. A causa exata do "N…" só se confirma no iPhone.
