@@ -49,8 +49,6 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 
 ## Pendências
 
-- [ ] Sincronização: juntar o PR `fix/original-epub`; no celular, "Atualizar" e ver o livro novo
-      chegar ao PC e ao iPad; se o aviso aparecer, tocar na mensagem e mandar o texto inteiro
 - [ ] V3.1: testar o menu ふ no PC e no iPhone/iPad (Do livro, Todos, Adaptativo, Sem furigana) e
       juntar o PR; no iPhone, ver se a leitura do furigana gerado não fica cortada no topo da página
 
