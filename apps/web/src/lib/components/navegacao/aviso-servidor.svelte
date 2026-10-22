@@ -9,6 +9,9 @@
 
   // "Servidor pausado; reative no painel do Supabase" (ESCOPO "Riscos"): o plano gratuito pausa o
   // projeto depois de uma semana sem uso. O app segue offline com o que está no aparelho.
+
+  /** A mensagem de erro aparece cortada em 3 linhas; tocar mostra inteira. */
+  let inteira = false;
 </script>
 
 {#if $bancoBloqueado$}
@@ -32,8 +35,15 @@
   <!-- Sem isso, uma rodada que falha não deixa rastro e nada sobe (V3.1: livro do celular). -->
   <div class="dokusho-aviso-servidor" role="status">
     <span>
-      A sincronização falhou: <small class="dokusho-aviso-servidor__erro"
-        >{$estadoSinc$.mensagem}</small
+      A sincronização falhou:
+      <small
+        class="dokusho-aviso-servidor__erro"
+        class:dokusho-aviso-servidor__erro--inteira={inteira}
+        role="button"
+        tabindex="0"
+        title="Toque para ver a mensagem inteira"
+        on:click={() => (inteira = !inteira)}
+        on:keyup={(e) => e.key === 'Enter' && (inteira = !inteira)}>{$estadoSinc$.mensagem}</small
       >
     </span>
     <button on:click={sincronizarAgora}>Tentar</button>
@@ -67,6 +77,13 @@
       overflow: hidden;
       word-break: break-word;
       color: var(--dk-ink2);
+      cursor: pointer;
+    }
+
+    .dokusho-aviso-servidor__erro--inteira {
+      display: block;
+      -webkit-line-clamp: unset;
+      line-clamp: unset;
     }
 
     button {

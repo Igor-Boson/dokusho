@@ -825,6 +825,7 @@ export class Sincronizador {
   private async enviarLivros(servidor: Servidor) {
     const ttu = await this.opcoes.ttu;
     const sinc = await this.opcoes.sinc;
+    const errosDoOriginal: string[] = [];
 
     for (const mapa of await sinc.getAll('livros')) {
       if (mapa.apagadoEm || !Object.keys(mapa.pendente).length) continue;
@@ -848,9 +849,34 @@ export class Sincronizador {
         await servidor.subir(caminhos.capa, livro.coverImage);
       }
 
+      // O EPUB original é só backup (ADR 0001): se não sobe, o livro sobe sem ele. Erro de rede tenta
+      // de novo na próxima rodada; arquivo que o Safari não consegue mais ler do IndexedDB
+      // (NotReadableError) é descartado, porque não volta a ser legível.
+      let originalPendente = false;
+
       if (mapa.pendente.original && mapa.original) {
-        await servidor.subir(caminhos.original, mapa.original);
-        atualizado.temOriginal = true;
+        let ilegivel = false;
+
+        try {
+          // Lido antes: o cliente do Supabase embrulha o erro de leitura num erro de envio.
+          const dados = await mapa.original.arrayBuffer().catch((erro) => {
+            ilegivel = true;
+            throw erro;
+          });
+
+          await servidor.subir(caminhos.original, new Blob([dados], { type: mapa.original.type }));
+          atualizado.temOriginal = true;
+        } catch (erro) {
+          ilegivel ||= erro instanceof DOMException && erro.name === 'NotReadableError';
+          const motivo = erro instanceof Error ? erro.message : String(erro);
+
+          originalPendente = !ilegivel;
+          errosDoOriginal.push(
+            ilegivel
+              ? `EPUB original de "${mapa.titulo}" não dá mais para ler neste aparelho; o livro ficou sem o backup do original (${motivo})`
+              : `EPUB original de "${mapa.titulo}" não subiu; o livro subiu sem ele e o original tenta de novo (${motivo})`
+          );
+        }
       }
 
       await servidor.enviar('books', [
@@ -867,10 +893,17 @@ export class Sincronizador {
         }
       ]);
 
-      delete atualizado.original;
-      atualizado.pendente = {};
+      if (originalPendente) {
+        atualizado.pendente = { original: true };
+      } else {
+        delete atualizado.original;
+        atualizado.pendente = {};
+      }
+
       await sinc.put('livros', atualizado);
     }
+
+    if (errosDoOriginal.length) throw new Error(errosDoOriginal.join(' · '));
   }
 
   private async enviarMarcadores(servidor: Servidor) {
