@@ -383,30 +383,60 @@ export class Sincronizador {
 
     if (!servidor) return 'sem-login';
 
-    await this.receber(servidor, 'books', (linhas) => this.receberLivros(servidor, linhas));
-    await this.receber(servidor, 'bookmarks', (linhas) => this.receberMarcadores(linhas));
-    await this.receber(servidor, 'reading_stats', (linhas) => this.receberEstatisticas(linhas));
-    await this.receber(servidor, 'reading_goals', (linhas) => this.receberMetas(linhas));
-    await this.receber(servidor, 'batch_items', (linhas) => this.receberLinhas('cartas', linhas));
-    await this.receber(servidor, 'lotes', (linhas) => this.receberLinhas('lotes', linhas));
-    await this.receber(servidor, 'translations', (linhas) =>
-      this.receberLinhas('traducoes', linhas)
+    // Cada passo roda mesmo que outro falhe (um erro numa tabela não pode impedir o livro de subir);
+    // os erros voltam juntos no fim. O hub (milhares de linhas) fica por último: no iPhone, uma
+    // rodada interrompida no meio dele já enviou o resto.
+    const erros: string[] = [];
+    const passo = async (fazer: () => Promise<unknown>) => {
+      try {
+        await fazer();
+      } catch (erro) {
+        erros.push(erro instanceof Error ? erro.message : String(erro));
+      }
+    };
+
+    await passo(() =>
+      this.receber(servidor, 'books', (linhas) => this.receberLivros(servidor, linhas))
     );
-    await this.receber(servidor, 'vocab', (linhas) => this.receberLinhas('vocab', linhas));
-    await this.receber(servidor, 'vocab_history', (linhas) =>
-      this.receberLinhas('retratos', linhas)
+    await passo(() =>
+      this.receber(servidor, 'bookmarks', (linhas) => this.receberMarcadores(linhas))
+    );
+    await passo(() =>
+      this.receber(servidor, 'reading_stats', (linhas) => this.receberEstatisticas(linhas))
+    );
+    await passo(() =>
+      this.receber(servidor, 'reading_goals', (linhas) => this.receberMetas(linhas))
+    );
+    await passo(() =>
+      this.receber(servidor, 'batch_items', (linhas) => this.receberLinhas('cartas', linhas))
+    );
+    await passo(() =>
+      this.receber(servidor, 'lotes', (linhas) => this.receberLinhas('lotes', linhas))
+    );
+    await passo(() =>
+      this.receber(servidor, 'translations', (linhas) => this.receberLinhas('traducoes', linhas))
     );
 
-    await this.registrarLivrosLocais();
-    await this.enviarApagamentos(servidor);
-    await this.enviarLivros(servidor);
-    await this.enviarMarcadores(servidor);
-    await this.enviarEstatisticas(servidor);
-    await this.enviarMetas(servidor);
-    await this.enviarLinhas(servidor, 'batch_items', 'cartas');
-    await this.enviarLinhas(servidor, 'lotes', 'lotes');
-    await this.enviarLinhas(servidor, 'vocab', 'vocab');
-    await this.enviarLinhas(servidor, 'vocab_history', 'retratos');
+    await passo(() => this.registrarLivrosLocais());
+    await passo(() => this.enviarApagamentos(servidor));
+    await passo(() => this.enviarLivros(servidor));
+    await passo(() => this.enviarMarcadores(servidor));
+    await passo(() => this.enviarEstatisticas(servidor));
+    await passo(() => this.enviarMetas(servidor));
+    await passo(() => this.enviarLinhas(servidor, 'batch_items', 'cartas'));
+    await passo(() => this.enviarLinhas(servidor, 'lotes', 'lotes'));
+
+    // Enviar o hub antes de receber não perde nada: o servidor ignora a escrita mais velha.
+    await passo(() => this.enviarLinhas(servidor, 'vocab', 'vocab'));
+    await passo(() => this.enviarLinhas(servidor, 'vocab_history', 'retratos'));
+    await passo(() =>
+      this.receber(servidor, 'vocab', (linhas) => this.receberLinhas('vocab', linhas))
+    );
+    await passo(() =>
+      this.receber(servidor, 'vocab_history', (linhas) => this.receberLinhas('retratos', linhas))
+    );
+
+    if (erros.length) throw new Error(erros.join(' · '));
 
     return 'feito';
   }
@@ -460,16 +490,23 @@ export class Sincronizador {
 
     let mudou = false;
 
+    // Uma transação por página (até mil linhas): uma por linha deixava o hub lento no iPhone.
+    const tx = sinc.transaction([loja, 'enviados'], 'readwrite');
+    const lojaTx = tx.objectStore(loja);
+    const enviados = tx.objectStore('enviados');
+
     for (const linha of linhas) {
       const chaveLinha = chaveDaLinha(loja, linha);
-      const local = (await sinc.get(loja, chaveLinha as string)) as LojasDeLinhas[L] | undefined;
+      const local = (await lojaTx.get(chaveLinha as string)) as LojasDeLinhas[L] | undefined;
 
       if (local && !remotoVence(deIso(local.modified_at), linha.modified_at)) continue;
 
-      await sinc.put(loja, linha as never);
-      await sinc.put('enviados', deIso(linha.modified_at), chave(tabela, textoDaChave(chaveLinha)));
+      await lojaTx.put(linha as never);
+      await enviados.put(deIso(linha.modified_at), chave(tabela, textoDaChave(chaveLinha)));
       mudou = true;
     }
+
+    await tx.done;
 
     if (!mudou) return;
     if (loja === 'vocab' || loja === 'retratos') this.opcoes.avisos.vocab?.();

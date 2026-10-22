@@ -28,6 +28,16 @@
     </span>
     <button on:click={sincronizarAgora}>Tentar</button>
   </div>
+{:else if $estadoSinc$.tipo === 'erro'}
+  <!-- Sem isso, uma rodada que falha não deixa rastro e nada sobe (V3.1: livro do celular). -->
+  <div class="dokusho-aviso-servidor" role="status">
+    <span>
+      A sincronização falhou: <small class="dokusho-aviso-servidor__erro"
+        >{$estadoSinc$.mensagem}</small
+      >
+    </span>
+    <button on:click={sincronizarAgora}>Tentar</button>
+  </div>
 {/if}
 
 <style lang="scss">
@@ -47,6 +57,16 @@
       color: var(--dk-accent);
       font-weight: 700;
       text-decoration: underline;
+    }
+
+    .dokusho-aviso-servidor__erro {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-word;
+      color: var(--dk-ink2);
     }
 
     button {
