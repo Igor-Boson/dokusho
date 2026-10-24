@@ -2,7 +2,7 @@
   import { cartasExportaveis, estimarBytes } from '$lib/data/cartas/exportar';
   import { confirmarLote, prepararLote, type LotePronto } from '$lib/data/cartas/lotes';
   import type { LinhaCarta } from '$lib/data/supabase/sincronizacao/regras';
-  import { entregarArquivo } from '$lib/functions/anki/entregar-arquivo';
+  import { entregarArquivo, usaCompartilhamento } from '$lib/functions/anki/entregar-arquivo';
 
   // "Exportar .apkg" fixo embaixo da aba "Na fila" (D1; ESCOPO "Regras da fila"). Em dois toques: o
   // primeiro monta o arquivo; o segundo entrega (o Safari só aceita a folha de compartilhamento logo
@@ -25,7 +25,7 @@
     maximumFractionDigits: 1,
     minimumFractionDigits: 1
   });
-  $: podeCompartilhar = typeof navigator !== 'undefined' && !!navigator.canShare;
+  const podeCompartilhar = usaCompartilhamento();
 
   async function preparar() {
     mensagem = '';

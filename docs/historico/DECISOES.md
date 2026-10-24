@@ -408,6 +408,9 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   no horizontal, toque e realce com o furigana ligado, "Já sei" e desfazer trocando o furigana sem
   recarregar. A troca de vertical para horizontal sem recarregar deixava a leitura em cima do kanji
   (a classe do ttu muda antes do layout); resolvido com o posicionamento lógico.
+- 2026-10-21: V3.1 no ar (PRs #6 e #7). No iPhone, o realce da seleção deixava um resto amarelo sob
+  o texto ao soltar a palavra (o Safari só redesenhava a área do kanji, dentro do span do furigana);
+  resolvido redesenhando o parágrafo (opacidade 0,999 por um quadro). Conferido pelo Igor no iPhone.
 - 2026-10-22: livro importado no celular não aparecia no iPad nem no PC. No servidor, nada do
   celular desde 21/10 20:27 (o livro não subiu); o servidor e o PC sincronizam normalmente. Causa
   provável: no celular a rodada falhava ou era interrompida antes da parte de envio (desde a v2 ela
