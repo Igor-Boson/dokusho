@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { tap } from 'rxjs';
-  import { browser } from '$app/environment';
+  import { browser, version } from '$app/environment';
+  import { procurarAtualizacao } from '$lib/data/atualizacao';
   import { afterNavigate } from '$app/navigation';
   import SettingsContent from '$lib/components/settings/settings-content.svelte';
   import SettingsHeader from '$lib/components/settings/settings-header.svelte';
@@ -137,6 +138,34 @@
         // no-op
       });
   }
+
+  // Versão = horário do build (o mesmo do service worker), para conferir se o aparelho atualizou.
+  const versaoDoApp = /^\d{13}$/.test(version)
+    ? new Date(Number(version)).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+    : version;
+
+  let procurando = false;
+  let resultado = '';
+
+  async function procurar() {
+    procurando = true;
+    resultado = '';
+
+    try {
+      const achou = await procurarAtualizacao();
+
+      resultado =
+        achou === 'nova'
+          ? 'Versão nova encontrada: o aviso "Atualizar" aparece quando terminar de baixar.'
+          : achou === 'atual'
+            ? 'Já está na versão mais nova.'
+            : 'Sem service worker neste navegador.';
+    } catch (erro) {
+      resultado = `Não deu para procurar: ${erro instanceof Error ? erro.message : erro}`;
+    } finally {
+      procurando = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -218,6 +247,27 @@
       bind:trackerPopupDetection={$trackerPopupDetection$}
       bind:adjustStatisticsAfterIdleTime={$adjustStatisticsAfterIdleTime$}
     />
+    <div class="dokusho-versao">
+      <span>Versão do app: {versaoDoApp}</span>
+      <button on:click={procurar} disabled={procurando}>Procurar atualização</button>
+      {#if resultado}<span>{resultado}</span>{/if}
+    </div>
   </div>
 </div>
 {$setPersistentStorage$ ?? ''}
+
+<style lang="scss">
+  .dokusho-versao {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin: 24px 0 40px;
+    font-size: 14px;
+    opacity: 0.8;
+
+    button {
+      text-decoration: underline;
+    }
+  }
+</style>
