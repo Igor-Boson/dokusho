@@ -6,7 +6,7 @@
   import { dummyFn } from '$lib/functions/utils';
   import { createEventDispatcher, onMount } from 'svelte';
   import Fa from 'svelte-fa';
-  import { vocabMudou$ } from '$lib/data/supabase/sincronizacao/iniciar';
+  import { apelidos$, nomeDoLivro, vocabMudou$ } from '$lib/data/supabase/sincronizacao/iniciar';
   import { perfilPronto$ } from '$lib/data/vocabulario/perfis';
   import { coberturasPorTitulo } from '$lib/data/vocabulario/servico';
 
@@ -64,7 +64,11 @@
         class:rounded-tl-xl={bookCard.id === currentBookId}
         class:mdc-elevation--z4={selectedBookIds.has(bookCard.id) || bookCard.id === currentBookId}
       >
-        <BookCard {...bookCard} on:click={() => onBookCardClick(bookCard.id)} />
+        <BookCard
+          {...bookCard}
+          title={nomeDoLivro(bookCard.title, $apelidos$)}
+          on:click={() => onBookCardClick(bookCard.id)}
+        />
 
         {#if coberturas.has(bookCard.title)}
           <div

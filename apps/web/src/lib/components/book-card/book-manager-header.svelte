@@ -40,6 +40,7 @@
     faChartLine,
     faCircleXmark,
     faCloudArrowUp,
+    faPen,
     faSortDown,
     faSortUp,
     faTimes,
@@ -62,6 +63,7 @@
   const dispatch = createEventDispatcher<{
     selectAllClick: void;
     removeClick: void;
+    renameClick: void;
     domainHintClick: void;
     bugReportClick: void;
     backToBookClick: void;
@@ -540,6 +542,21 @@
               on:keyup={dummyFn}
             >
               <Fa icon={faCalendarXmark} />
+            </div>
+          {/if}
+          {#if selectedCount === 1}
+            <div
+              tabindex="0"
+              role="button"
+              title="Renomear (nome mostrado nas telas)"
+              aria-label="Renomear"
+              class="transform-gpu {baseIconClasses}"
+              in:scale={inAnimationParams}
+              out:scale={outAnimationParams}
+              on:click={() => dispatch('renameClick')}
+              on:keyup={dummyFn}
+            >
+              <Fa icon={faPen} />
             </div>
           {/if}
           <div

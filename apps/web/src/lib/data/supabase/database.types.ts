@@ -148,6 +148,8 @@ export type Database = {
           characters: number;
           cover_path: string | null;
           deleted_at: string | null;
+          display_name: string | null;
+          display_name_at: string | null;
           id: string;
           modified_at: string;
           original_path: string | null;
@@ -161,6 +163,8 @@ export type Database = {
           characters?: number;
           cover_path?: string | null;
           deleted_at?: string | null;
+          display_name?: string | null;
+          display_name_at?: string | null;
           id: string;
           modified_at?: string;
           original_path?: string | null;
@@ -174,6 +178,8 @@ export type Database = {
           characters?: number;
           cover_path?: string | null;
           deleted_at?: string | null;
+          display_name?: string | null;
+          display_name_at?: string | null;
           id?: string;
           modified_at?: string;
           original_path?: string | null;

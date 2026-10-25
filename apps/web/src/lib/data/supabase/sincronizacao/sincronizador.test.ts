@@ -316,6 +316,77 @@ describe('livros', () => {
   });
 });
 
+describe('apelido do livro', () => {
+  const espera = () =>
+    new Promise((ok) => {
+      setTimeout(ok, 5);
+    });
+
+  it('o apelido chega ao outro aparelho, o mais novo vence e o título interno não muda', async () => {
+    const pc = criarAparelho(servidor, 'Windows');
+    const ipad = criarAparelho(servidor, 'iPad');
+    const titulo = 'orange 【オレンジ】 : 1 (双葉社ジュニア文庫)';
+    const { hash } = await importar(pc, titulo);
+
+    await pc.sincronizador.sincronizar();
+    await ipad.sincronizador.sincronizar();
+
+    await pc.sincronizador.renomear(titulo, '  orange 1  ');
+    expect(await pc.sincronizador.apelidosDosLivros()).toEqual(new Map([[titulo, 'orange 1']]));
+
+    await pc.sincronizador.sincronizar();
+    expect(servidor.tabela('books').get(hash)).toMatchObject({
+      title: titulo,
+      display_name: 'orange 1'
+    });
+
+    const avisosAntes = ipad.avisos.livros;
+
+    await ipad.sincronizador.sincronizar();
+    expect(await ipad.sincronizador.apelidosDosLivros()).toEqual(new Map([[titulo, 'orange 1']]));
+    expect(ipad.avisos.livros).toBe(avisosAntes + 1);
+    expect((await (await ipad.ttu).getAll('data')).map((l) => l.title)).toEqual([titulo]);
+
+    // O PC renomeia antes, mas sincroniza depois do iPad: vale o do iPad, nos dois.
+    await pc.sincronizador.renomear(titulo, 'velho');
+    await espera();
+    await ipad.sincronizador.renomear(titulo, 'novo');
+    await ipad.sincronizador.sincronizar();
+    await pc.sincronizador.sincronizar();
+    await ipad.sincronizador.sincronizar();
+    await pc.sincronizador.sincronizar();
+
+    expect(await pc.sincronizador.apelidosDosLivros()).toEqual(new Map([[titulo, 'novo']]));
+    expect(await ipad.sincronizador.apelidosDosLivros()).toEqual(new Map([[titulo, 'novo']]));
+    expect(servidor.tabela('books').get(hash)?.display_name).toBe('novo');
+
+    // Vazio volta ao título do EPUB.
+    await espera();
+    await ipad.sincronizador.renomear(titulo, ' ');
+    await ipad.sincronizador.sincronizar();
+    await pc.sincronizador.sincronizar();
+
+    expect(await pc.sincronizador.apelidosDosLivros()).toEqual(new Map());
+  });
+
+  it('apelido dado antes de o livro subir vai junto quando ele sobe', async () => {
+    const pc = criarAparelho(servidor, 'Windows');
+    const ipad = criarAparelho(servidor, 'iPad');
+    const { hash } = await importar(pc, '夢');
+
+    await pc.sincronizador.renomear('夢', 'Sonho');
+    await pc.sincronizador.sincronizar();
+    expect(servidor.tabela('books').get(hash)).toMatchObject({
+      title: '夢',
+      display_name: 'Sonho',
+      processed_path: `u1/${hash}/processado.zip`
+    });
+
+    await ipad.sincronizador.sincronizar();
+    expect(await ipad.sincronizador.apelidosDosLivros()).toEqual(new Map([['夢', 'Sonho']]));
+  });
+});
+
 describe('marcador', () => {
   it('aparelho novo recebe o marcador; o outro pergunta antes de pular', async () => {
     const pc = criarAparelho(servidor, 'Windows');

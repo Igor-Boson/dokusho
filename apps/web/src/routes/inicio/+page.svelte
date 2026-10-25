@@ -28,8 +28,10 @@
   import { getReadingGoalWindow } from '$lib/data/reading-goal';
   import { database, readingGoal$, startDayHoursForTracker$ } from '$lib/data/store';
   import {
+    apelidos$,
     cartasRecebidas$,
     estatisticasRecebidas$,
+    nomeDoLivro,
     sincronizador,
     vocabMudou$
   } from '$lib/data/supabase/sincronizacao/iniciar';
@@ -302,7 +304,7 @@
       {/if}
       <div>
         <small>Continuar lendo</small>
-        <div class="dokusho-inicio__titulo">{livroAtual.titulo}</div>
+        <div class="dokusho-inicio__titulo">{nomeDoLivro(livroAtual.titulo, $apelidos$)}</div>
         <div class="dokusho-inicio__parte"><i style:width="{livroAtual.porcentagem}%" /></div>
       </div>
       <span class="dokusho-inicio__porcentagem">{livroAtual.porcentagem}%</span>
@@ -417,7 +419,7 @@
           <span class="dokusho-inicio__sem-capa" />
         {/if}
         <div>
-          <div class="dokusho-inicio__titulo">{livro}</div>
+          <div class="dokusho-inicio__titulo">{nomeDoLivro(livro, $apelidos$)}</div>
           <div class="dokusho-inicio__parte"><i style:width="{(100 * valor) / maiorLivro}%" /></div>
         </div>
         <small>{medida === 'palavras' ? `${valor}%` : formatar(valor, medida)}</small>
@@ -447,7 +449,7 @@
               >
               <div>
                 <div class="dokusho-inicio__titulo">{palavra.significado ?? ''}</div>
-                {#if palavra.livro}<small>{palavra.livro}</small>{/if}
+                {#if palavra.livro}<small>{nomeDoLivro(palavra.livro, $apelidos$)}</small>{/if}
               </div>
             </div>
           {/each}
@@ -470,6 +472,7 @@
 <style lang="scss">
   .dokusho-inicio {
     max-width: 640px;
+    overflow-x: clip;
     margin: 0 auto;
     padding: 0 18px calc(96px + env(safe-area-inset-bottom, 0px));
     font-family: 'Noto Sans JP', system-ui, sans-serif;
@@ -723,7 +726,7 @@
 
   .dokusho-inicio__continuar {
     display: grid;
-    grid-template-columns: 40px 1fr auto;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
     gap: 14px;
     align-items: center;
 
@@ -876,7 +879,7 @@
 
   .dokusho-inicio__livro {
     display: grid;
-    grid-template-columns: 34px 1fr auto;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
     gap: 12px;
     align-items: center;
     margin-bottom: 12px;
