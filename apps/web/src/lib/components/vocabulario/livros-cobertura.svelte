@@ -1,7 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { pagePath } from '$lib/data/env';
-  import { sincronizador, vocabMudou$ } from '$lib/data/supabase/sincronizacao/iniciar';
+  import {
+    apelidos$,
+    nomeDoLivro,
+    sincronizador,
+    vocabMudou$
+  } from '$lib/data/supabase/sincronizacao/iniciar';
   import { perfilPronto$ } from '$lib/data/vocabulario/perfis';
   import { coberturasPorTitulo } from '$lib/data/vocabulario/servico';
 
@@ -35,7 +40,7 @@
     <h2>Livros</h2>
     {#each livros as livro (livro.livroId)}
       <a href="{pagePath}/vocabulario/livro?id={encodeURIComponent(livro.livroId)}">
-        <span lang="ja">{livro.titulo}</span>
+        <span lang="ja">{nomeDoLivro(livro.titulo, $apelidos$)}</span>
         {#if livro.porcentagem !== undefined}
           <b>{livro.porcentagem}%</b>
         {:else}

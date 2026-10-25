@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { apelidos$, nomeDoLivro } from '$lib/data/supabase/sincronizacao/iniciar';
   import { createEventDispatcher } from 'svelte';
 
   import type { OpcaoFurigana } from '$lib/data/furigana/modo';
@@ -77,7 +78,7 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
   </button>
   <div class="dokusho-barra__titulo">
-    <b>{titulo}</b>
+    <b>{nomeDoLivro(titulo, $apelidos$)}</b>
     <span>{capitulo ? `${capitulo} · ` : ''}{porcentagem}%{cobertura ? ` · ${cobertura}` : ''}</span
     >
   </div>

@@ -6,7 +6,12 @@
   import { pagePath } from '$lib/data/env';
   import { database } from '$lib/data/store';
   import { consultarPalavra } from '$lib/data/dicionario/servico';
-  import { sincronizador, vocabMudou$ } from '$lib/data/supabase/sincronizacao/iniciar';
+  import {
+    apelidos$,
+    nomeDoLivro,
+    sincronizador,
+    vocabMudou$
+  } from '$lib/data/supabase/sincronizacao/iniciar';
   import {
     cobertura,
     desconhecidas,
@@ -137,7 +142,7 @@
 <main class="dokusho-livro">
   <header>
     <a href="{pagePath}/vocabulario">‹ Vocabulário</a>
-    <h1 lang="ja">{titulo}</h1>
+    <h1 lang="ja">{nomeDoLivro(titulo, $apelidos$)}</h1>
   </header>
 
   {#if resumo}

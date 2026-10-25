@@ -38,7 +38,12 @@
     showExternalPlaceholder$,
     statisticsMergeMode$
   } from '$lib/data/store';
-  import { sincronizador, sincronizarAgora } from '$lib/data/supabase/sincronizacao/iniciar';
+  import {
+    apelidos$,
+    renomearLivro,
+    sincronizador,
+    sincronizarAgora
+  } from '$lib/data/supabase/sincronizacao/iniciar';
   import { cloneMutateSet } from '$lib/functions/clone-mutate-set';
   import { getDropEventFiles } from '$lib/functions/file-dom/get-drop-event-files';
   import { inputFile } from '$lib/functions/file-dom/input-file';
@@ -94,6 +99,29 @@
     }),
     share()
   );
+
+  /** Apelido do livro selecionado: o nome mostrado nas telas; o título do EPUB segue como chave. */
+  async function renomearSelecionado() {
+    const [id] = selectedBookIds;
+    const titulo = $bookCards$?.find((card) => card.id === id)?.title;
+
+    if (!titulo) return;
+
+    const novo = prompt(
+      `Nome mostrado para "${titulo}" (vazio volta ao título do EPUB):`,
+      $apelidos$.get(titulo) ?? titulo
+    );
+
+    if (novo === null) return;
+
+    try {
+      await renomearLivro(titulo, novo.trim() === titulo ? '' : novo);
+      selectedBookIds = new Set();
+      selectMode = false;
+    } catch (erro) {
+      alert(erro instanceof Error ? erro.message : String(erro));
+    }
+  }
 
   const currentBookId$ = database.lastItem$.pipe(
     map((item) => item?.dataId),
@@ -761,6 +789,7 @@
     on:selectAllClick={onSelectAllBooks}
     on:backToBookClick={backToCurrentBook}
     on:removeClick={() => removeBooks(Array.from(selectedBookIds))}
+    on:renameClick={renomearSelecionado}
     on:filesChange={(ev) => onFilesChange(ev.detail)}
     on:domainHintClick={onDomainHintClick}
     on:bugReportClick={onBugReportClick}
