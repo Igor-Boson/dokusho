@@ -5,8 +5,11 @@
   import { estadoDaLinha } from '$lib/data/vocabulario/hub';
   import { contarPorFiltro, filtrarHub, type FiltroDoHub } from '$lib/data/vocabulario/lista';
   import { desfazerJaSeiDaLinha } from '$lib/data/vocabulario/servico';
+  import { csvDoHub, nomeDoCsv } from '$lib/data/vocabulario/csv';
+  import { entregarArquivo } from '$lib/functions/anki/entregar-arquivo';
 
-  // Lista do hub (V2.4): as Palavras conhecidas, aprendendo ou com "Já sei", com busca.
+  // Lista do hub (V2.4): as Palavras conhecidas, aprendendo ou com "Já sei", com busca. V3.3:
+  // "Exportar CSV" com as conhecidas e aprendendo.
 
   const POR_VEZ = 100;
   const FILTROS: [FiltroDoHub, string][] = [
@@ -24,6 +27,19 @@
   $: contagem = contarPorFiltro(linhas);
   $: lista = filtrarHub(linhas, filtro, busca);
   $: if (filtro || busca !== undefined) mostrando = POR_VEZ;
+
+  let aviso = '';
+
+  /** Direto do clique: o Safari só abre a folha de compartilhamento num gesto recente. */
+  async function exportarCsv() {
+    aviso = '';
+    try {
+      const blob = new Blob([csvDoHub(linhas)], { type: 'text/csv;charset=utf-8' });
+      await entregarArquivo(blob, nomeDoCsv());
+    } catch (erro) {
+      aviso = `Não deu para exportar: ${erro instanceof Error ? erro.message : erro}`;
+    }
+  }
 
   async function carregar() {
     linhas = await sincronizador().listar('vocab');
@@ -52,7 +68,13 @@
 </script>
 
 <section class="dokusho-hub">
-  <h2>Palavras</h2>
+  <div class="dokusho-hub__topo">
+    <h2>Palavras</h2>
+    {#if contagem.conhecida + contagem.aprendendo}
+      <button on:click={exportarCsv}>Exportar CSV</button>
+    {/if}
+  </div>
+  {#if aviso}<p class="dokusho-hub__vazio">{aviso}</p>{/if}
   <div class="dokusho-hub__filtros">
     {#each FILTROS as [valor, rotulo]}
       <button class:ativa={filtro === valor} on:click={() => (filtro = valor)}>
@@ -106,7 +128,23 @@
     h2 {
       font-size: 17px;
       font-weight: 700;
-      margin-bottom: 8px;
+    }
+  }
+
+  .dokusho-hub__topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+
+    button {
+      min-height: 32px;
+      padding: 0 12px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dk-accent);
+      box-shadow: inset 0 0 0 1.5px var(--dk-line);
     }
   }
 

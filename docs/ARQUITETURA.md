@@ -96,7 +96,8 @@ telas, nunca no leitor.
   (`finsDosParagrafos` em `alcance-dom.ts`); daí saem as palavras vistas (`palavrasVistas`), o lido
   e a cobertura antes e depois do Alcance (`leituraDoLivro`) e as desconhecidas já vistas.
   Perfil sem posições (`FORMATO_DO_PERFIL` antigo) é recalculado.
-- `lista.ts`: filtros e busca da lista do hub.
+- `lista.ts`: filtros e busca da lista do hub. `csv.ts`: o CSV de conhecidas e aprendendo (V3.3),
+  entregue por `entregarArquivo` pelo botão "Exportar CSV" de `lista-hub.svelte`.
 - Tela: `lib/components/vocabulario/` (`cartao-anki.svelte`, `palavras-vistas.svelte`, `livros-cobertura.svelte`,
   `importar-ja-sei.svelte`, `lista-hub.svelte`) em `/vocabulario`; `/vocabulario/livro?id=` com as desconhecidas
   (abas "Já vistas" e "No livro todo"). A
