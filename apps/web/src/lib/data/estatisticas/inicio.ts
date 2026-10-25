@@ -137,3 +137,26 @@ export function formatarTempo(segundos: number) {
 
   return `${Math.floor(minutos / 60)} h ${String(minutos % 60).padStart(2, '0')} min`;
 }
+
+/** Dias seguidos com leitura até hoje; hoje ainda sem leitura não quebra a sequência de ontem. */
+export function sequenciaDeDias(porDia: Map<string, Dia>, hoje: string) {
+  const leu = (dia: string) => !!(porDia.get(dia)?.tempo || porDia.get(dia)?.caracteres);
+  let dia = leu(hoje) ? hoje : somarAoDia(hoje, -1);
+  let dias = 0;
+
+  while (leu(dia)) {
+    dias += 1;
+    dia = somarAoDia(dia, -1);
+  }
+
+  return dias;
+}
+
+/** Tom do dia no calendário da semana: 0 sem leitura; 1 a 4 por tempo (<10, <20, <40, 40+ min). */
+export function nivelDoDia(dia: Valores | undefined) {
+  if (!dia || (!dia.tempo && !dia.caracteres)) return 0;
+
+  const minutos = dia.tempo / 60;
+
+  return minutos < 10 ? 1 : minutos < 20 ? 2 : minutos < 40 ? 3 : 4;
+}

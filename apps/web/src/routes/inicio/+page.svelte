@@ -8,17 +8,27 @@
     diasDaSemana,
     diasDoPeriodo,
     formatarTempo,
+    nivelDoDia,
     porLivro,
+    sequenciaDeDias,
+    somarAoDia,
     somarDias,
     somarPorDia,
     type Dia,
     type Medida,
     type Periodo
   } from '$lib/data/estatisticas/inicio';
-  import { capasDosLivros, linhasDeLeitura } from '$lib/data/estatisticas/carregar';
+  import {
+    capasDosLivros,
+    linhasDeLeitura,
+    ultimoLivro,
+    type UltimoLivro
+  } from '$lib/data/estatisticas/carregar';
+  import { registroDoAnki, type PalavraDoRegistro } from '$lib/data/estatisticas/anki';
   import { getReadingGoalWindow } from '$lib/data/reading-goal';
   import { database, readingGoal$, startDayHoursForTracker$ } from '$lib/data/store';
   import {
+    cartasRecebidas$,
     estatisticasRecebidas$,
     sincronizador,
     vocabMudou$
@@ -34,9 +44,10 @@
   import { formatPageTitle } from '$lib/functions/format-page-title';
   import { getDateKey } from '$lib/functions/statistic-util';
 
-  // Tela Início (ESCOPO "Tela inicial"; desenho do D1): calendário da semana, meta, progresso de
-  // tempo e caracteres somando os aparelhos, gráfico por dia, filtro e lista por livro. A aba
-  // Palavras (V2.4) mostra as palavras conhecidas do hub, com o histórico dos retratos.
+  // Tela Início (ESCOPO "Tela inicial"; desenho do D1, refeito em 25/10): meta em anel com a
+  // sequência de dias, resumo da semana, "Continuar lendo", calendário da semana com tons pelo
+  // tempo lido, progresso de tempo e caracteres somando os aparelhos, lista por livro e o registro
+  // das palavras exportadas para o Anki. A aba Palavras (V2.4) mostra as conhecidas do hub.
 
   const DIAS_CURTOS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
   const DIAS_LONGOS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
@@ -52,6 +63,12 @@
   let coberturas: { livro: string; valor: number }[] = [];
   let periodo: Periodo = 7;
   let carregado = false;
+  let livroAtual: UltimoLivro | undefined;
+  let registro: { dia: string; palavras: PalavraDoRegistro[] }[] = [];
+  let verTodoRegistro = false;
+
+  const DIAS_DO_REGISTRO = 3;
+  const CIRCUNFERENCIA = 2 * Math.PI * 32;
 
   $: hoje = getDateKey($startDayHoursForTracker$);
   $: dias = diasDaSemana(hoje, semana);
@@ -82,6 +99,20 @@
   $: diasDaMeta = diasDoPeriodo(janela[1], 'tudo', janela[0]);
   $: feitoNaMeta = somarDias(porDia, diasDaMeta);
   $: temMeta = !!meta && (meta.timeGoal > 0 || meta.characterGoal > 0);
+  $: metaPorTempo = !!meta?.timeGoal;
+  $: feito = metaPorTempo ? feitoNaMeta.tempo : feitoNaMeta.caracteres;
+  $: alvo = (metaPorTempo ? meta?.timeGoal : meta?.characterGoal) || 1;
+  $: batida = temMeta && feito >= alvo;
+  $: diferenca = metaPorTempo
+    ? formatarTempo(Math.abs(feito - alvo))
+    : `${Math.abs(feito - alvo).toLocaleString('pt-BR')} caracteres`;
+  $: sequencia = sequenciaDeDias(porDia, hoje);
+  $: estaSemana = diasDaSemana(hoje, 0);
+  $: semanaLida = somarDias(porDia, estaSemana);
+  $: aoAnkiNaSemana = registro
+    .filter(({ dia }) => estaSemana.includes(dia))
+    .reduce((soma, { palavras }) => soma + palavras.length, 0);
+  $: registroVisivel = verTodoRegistro ? registro : registro.slice(0, DIAS_DO_REGISTRO);
   $: nomeDaMeta =
     meta?.goalFrequency === ReadingGoalFrequency.WEEKLY
       ? 'da semana'
@@ -116,6 +147,27 @@
       .sort((x, y) => y.valor - x.valor);
   }
 
+  async function carregarRegistro() {
+    const [cartas, lotes, titulos] = await Promise.all([
+      sincronizador().listar('cartas'),
+      sincronizador().listar('lotes'),
+      sincronizador().titulosDosLivros()
+    ]);
+
+    registro = registroDoAnki(cartas, lotes, titulos, (quando) =>
+      getDateKey($startDayHoursForTracker$, new Date(quando))
+    );
+  }
+
+  function nomeDoDia(dia: string) {
+    if (dia === hoje) return 'Hoje';
+    if (dia === somarAoDia(hoje, -1)) return 'Ontem';
+
+    const diaDaSemana = (new Date(`${dia}T12:00:00Z`).getUTCDay() + 6) % 7;
+
+    return `${DIAS_LONGOS[diaDaSemana]}, ${dataCurta(dia)}`;
+  }
+
   function dataCurta(dia: string) {
     const [, mes, d] = dia.split('-');
 
@@ -138,11 +190,14 @@
       estatisticasRecebidas$.subscribe(carregar),
       database.mudou$.subscribe(carregar),
       vocabMudou$.subscribe(carregarPalavras),
-      perfilPronto$.subscribe(carregarPalavras)
+      perfilPronto$.subscribe(carregarPalavras),
+      cartasRecebidas$.subscribe(carregarRegistro)
     ];
 
     carregar();
     carregarPalavras();
+    carregarRegistro();
+    ultimoLivro().then((achado) => (livroAtual = achado));
     capasDosLivros().then((achadas) => (capas = achadas));
 
     return () => assinaturas.forEach((assinatura) => assinatura.unsubscribe());
@@ -161,6 +216,99 @@
     <a href="{pagePath}/settings" aria-label="Configurações" class="dokusho-inicio__icone">⚙</a>
   </header>
 
+  <section class="dokusho-cartao dokusho-inicio__meta">
+    {#if temMeta}
+      <svg
+        class="dokusho-inicio__anel"
+        class:batida
+        viewBox="0 0 80 80"
+        role="img"
+        aria-label="Meta {nomeDaMeta}: {Math.round((100 * feito) / alvo)}%"
+      >
+        <circle cx="40" cy="40" r="32" />
+        <circle
+          cx="40"
+          cy="40"
+          r="32"
+          stroke-dasharray={CIRCUNFERENCIA}
+          stroke-dashoffset={CIRCUNFERENCIA * (1 - Math.min(1, feito / alvo))}
+          transform="rotate(-90 40 40)"
+        />
+        <text x="40" y="40" text-anchor="middle"
+          >{metaPorTempo ? Math.round(feito / 60) : Math.round(feito / 1000)}</text
+        >
+        <text x="40" y="55" text-anchor="middle" class="dokusho-inicio__anel-de"
+          >de {metaPorTempo
+            ? `${Math.round(alvo / 60)} min`
+            : `${Math.round(alvo / 1000)} mil`}</text
+        >
+      </svg>
+    {/if}
+    <div class="dokusho-inicio__meta-texto">
+      <div class="dokusho-inicio__meta-cabeca">
+        <small>{temMeta ? `Meta ${nomeDaMeta}` : 'Sem meta'}</small>
+        <a href="{pagePath}/settings?aba=Statistics">{temMeta ? 'Editar' : 'Definir meta'}</a>
+      </div>
+      {#if temMeta}
+        <b class:batida>
+          {#if batida}
+            Meta batida{feito > alvo ? ` · +${diferenca}` : ''}
+          {:else}
+            Faltam {diferenca}
+          {/if}
+        </b>
+        {#if metaPorTempo && meta?.characterGoal}
+          <small
+            >{feitoNaMeta.caracteres.toLocaleString('pt-BR')} de
+            {meta.characterGoal.toLocaleString('pt-BR')} caracteres</small
+          >
+        {/if}
+      {/if}
+      {#if sequencia}
+        <span class="dokusho-inicio__sequencia">
+          <svg viewBox="0 0 24 24" aria-hidden="true"
+            ><path
+              d="M12 22c4 0 7-2.7 7-7 0-3.5-2.5-6-4-8-.5 2-1.5 3-3 3 0-3-1-6-4-8 0 4-4 7-4 12 0 4.3 3 8 8 8z"
+            /></svg
+          >
+          {sequencia}
+          {sequencia === 1 ? 'dia' : 'dias seguidos'}
+        </span>
+      {/if}
+    </div>
+  </section>
+
+  <div class="dokusho-inicio__resumo">
+    <div>
+      <b>{formatarTempo(porDia.get(hoje)?.tempo ?? 0)}</b>
+      <small>lidos hoje</small>
+    </div>
+    <div>
+      <b>{semanaLida.caracteres.toLocaleString('pt-BR')}</b>
+      <small>caracteres na semana</small>
+    </div>
+    <div>
+      <b>{aoAnkiNaSemana}</b>
+      <small>{aoAnkiNaSemana === 1 ? 'palavra' : 'palavras'} ao Anki</small>
+    </div>
+  </div>
+
+  {#if livroAtual}
+    <a class="dokusho-cartao dokusho-inicio__continuar" href="{pagePath}/b?id={livroAtual.id}">
+      {#if capas.get(livroAtual.titulo)}
+        <img src={capas.get(livroAtual.titulo)} alt="" />
+      {:else}
+        <span class="dokusho-inicio__sem-capa" />
+      {/if}
+      <div>
+        <small>Continuar lendo</small>
+        <div class="dokusho-inicio__titulo">{livroAtual.titulo}</div>
+        <div class="dokusho-inicio__parte"><i style:width="{livroAtual.porcentagem}%" /></div>
+      </div>
+      <span class="dokusho-inicio__porcentagem">{livroAtual.porcentagem}%</span>
+    </a>
+  {/if}
+
   <section class="dokusho-cartao">
     <div class="dokusho-inicio__semana-cabeca">
       <button aria-label="Semana anterior" on:click={() => (semana -= 1)}>‹</button>
@@ -177,7 +325,7 @@
         <div>
           <small>{DIAS_CURTOS[i]}</small>
           <button
-            class:lido={(porDia.get(dia)?.tempo ?? 0) > 0 || (porDia.get(dia)?.caracteres ?? 0) > 0}
+            class="nivel-{nivelDoDia(porDia.get(dia))}"
             class:hoje={dia === hoje}
             class:escolhido={dia === diaEscolhido}
             disabled={dia > hoje}
@@ -200,36 +348,6 @@
         {/if}
       </p>
     {/if}
-  </section>
-
-  <section class="dokusho-cartao dokusho-inicio__meta">
-    <div>
-      {#if temMeta}
-        <small>Meta {nomeDaMeta}</small>
-        {#if meta.timeGoal}
-          <p>
-            <b>{formatarTempo(feitoNaMeta.tempo)}</b> de {formatarTempo(meta.timeGoal)}
-          </p>
-          <div class="dokusho-inicio__barra">
-            <i style:width="{Math.min(100, (100 * feitoNaMeta.tempo) / meta.timeGoal)}%" />
-          </div>
-        {/if}
-        {#if meta.characterGoal}
-          <p>
-            <b>{feitoNaMeta.caracteres.toLocaleString('pt-BR')}</b> de
-            {meta.characterGoal.toLocaleString('pt-BR')} caracteres
-          </p>
-          <div class="dokusho-inicio__barra">
-            <i
-              style:width="{Math.min(100, (100 * feitoNaMeta.caracteres) / meta.characterGoal)}%"
-            />
-          </div>
-        {/if}
-      {:else}
-        <small>Sem meta</small>
-      {/if}
-    </div>
-    <a class="dokusho-botao" href="{pagePath}/settings?aba=Statistics">Definir meta</a>
   </section>
 
   <section>
@@ -314,6 +432,37 @@
       </p>
     {/each}
   </section>
+
+  {#if registro.length}
+    <section>
+      <h2>Adicionadas ao Anki</h2>
+      <div class="dokusho-cartao dokusho-inicio__registro">
+        {#each registroVisivel as { dia, palavras } (dia)}
+          <h3>{nomeDoDia(dia)} · {palavras.length}</h3>
+          {#each palavras as palavra (palavra.id)}
+            <div class="dokusho-inicio__palavra">
+              <ruby lang="ja"
+                >{palavra.palavra}{#if palavra.leitura !== palavra.palavra}<rt>{palavra.leitura}</rt
+                  >{/if}</ruby
+              >
+              <div>
+                <div class="dokusho-inicio__titulo">{palavra.significado ?? ''}</div>
+                {#if palavra.livro}<small>{palavra.livro}</small>{/if}
+              </div>
+            </div>
+          {/each}
+        {/each}
+        {#if registro.length > DIAS_DO_REGISTRO}
+          <button
+            class="dokusho-inicio__ver-todas"
+            on:click={() => (verTodoRegistro = !verTodoRegistro)}
+          >
+            {verTodoRegistro ? 'Mostrar menos' : 'Ver todas'}
+          </button>
+        {/if}
+      </div>
+    </section>
+  {/if}
 </main>
 
 <NavegacaoInferior />
@@ -407,10 +556,29 @@
       font-size: 14px;
       box-shadow: inset 0 0 0 1.5px var(--dk-line);
 
-      &.lido {
+      &.nivel-1,
+      &.nivel-2,
+      &.nivel-3,
+      &.nivel-4 {
+        box-shadow: none;
+      }
+
+      &.nivel-1 {
+        background: color-mix(in srgb, var(--dk-accent) 25%, var(--dk-surface));
+      }
+
+      &.nivel-2 {
+        background: color-mix(in srgb, var(--dk-accent) 48%, var(--dk-surface));
+      }
+
+      &.nivel-3 {
+        background: color-mix(in srgb, var(--dk-accent) 74%, var(--dk-surface));
+        color: var(--dk-accent-ink);
+      }
+
+      &.nivel-4 {
         background: var(--dk-accent);
         color: var(--dk-accent-ink);
-        box-shadow: none;
       }
 
       &.hoje {
@@ -440,29 +608,200 @@
   .dokusho-inicio__meta {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 16px;
+    margin-top: 4px;
+  }
 
-    > div {
-      flex: 1;
+  .dokusho-inicio__anel {
+    flex: none;
+    width: 80px;
+    height: 80px;
+
+    circle {
+      fill: none;
+      stroke-width: 8;
+      stroke: var(--dk-sunk);
+
+      + circle {
+        stroke: var(--dk-accent);
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.4s ease;
+      }
     }
+
+    &.batida circle + circle {
+      stroke: var(--dk-read);
+    }
+
+    text {
+      font-size: 20px;
+      font-weight: 700;
+      fill: var(--dk-ink);
+    }
+
+    .dokusho-inicio__anel-de {
+      font-size: 10px;
+      font-weight: 400;
+      fill: var(--dk-ink2);
+    }
+  }
+
+  .dokusho-inicio__meta-texto {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 
     small {
       color: var(--dk-ink2);
     }
 
-    p {
-      margin-top: 4px;
-    }
-
     b {
-      font-size: 18px;
+      font-size: 17px;
+      font-weight: 700;
+
+      &.batida {
+        color: var(--dk-read);
+      }
     }
   }
 
-  .dokusho-inicio__barra,
+  .dokusho-inicio__meta-cabeca {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    a {
+      padding: 6px 0 6px 12px;
+      font-size: 14px;
+      color: var(--dk-accent);
+    }
+  }
+
+  .dokusho-inicio__sequencia {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--dk-warn);
+
+    svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linejoin: round;
+    }
+  }
+
+  .dokusho-inicio__resumo {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+
+    > div {
+      background: var(--dk-surface);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 1px 3px var(--dk-shadow);
+    }
+
+    b {
+      display: block;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    small {
+      font-size: 12px;
+      color: var(--dk-ink2);
+    }
+  }
+
+  .dokusho-inicio__continuar {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 14px;
+    align-items: center;
+
+    img,
+    .dokusho-inicio__sem-capa {
+      width: 40px;
+      height: 56px;
+      border-radius: 4px;
+      object-fit: cover;
+      background: var(--dk-line);
+    }
+
+    small {
+      font-size: 12px;
+      color: var(--dk-ink2);
+    }
+
+    .dokusho-inicio__parte {
+      margin-top: 8px;
+
+      i {
+        opacity: 1;
+      }
+    }
+  }
+
+  .dokusho-inicio__porcentagem {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dk-accent);
+  }
+
+  .dokusho-inicio__registro {
+    padding-top: 2px;
+
+    h3 {
+      padding: 12px 0 2px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--dk-ink2);
+    }
+
+    small {
+      font-size: 12px;
+      color: var(--dk-ink3);
+    }
+  }
+
+  .dokusho-inicio__palavra {
+    display: grid;
+    grid-template-columns: minmax(64px, auto) minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--dk-line);
+
+    ruby {
+      font-size: 19px;
+      font-weight: 500;
+      ruby-align: center;
+    }
+
+    rt {
+      font-size: 10px;
+      color: var(--dk-ink2);
+    }
+  }
+
+  .dokusho-inicio__ver-todas {
+    width: 100%;
+    min-height: 44px;
+    font-size: 14px;
+    color: var(--dk-accent);
+  }
+
   .dokusho-inicio__parte {
-    height: 8px;
-    border-radius: 4px;
+    height: 4px;
+    border-radius: 2px;
     background: var(--dk-sunk);
     overflow: hidden;
     margin-top: 6px;
@@ -470,27 +809,9 @@
     i {
       display: block;
       height: 100%;
-      background: var(--dk-read);
-    }
-  }
-
-  .dokusho-inicio__parte {
-    height: 4px;
-
-    i {
       background: var(--dk-accent);
       opacity: 0.55;
     }
-  }
-
-  .dokusho-botao {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    padding: 0 16px;
-    border-radius: 12px;
-    font-weight: 700;
-    background: var(--dk-sunk);
   }
 
   .dokusho-abas {

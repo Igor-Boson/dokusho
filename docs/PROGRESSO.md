@@ -10,6 +10,8 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 **V3.1 no ar** (PRs #6 e #7, 2026-10-21), conferido pelo Igor no iPhone.
 **V3.2 pronta** (2026-10-24), conferida no navegador com dados de teste; falta o Igor olhar com os
 livros de verdade. **V3.3 pronta** (2026-10-24): roteiro do docs/FASES.md concluído.
+**Início refeito** (2026-10-25): meta em anel, resumo, continuar lendo, semana em tons e registro
+do Anki; conferido no navegador com dados de teste.
 
 | Item | Status  | Data       | Observação                                                                  |
 | ---- | ------- | ---------- | --------------------------------------------------------------------------- |
@@ -56,6 +58,8 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
       (os perfis antigos são recalculados na primeira visita; livro não baixado no aparelho fica de fora)
 - [ ] V3.3 no aparelho: Vocabulário › Palavras › "Exportar CSV" no iPhone (folha de compartilhamento)
       e no Windows (download, abrir no Excel)
+- [ ] Início refeito no aparelho: anel da meta, "Continuar lendo" e "Adicionadas ao Anki" com os
+      dados reais
 - Conhecido: na primeira abertura da v2, uma aba ou janela antiga do Dokusho (v1) aberta trava a
   atualização do banco local; o app avisa e é só fechá-la.
 

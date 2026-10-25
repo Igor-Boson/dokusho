@@ -44,3 +44,33 @@ export async function capasDosLivros() {
 
   return capas;
 }
+
+export interface UltimoLivro {
+  id: number;
+  titulo: string;
+  porcentagem: number;
+}
+
+/** O livro aberto por último neste aparelho, com a parte lida pelo marcador, para "Continuar lendo". */
+export async function ultimoLivro(): Promise<UltimoLivro | undefined> {
+  const db = await database.db;
+  const livros = await db.getAll('data');
+  const ultimo = livros.reduce<(typeof livros)[number] | undefined>(
+    (maior, livro) =>
+      !maior || (livro.lastBookOpen || 0) > (maior.lastBookOpen || 0) ? livro : maior,
+    undefined
+  );
+
+  if (!ultimo?.lastBookOpen) return undefined;
+
+  const marcador = await db.get('bookmark', ultimo.id);
+  const lidos = marcador?.exploredCharCount ?? 0;
+
+  return {
+    id: ultimo.id,
+    titulo: ultimo.title,
+    porcentagem: ultimo.characters
+      ? Math.min(100, Math.round((100 * lidos) / ultimo.characters))
+      : 0
+  };
+}

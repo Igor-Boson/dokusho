@@ -455,3 +455,12 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   aprendendo (fica assim) e a flexão que não vira palavra, com a carta pela forma de dicionário (é o
   que ele quer). As demais (tela, cores, ordem das listas, backup por mescla e as técnicas) foram
   aprovadas sem mudança.
+- 2026-10-25: tela Início refeita com o Igor (protótipos no chat e num canvas; escolhido o "pacote
+  enxuto" com a semana em tons). A barra da meta virou um anel (a barra parecia cortada ao lado do
+  botão "Definir meta", que virou o link "Editar"), com "Meta batida · +N" ou "Faltam N" e a
+  sequência de dias seguidos (hoje sem leitura não quebra a de ontem). Novos: resumo (lidos hoje,
+  caracteres na semana, palavras ao Anki na semana), "Continuar lendo" (último livro aberto neste
+  aparelho, % pelo marcador) e "Adicionadas ao Anki" (Cartas exportadas pelo dia do Lote, 3 dias e
+  "Ver todas"; Cards criados direto no Anki não entram). Calendário da semana com 4 tons pelo tempo
+  do dia (<10, <20, <40, 40+ min), sem legenda; a grade de 12 semanas, a média no gráfico e o
+  recorde ficaram de fora.

@@ -9,7 +9,9 @@ import {
   barrasDoGrafico,
   diasDaSemana,
   diasDoPeriodo,
+  nivelDoDia,
   porLivro,
+  sequenciaDeDias,
   somarPorDia,
   somarDias,
   type LinhaDeLeitura
@@ -110,5 +112,45 @@ describe('lista por livro e gráfico', () => {
 
   it('somarDias sem dias é zero', () => {
     expect(somarDias(new Map(), [])).toEqual({ tempo: 0, caracteres: 0 });
+  });
+});
+
+describe('sequenciaDeDias (dias seguidos com leitura)', () => {
+  const porDia = somarPorDia([
+    { livro: '夢', dia: '2026-10-22', tempo: 60, caracteres: 0 },
+    { livro: '夢', dia: '2026-10-23', tempo: 0, caracteres: 100 },
+    { livro: '夢', dia: '2026-10-24', tempo: 60, caracteres: 100 },
+    { livro: '夢', dia: '2026-10-20', tempo: 60, caracteres: 100 }
+  ]);
+
+  it('conta até hoje quando hoje já tem leitura', () => {
+    expect(sequenciaDeDias(porDia, '2026-10-24')).toBe(3);
+  });
+
+  it('hoje ainda sem leitura não quebra a sequência de ontem', () => {
+    expect(sequenciaDeDias(porDia, '2026-10-25')).toBe(3);
+  });
+
+  it('um dia inteiro sem leitura zera', () => {
+    expect(sequenciaDeDias(porDia, '2026-10-26')).toBe(0);
+  });
+});
+
+describe('nivelDoDia (tons do calendário da semana)', () => {
+  const dia = (minutos: number, caracteres = 0) => ({ tempo: minutos * 60, caracteres });
+
+  it('sem leitura é 0; os tons sobem com o tempo lido', () => {
+    expect(nivelDoDia(undefined)).toBe(0);
+    expect(nivelDoDia(dia(0))).toBe(0);
+    expect(nivelDoDia(dia(5))).toBe(1);
+    expect(nivelDoDia(dia(10))).toBe(2);
+    expect(nivelDoDia(dia(20))).toBe(3);
+    expect(nivelDoDia(dia(39))).toBe(3);
+    expect(nivelDoDia(dia(40))).toBe(4);
+    expect(nivelDoDia(dia(62))).toBe(4);
+  });
+
+  it('caracteres sem tempo (outro aparelho, tempo zerado) contam como leitura', () => {
+    expect(nivelDoDia(dia(0, 300))).toBe(1);
   });
 });
