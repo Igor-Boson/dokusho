@@ -61,3 +61,17 @@ export function atualizarAgora() {
   });
   esperando.postMessage({ type: 'ATUALIZAR' });
 }
+
+/** "Procurar atualização" das Configurações: pergunta ao servidor agora, sem esperar a hora. */
+export async function procurarAtualizacao(): Promise<'nova' | 'atual' | 'sem-service-worker'> {
+  if (!registro) return 'sem-service-worker';
+
+  await registro.update();
+
+  if (registro.installing || registro.waiting) {
+    acompanhar(registro.installing ?? registro.waiting);
+    return 'nova';
+  }
+
+  return 'atual';
+}
