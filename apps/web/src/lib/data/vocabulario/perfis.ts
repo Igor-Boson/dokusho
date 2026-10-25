@@ -6,6 +6,7 @@
 
 import { openDB, type DBSchema } from 'idb';
 import { Subject } from 'rxjs';
+import { finsDosParagrafos } from '$lib/components/painel-palavra/alcance-dom';
 import { lerParagrafo, SELETOR_PARAGRAFO } from '$lib/components/painel-palavra/texto-do-dom';
 import {
   consultarPalavra,
@@ -15,7 +16,7 @@ import {
 } from '$lib/data/dicionario/servico';
 import type { Pedaco } from '$lib/data/dicionario/tokenizador';
 import { casarPedaco, type PalavraJmdict } from './casamento';
-import { PerfilEmConstrucao, type PerfilDoLivro } from './perfil';
+import { PerfilEmConstrucao, temPosicoes, type PerfilDoLivro } from './perfil';
 
 // Perfis dos livros neste aparelho (V2.3). Ficam num banco próprio, fora da sincronização: cada
 // aparelho calcula o dos livros que abre (o texto e o dicionário são os mesmos, o resultado também).
@@ -65,13 +66,31 @@ export async function lerPerfis() {
   return (await db()).getAll('perfis');
 }
 
-/** Parágrafos do HTML do livro, sem os que contêm outro (li com p dentro contaria duas vezes). */
+/**
+ * Parágrafos do HTML do livro, sem os que contêm outro (li com p dentro contaria duas vezes), com o
+ * fim de cada um contado como o Alcance. O `template` lê o HTML como o leitor (mesmas seções) sem
+ * carregar imagens.
+ */
 function paragrafosDoHtml(html: string) {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  return [...doc.body.querySelectorAll(SELETOR_PARAGRAFO)].filter(
+  const modelo = document.createElement('template');
+  modelo.innerHTML = html;
+  const { fins, total } = finsDosParagrafos(modelo.content);
+  const paragrafos = [...modelo.content.querySelectorAll(SELETOR_PARAGRAFO)].filter(
     (p) => !p.querySelector(SELETOR_PARAGRAFO)
   );
+  let ultimo = 0;
+  return {
+    total,
+    paragrafos: paragrafos.map((elemento) => {
+      ultimo = fins.get(elemento) ?? ultimo;
+      return { elemento, fim: ultimo };
+    })
+  };
 }
+
+/** Perfil guardado que precisa ser calculado de novo (outro dicionário ou formato antigo). */
+export const perfilVelho = (perfil: PerfilDoLivro, versao: string) =>
+  perfil.versao !== versao || !temPosicoes(perfil);
 
 const emAndamento = new Map<string, Promise<PerfilDoLivro | undefined>>();
 
@@ -92,7 +111,7 @@ async function calcular(livroId: string, html: () => Promise<string | undefined>
   const versao = await versaoDoDicionario();
   if (!versao) return undefined;
   const guardado = await lerPerfil(livroId);
-  if (guardado?.versao === versao) return guardado;
+  if (guardado && !perfilVelho(guardado, versao)) return guardado;
 
   const texto = await html();
   if (!texto) return undefined;
@@ -110,13 +129,14 @@ async function calcular(livroId: string, html: () => Promise<string | undefined>
     return r;
   };
 
-  const paragrafos = paragrafosDoHtml(texto);
+  const { paragrafos, total } = paragrafosDoHtml(texto);
   const perfil = new PerfilEmConstrucao();
   let fatia = performance.now();
 
   for (let i = 0; i < paragrafos.length; i += 1) {
-    const { texto: doParagrafo } = lerParagrafo(paragrafos[i]);
-    if (doParagrafo.trim()) await perfil.acrescentar(tk.tokenizar(doParagrafo), casar);
+    const { elemento, fim } = paragrafos[i];
+    const { texto: doParagrafo } = lerParagrafo(elemento);
+    if (doParagrafo.trim()) await perfil.acrescentar(tk.tokenizar(doParagrafo), casar, fim);
     if (performance.now() - fatia > FATIA_MS) {
       calculando.set(livroId, i / paragrafos.length);
       progressoDoPerfil$.next({ livroId, fracao: i / paragrafos.length });
@@ -125,7 +145,7 @@ async function calcular(livroId: string, html: () => Promise<string | undefined>
     }
   }
 
-  const pronto = perfil.pronto(livroId, versao);
+  const pronto = perfil.pronto(livroId, versao, total);
   await (await db()).put('perfis', pronto);
   calculando.delete(livroId);
   ultimaMedida = {

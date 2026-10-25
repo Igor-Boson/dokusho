@@ -72,6 +72,24 @@ export function mapearLivro(htmlContent: string): MapaDoLivro {
   return { secoes, total };
 }
 
+/**
+ * Fim de cada parágrafo do livro, contado como em `mapearLivro` (seção por seção, a partir dos
+ * filhos da raiz). Usado pelo perfil do livro para saber se uma palavra está no trecho lido (V3.2).
+ */
+export function finsDosParagrafos(raiz: ParentNode) {
+  const fins = new Map<Element, number>();
+  let total = 0;
+
+  for (const secao of Array.from(raiz.children)) {
+    const { paragrafos, fins: daSecao, contados } = paragrafosEFins(secao, total);
+
+    paragrafos.forEach((paragrafo, i) => fins.set(paragrafo, daSecao[i]));
+    total = contados;
+  }
+
+  return { fins, total };
+}
+
 /** Marca os parágrafos lidos do que está na tela (o livro inteiro ou uma seção). */
 export function marcarLidos(conteudo: Element, mapa: MapaDoLivro, alcance: number) {
   const { paragrafos } = paragrafosEFins(conteudo, 0);
