@@ -471,3 +471,11 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   pelo horário do aparelho, à parte do `modified_at` da linha (que é o da importação). Na
   Biblioteca: selecionar um livro → lápis; vazio volta ao título. O Início também travou a rolagem
   horizontal.
+- 2026-10-25: capa que sumia no iPhone depois de abrir e fechar o livro. Duas correções às cegas
+  falharam (reler a capa depois do put; reler a lista a cada visita à Biblioteca, que ficou). Um
+  diagnóstico temporário nas Configurações mostrou no aparelho: antes de abrir, capa e 28 imagens
+  boas; depois, capa `NotFoundError` e imagens boas. No EPUB a capa é o mesmo Blob de uma das
+  imagens, e o Safari perde o arquivo da capa quando o leitor regrava o registro inteiro
+  (`updateLastRead`). Correção: antes do put a capa vira cópia própria, e uma capa já perdida volta
+  pela imagem de mesmo tamanho e tipo (`capa-independente.ts`). Conferido no iPhone. Ficaram nas
+  Configurações a versão do app (horário do build) e "Procurar atualização"; o diagnóstico saiu.

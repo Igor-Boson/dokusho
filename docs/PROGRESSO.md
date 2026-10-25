@@ -11,8 +11,9 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 **V3.2 pronta** (2026-10-24), conferida no navegador com dados de teste; falta o Igor olhar com os
 livros de verdade. **V3.3 pronta** (2026-10-24): roteiro do docs/FASES.md concluído.
 **Início refeito** (2026-10-25): meta em anel, resumo, continuar lendo, semana em tons e registro
-do Anki; apelido do livro (nome mostrado no lugar do título do EPUB); conferido no navegador com
-dados de teste.
+do Anki; apelido do livro (nome mostrado no lugar do título do EPUB). Capa que sumia no iPhone
+depois de abrir o livro corrigida e conferida no aparelho. Versão do app e "Procurar atualização"
+no fim das Configurações.
 
 | Item | Status  | Data       | Observação                                                                  |
 | ---- | ------- | ---------- | --------------------------------------------------------------------------- |
@@ -59,10 +60,9 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
       (os perfis antigos são recalculados na primeira visita; livro não baixado no aparelho fica de fora)
 - [ ] V3.3 no aparelho: Vocabulário › Palavras › "Exportar CSV" no iPhone (folha de compartilhamento)
       e no Windows (download, abrir no Excel)
-- [ ] Início refeito no aparelho: anel da meta, "Continuar lendo" e "Adicionadas ao Anki" com os
-      dados reais
-- [ ] Apelido do livro no aparelho: renomear no iPhone e ver chegar no PC (migração aplicada em
-      2026-10-25)
+- [ ] Início no aparelho: "Adicionadas ao Anki" com os dados reais (anel da meta, "Continuar
+      lendo" e semana conferidos no iPhone em 2026-10-25)
+- [ ] Apelido do livro: ver o apelido dado no iPhone chegar no PC (renomear no iPhone conferido)
 - Conhecido: na primeira abertura da v2, uma aba ou janela antiga do Dokusho (v1) aberta trava a
   atualização do banco local; o app avisa e é só fechá-la.
 
