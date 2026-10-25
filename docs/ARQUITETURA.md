@@ -92,9 +92,14 @@ telas, nunca no leitor.
   parágrafos perto da tela; o painel mostra o estado e o "Já sei".
 - `perfil.ts` (puro: perfil do livro, cobertura, desconhecidas) e `perfis.ts` (banco
   `dokusho-perfis`, fora da sincronização: o cálculo em fatias de 30 ms, `perfilPronto$`).
+  Desde a V3.2 cada ocorrência guarda o fim do seu parágrafo, contado como o Alcance
+  (`finsDosParagrafos` em `alcance-dom.ts`); daí saem as palavras vistas (`palavrasVistas`), o lido
+  e a cobertura antes e depois do Alcance (`leituraDoLivro`) e as desconhecidas já vistas.
+  Perfil sem posições (`FORMATO_DO_PERFIL` antigo) é recalculado.
 - `lista.ts`: filtros e busca da lista do hub.
-- Tela: `lib/components/vocabulario/` (`cartao-anki.svelte`, `livros-cobertura.svelte`,
-  `importar-ja-sei.svelte`, `lista-hub.svelte`) em `/vocabulario`; `/vocabulario/livro?id=` com as desconhecidas. A
+- Tela: `lib/components/vocabulario/` (`cartao-anki.svelte`, `palavras-vistas.svelte`, `livros-cobertura.svelte`,
+  `importar-ja-sei.svelte`, `lista-hub.svelte`) em `/vocabulario`; `/vocabulario/livro?id=` com as desconhecidas
+  (abas "Já vistas" e "No livro todo"). A
   Biblioteca (`book-card-list.svelte`) mostra a cobertura na capa.
 
 ## Cartas (`lib/data/cartas/`, ADR 0006, 0009, 0010; formato em docs/CARDS.md)

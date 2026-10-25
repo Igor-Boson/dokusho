@@ -433,3 +433,12 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   rodada de sincronização (até 4 s) para perguntar do marcador de outro aparelho antes de mostrar o
   texto. Agora (`fix/abrir-livro-rapido`) o livro abre na hora e a pergunta vem depois, se chegar;
   se você já leu aqui nesse meio tempo, o marcador daqui vence e não há pergunta.
+- 2026-10-24: V3.2 (aprovado pelo Igor antes de implementar). "Palavra vista" = aparece num
+  parágrafo que o Alcance já passou (a regra da barra verde). O perfil do livro guarda, por
+  ocorrência, o fim do parágrafo contado como o Alcance (o HTML lido por `template`, que separa as
+  seções como o leitor e não carrega imagens). Telas: card "Palavras vistas" no Vocabulário (somando
+  os livros com perfil neste aparelho, cada Palavra uma vez, pelo estado no hub) e, em Palavras do
+  livro, "% do livro lido", cobertura no que leu e no que falta, e a aba "Já vistas" (desconhecidas
+  do trecho lido, das vistas mais vezes). Gráfico de vistas por dia e tela Início ficaram de fora
+  (o Alcance não tem histórico). Perfis da V2.3 são recalculados ao abrir as telas ou o livro;
+  livro não baixado no aparelho fica de fora da soma, com aviso "Faltam N livros".
