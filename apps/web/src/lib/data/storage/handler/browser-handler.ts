@@ -18,6 +18,7 @@ import { database, lastReadingGoalsModified$ } from '$lib/data/store';
 import type { MergeMode } from '$lib/data/merge-mode';
 import { ReplicationSaveBehavior } from '$lib/functions/replication/replication-options';
 import { StorageDataType } from '$lib/data/storage/storage-types';
+import { capaIndependente } from './capa-independente';
 
 export class BrowserStorageHandler extends BaseStorageHandler {
   updateSettings(
@@ -105,6 +106,7 @@ export class BrowserStorageHandler extends BaseStorageHandler {
       BaseStorageHandler.getBookMetadata(filename);
     const db = await database.db;
 
+    book.coverImage = await capaIndependente(book.coverImage, book.blobs);
     await db.put('data', book);
 
     this.addBookCard(this.currentContext.title, { characters, lastBookModified, lastBookOpen });
