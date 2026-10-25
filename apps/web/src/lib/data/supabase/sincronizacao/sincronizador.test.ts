@@ -409,6 +409,34 @@ describe('marcador', () => {
     });
   });
 
+  it('marcador gravado aqui enquanto a sincronização corre não recebe a pergunta', async () => {
+    const pc = criarAparelho(servidor, 'Windows');
+    const ipad = criarAparelho(servidor, 'iPad');
+    const { dataId } = await importar(pc, '夢');
+    const dbPc = await pc.ttu;
+
+    await pc.sincronizador.sincronizar();
+    await ipad.sincronizador.sincronizar();
+
+    const dbIpad = await ipad.ttu;
+    const [livroIpad] = await dbIpad.getAll('data');
+
+    await dbIpad.put('bookmark', {
+      dataId: livroIpad.id,
+      progress: 0.7,
+      lastBookmarkModified: 2000
+    });
+    await ipad.sincronizador.sincronizar();
+
+    // O livro já está aberto no PC e a leitura começou antes de a sincronização terminar.
+    const pergunta = pc.sincronizador.marcadorDeOutroAparelho(dataId, 1000);
+
+    await dbPc.put('bookmark', { dataId, progress: 0.3, lastBookmarkModified: 3000 });
+
+    expect(await pergunta).toBeUndefined();
+    expect((await dbPc.get('bookmark', dataId))?.progress).toBe(0.3);
+  });
+
   it('recusar a pergunta mantém o marcador daqui', async () => {
     const pc = criarAparelho(servidor, 'Windows');
     const ipad = criarAparelho(servidor, 'iPad');

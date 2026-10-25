@@ -429,3 +429,7 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   mostra a mensagem inteira ao tocar. A causa exata do "N…" só se confirma no iPhone.
 - 2026-10-22: correção no ar e conferida pelo Igor: o livro importado no celular chegou aos outros
   aparelhos.
+- 2026-10-24: abrir um livro logo depois de abrir o app levava ~5 s porque o leitor esperava a
+  rodada de sincronização (até 4 s) para perguntar do marcador de outro aparelho antes de mostrar o
+  texto. Agora (`fix/abrir-livro-rapido`) o livro abre na hora e a pergunta vem depois, se chegar;
+  se você já leu aqui nesse meio tempo, o marcador daqui vence e não há pergunta.

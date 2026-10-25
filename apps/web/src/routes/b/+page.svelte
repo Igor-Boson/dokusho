@@ -189,6 +189,7 @@
   } from '$lib/functions/range-util';
 
   let showSpinner = true;
+  let saiuDoLeitor = false;
   let showHeader = false;
   let leitorDokusho: LeitorDokusho | undefined;
   let coberturaDoLivro = '';
@@ -333,7 +334,8 @@
 
         await localStorageHandler.updateLastRead(bookData);
         await syncDownData(externalStorageHandler, currentContext);
-        await perguntarMarcadorDeOutroAparelho(bookData);
+        // Sem await: o livro abre na hora e a pergunta vem quando a sincronização responder.
+        perguntarMarcadorDeOutroAparelho(bookData).catch(() => undefined);
 
         if (!$statisticsEnabled$) {
           const wasNew = (
@@ -628,6 +630,8 @@
   /** Experimental Code - May be removed any time without warning */
 
   onDestroy(() => {
+    saiuDoLeitor = true;
+
     if (browser) {
       document.removeEventListener('ttu-action', handleAction, false);
       document.documentElement.lang = 'ja';
@@ -1181,13 +1185,16 @@
     ev.preventDefault();
   }
 
-  /** Outro aparelho tem marcador mais novo: pergunta antes de pular (ESCOPO "Outros comportamentos"). */
+  /**
+   * Outro aparelho tem marcador mais novo: pergunta antes de pular (ESCOPO "Outros comportamentos").
+   * Roda com o livro já aberto; se você começou a ler aqui antes da resposta, o marcador daqui vence.
+   */
   async function perguntarMarcadorDeOutroAparelho(livro: BooksDbBookData) {
     const linha = await sincronizador()
       .marcadorDeOutroAparelho(livro.id)
       .catch(() => undefined);
 
-    if (!linha) return;
+    if (!linha || saiuDoLeitor || getBookIdSync() !== livro.id) return;
 
     const ficar = await new Promise<boolean>((resolver) => {
       dialogManager.dialogs$.next([
@@ -1211,6 +1218,8 @@
       await sincronizador().dispensarMarcadorRemoto(linha);
     } else {
       await sincronizador().aplicarMarcadorRemoto(livro.id, linha);
+      bookmarkData = database.getBookmark(livro.id);
+      await scrollToBookmark();
     }
   }
 
