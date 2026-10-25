@@ -61,8 +61,8 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
       e no Windows (download, abrir no Excel)
 - [ ] Início refeito no aparelho: anel da meta, "Continuar lendo" e "Adicionadas ao Anki" com os
       dados reais
-- [ ] Apelido do livro: aplicar a migração `20261025120000_apelido_do_livro.sql`
-      (`npx supabase db push`) antes do merge; depois, renomear no iPhone e ver chegar no PC
+- [ ] Apelido do livro no aparelho: renomear no iPhone e ver chegar no PC (migração aplicada em
+      2026-10-25)
 - Conhecido: na primeira abertura da v2, uma aba ou janela antiga do Dokusho (v1) aberta trava a
   atualização do banco local; o app avisa e é só fechá-la.
 
