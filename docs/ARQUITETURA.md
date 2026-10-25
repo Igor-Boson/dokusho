@@ -12,7 +12,7 @@ em português, ao lado do código do ttu, que segue com os nomes originais.
 | Rota                     | O que é                                                                                    |
 | ------------------------ | ------------------------------------------------------------------------------------------ |
 | `/` → `/inicio`          | Início: meta em anel, resumo, continuar lendo, semana em tons, progresso, registro do Anki |
-| `/manage`                | Biblioteca do ttu (livro na nuvem como placeholder com ícone; apagar com confirmação)      |
+| `/manage`                | Biblioteca do ttu (livro na nuvem com ícone; apagar com confirmação; apelido pelo lápis)   |
 | `/b?id=`                 | Leitor do ttu com a barra própria, o toque na palavra, o painel e a barra verde do Alcance |
 | `/fila`                  | Fila de cartas e aba Lotes; `/fila?carta=<id>` abre a edição                               |
 | `/settings?aba=`         | Configurações do ttu, mais Dicionário, Backup e Aparência (aba Data)                       |
@@ -129,6 +129,8 @@ telas, nunca no leitor.
 - Início: `lib/data/estatisticas/` (contas testadas em `inicio.ts`; aba Palavras em `palavras.ts`, a
   partir dos retratos de `vocab_history`; registro do Anki em `anki.ts`, das Cartas exportadas
   agrupadas pelo dia do Lote).
+- Apelido do livro: `renomearLivro`, `apelidos$` e `nomeDoLivro` em `sincronizacao/iniciar.ts`; as
+  telas mostram `nomeDoLivro(titulo, $apelidos$)`, e o título segue como chave.
 - Bancos locais (IndexedDB): `books` (ttu), `dokusho-sinc` (sincronização e hub; fecha a conexão
   quando outra aba precisa atualizá-lo e avisa quando espera), `dokusho-dicionario`,
   `dokusho-perfis` (perfis dos livros, fora da sincronização).

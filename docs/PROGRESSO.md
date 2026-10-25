@@ -11,7 +11,8 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 **V3.2 pronta** (2026-10-24), conferida no navegador com dados de teste; falta o Igor olhar com os
 livros de verdade. **V3.3 pronta** (2026-10-24): roteiro do docs/FASES.md concluído.
 **Início refeito** (2026-10-25): meta em anel, resumo, continuar lendo, semana em tons e registro
-do Anki; conferido no navegador com dados de teste.
+do Anki; apelido do livro (nome mostrado no lugar do título do EPUB); conferido no navegador com
+dados de teste.
 
 | Item | Status  | Data       | Observação                                                                  |
 | ---- | ------- | ---------- | --------------------------------------------------------------------------- |
@@ -60,6 +61,8 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
       e no Windows (download, abrir no Excel)
 - [ ] Início refeito no aparelho: anel da meta, "Continuar lendo" e "Adicionadas ao Anki" com os
       dados reais
+- [ ] Apelido do livro: aplicar a migração `20261025120000_apelido_do_livro.sql`
+      (`npx supabase db push`) antes do merge; depois, renomear no iPhone e ver chegar no PC
 - Conhecido: na primeira abertura da v2, uma aba ou janela antiga do Dokusho (v1) aberta trava a
   atualização do banco local; o app avisa e é só fechá-la.
 

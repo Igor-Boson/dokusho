@@ -464,3 +464,10 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   "Ver todas"; Cards criados direto no Anki não entram). Calendário da semana com 4 tons pelo tempo
   do dia (<10, <20, <40, 40+ min), sem legenda; a grade de 12 semanas, a média no gráfico e o
   recorde ficaram de fora.
+- 2026-10-25: apelido do livro (pedido do Igor: o título do EPUB era longo demais e estourava a
+  tela Início). Não renomeia: o título segue como chave do ttu (estatísticas por título, etiqueta
+  `dokusho::<título>` no Anki); o apelido só troca o nome mostrado (Biblioteca, Início, Vocabulário,
+  barra do leitor). Colunas `display_name` e `display_name_at` em `books`; vence o apelido mais novo
+  pelo horário do aparelho, à parte do `modified_at` da linha (que é o da importação). Na
+  Biblioteca: selecionar um livro → lápis; vazio volta ao título. O Início também travou a rolagem
+  horizontal.
