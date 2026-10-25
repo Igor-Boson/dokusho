@@ -198,12 +198,17 @@ export class Sincronizador {
       await sinc.put('livros', { ...mesmoTitulo, apagadoEm: Date.now() });
     }
 
+    const anterior = await sinc.get('livros', id);
+
     await sinc.put('livros', {
       id,
       titulo,
       original: arquivo,
       pendente: { original: true, processado: true, capa: true, linha: true },
-      modificado: Date.now()
+      modificado: Date.now(),
+      ...(anterior?.apelidoEm
+        ? { apelido: anterior.apelido, apelidoEm: anterior.apelidoEm, apelidoPendente: true }
+        : {})
     });
 
     return id;
@@ -360,6 +365,34 @@ export class Sincronizador {
     return new Map((await sinc.getAll('livros')).map((livro) => [livro.id, livro.titulo]));
   }
 
+  /** Dá (ou tira, com texto vazio) o apelido mostrado no lugar do título; sobe na sincronização. */
+  async renomear(titulo: string, apelido: string) {
+    const sinc = await this.opcoes.sinc;
+    const mapa = await sinc.getFromIndex('livros', 'titulo', titulo);
+
+    if (!mapa) throw new Error('Livro ainda não sincronizado; tente de novo daqui a pouco');
+
+    const limpo = apelido.trim();
+
+    await sinc.put('livros', {
+      ...mapa,
+      apelido: limpo || undefined,
+      apelidoEm: Date.now(),
+      apelidoPendente: true
+    });
+  }
+
+  /** Título → apelido dos livros que têm um. */
+  async apelidosDosLivros() {
+    const sinc = await this.opcoes.sinc;
+
+    return new Map(
+      (await sinc.getAll('livros'))
+        .filter((livro) => livro.apelido && !livro.apagadoEm)
+        .map((livro) => [livro.titulo, livro.apelido as string])
+    );
+  }
+
   /** Livros que não foram apagados: hash → título. */
   async livrosAtivos() {
     const sinc = await this.opcoes.sinc;
@@ -420,6 +453,7 @@ export class Sincronizador {
     await passo(() => this.registrarLivrosLocais());
     await passo(() => this.enviarApagamentos(servidor));
     await passo(() => this.enviarLivros(servidor));
+    await passo(() => this.enviarApelidos(servidor));
     await passo(() => this.enviarMarcadores(servidor));
     await passo(() => this.enviarEstatisticas(servidor));
     await passo(() => this.enviarMetas(servidor));
@@ -586,7 +620,7 @@ export class Sincronizador {
     let mudou = false;
 
     for (const linha of linhas) {
-      const mapa = await sinc.get('livros', linha.id);
+      let mapa = await sinc.get('livros', linha.id);
 
       if (linha.deleted_at) {
         // Vale se for mais nova que a importação daqui (reimportar depois de apagar devolve o livro).
@@ -604,6 +638,14 @@ export class Sincronizador {
       }
 
       if (mapa) {
+        const comApelido = juntarApelido(mapa, linha);
+
+        if (comApelido !== mapa) {
+          if (comApelido.apelido !== mapa.apelido) mudou = true;
+          await sinc.put('livros', comApelido);
+          mapa = comApelido;
+        }
+
         if (mapa.apagadoEm && mapa.apagadoEm < deIso(linha.modified_at)) {
           // Importado de novo em outro aparelho depois de apagado aqui.
           const { apagadoEm: _, ...semApagado } = mapa;
@@ -632,7 +674,10 @@ export class Sincronizador {
         pendente: {},
         temOriginal: !!linha.original_path,
         modificado: deIso(linha.modified_at),
-        tamanho: linha.processed_size ?? undefined
+        tamanho: linha.processed_size ?? undefined,
+        ...(linha.display_name_at
+          ? { apelido: linha.display_name || undefined, apelidoEm: deIso(linha.display_name_at) }
+          : {})
       };
 
       if (!(await ttu.getFromIndex('data', 'title', linha.title))) {
@@ -888,10 +933,14 @@ export class Sincronizador {
           processed_path: caminhos.processado,
           original_path: atualizado.temOriginal ? caminhos.original : null,
           processed_size: atualizado.tamanho ?? null,
+          ...(mapa.apelidoEm
+            ? { display_name: mapa.apelido ?? null, display_name_at: paraIso(mapa.apelidoEm) }
+            : {}),
           modified_at: paraIso(mapa.modificado),
           deleted_at: null
         }
       ]);
+      delete atualizado.apelidoPendente;
 
       if (originalPendente) {
         atualizado.pendente = { original: true };
@@ -904,6 +953,31 @@ export class Sincronizador {
     }
 
     if (errosDoOriginal.length) throw new Error(errosDoOriginal.join(' · '));
+  }
+
+  /** Apelidos mudados aqui, de livros que já estão no servidor (os outros sobem com o livro). */
+  private async enviarApelidos(servidor: Servidor) {
+    const sinc = await this.opcoes.sinc;
+
+    for (const mapa of await sinc.getAll('livros')) {
+      if (!mapa.apelidoPendente || mapa.apagadoEm || !mapa.apelidoEm) continue;
+      if (mapa.pendente.linha || mapa.pendente.processado) continue;
+
+      // Mesmo modified_at da linha: o gatilho aceita, e um apagamento mais novo continua valendo.
+      await servidor.enviar('books', [
+        {
+          id: mapa.id,
+          title: mapa.titulo,
+          display_name: mapa.apelido ?? null,
+          display_name_at: paraIso(mapa.apelidoEm),
+          modified_at: paraIso(mapa.modificado)
+        }
+      ]);
+
+      const { apelidoPendente: _, ...enviado } = mapa;
+
+      await sinc.put('livros', enviado);
+    }
   }
 
   private async enviarMarcadores(servidor: Servidor) {
@@ -1049,4 +1123,23 @@ export class Sincronizador {
       }
     }
   }
+}
+
+/**
+ * O apelido que vale entre o daqui e o da linha recebida: o mais novo. Se o daqui for mais novo
+ * (outro aparelho subiu um mais velho depois), marca para subir de novo.
+ */
+function juntarApelido(mapa: LivroSinc, linha: LinhaLivro): LivroSinc {
+  const doServidor = linha.display_name_at ? deIso(linha.display_name_at) : 0;
+  const daqui = mapa.apelidoEm ?? 0;
+
+  if (doServidor > daqui) {
+    const { apelidoPendente: _, ...semPendente } = mapa;
+
+    return { ...semPendente, apelido: linha.display_name || undefined, apelidoEm: doServidor };
+  }
+
+  if (daqui > doServidor && !mapa.apelidoPendente) return { ...mapa, apelidoPendente: true };
+
+  return mapa;
 }

@@ -32,6 +32,12 @@ export interface LivroSinc {
   /** Apagado neste aparelho; falta avisar o servidor. */
   apagadoEm?: number;
   tamanho?: number;
+  /** Nome mostrado nas telas no lugar do título (o título segue como chave do ttu). */
+  apelido?: string;
+  /** Quando o apelido foi dado ou tirado (horário do aparelho); vence o mais novo. */
+  apelidoEm?: number;
+  /** O apelido mudou aqui e falta subir. */
+  apelidoPendente?: true;
 }
 
 interface SincDb extends DBSchema {

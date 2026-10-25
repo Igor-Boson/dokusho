@@ -44,6 +44,25 @@ export const cartasRecebidas$ = new Subject<void>();
 /** O hub de vocabulário mudou (chegou do servidor ou foi gravado aqui): destaque, painel e telas releem. */
 export const vocabMudou$ = new Subject<void>();
 
+/** Apelidos dos livros (título → nome mostrado); muda quando um chega do servidor ou é dado aqui. */
+export const apelidos$ = new BehaviorSubject<Map<string, string>>(new Map());
+
+export async function atualizarApelidos() {
+  apelidos$.next(await sincronizador().apelidosDosLivros());
+}
+
+/** O nome que as telas mostram: o apelido, se houver, ou o título do EPUB. */
+export function nomeDoLivro(titulo: string, apelidos: Map<string, string>) {
+  return apelidos.get(titulo) || titulo;
+}
+
+/** Dá ou tira (texto vazio) o apelido de um livro; sobe em até ~15 s. */
+export async function renomearLivro(titulo: string, apelido: string) {
+  await sincronizador().renomear(titulo, apelido);
+  await atualizarApelidos();
+  sincronizarEmBreve();
+}
+
 const CHAVE_APARELHO = 'dokusho-aparelho';
 const ESPERA_DEPOIS_DE_MUDAR = 15_000;
 const INTERVALO_EM_PRIMEIRO_PLANO = 5 * 60_000;
@@ -103,7 +122,10 @@ export function sincronizador() {
       servidor: () => servidorSupabase(supabase),
       aparelho: aparelho(),
       avisos: {
-        livros: atualizarListaDeLivros,
+        livros: () => {
+          atualizarListaDeLivros();
+          atualizarApelidos();
+        },
         marcadores: () => database.bookmarksChanged$.next(),
         metas: async () => readingGoal$.next(await getCurrentReadingGoal()),
         estatisticas: () => estatisticasRecebidas$.next(),
@@ -169,6 +191,7 @@ export function iniciarSincronizacao() {
   navigator.storage?.persist?.().catch(() => undefined);
 
   database.mudou$.subscribe(sincronizarEmBreve);
+  atualizarApelidos().catch(() => undefined);
 
   window.addEventListener('online', sincronizarAgora);
 
