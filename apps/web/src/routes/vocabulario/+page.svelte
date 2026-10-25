@@ -1,13 +1,14 @@
 <script lang="ts">
   import CartaoAnki from '$lib/components/vocabulario/cartao-anki.svelte';
   import ImportarJaSei from '$lib/components/vocabulario/importar-ja-sei.svelte';
+  import PalavrasVistas from '$lib/components/vocabulario/palavras-vistas.svelte';
   import LivrosCobertura from '$lib/components/vocabulario/livros-cobertura.svelte';
   import ListaHub from '$lib/components/vocabulario/lista-hub.svelte';
   import NavegacaoInferior from '$lib/components/navegacao/navegacao-inferior.svelte';
   import { formatPageTitle } from '$lib/functions/format-page-title';
 
   // Tela Vocabulário (ESCOPO "Hub de vocabulário"): a Sincronização do Anki, a cobertura dos
-  // livros, o "Já sei" pela frequência e a lista do hub.
+  // livros, as palavras vistas, o "Já sei" pela frequência e a lista do hub.
 </script>
 
 <svelte:head>
@@ -18,6 +19,7 @@
   <header><h1>Vocabulário</h1></header>
 
   <CartaoAnki />
+  <PalavrasVistas />
   <LivrosCobertura />
   <ImportarJaSei />
   <ListaHub />

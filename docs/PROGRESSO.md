@@ -8,7 +8,8 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 **v1 pronta** (2026-10-21), no ar em https://dokusho-kappa.vercel.app. **v2 pronta** e no ar
 (PR #5, 2026-10-21). Decisões marcadas "(autônomo, revisar)" em docs/historico/DECISOES.md.
 **V3.1 no ar** (PRs #6 e #7, 2026-10-21), conferido pelo Igor no iPhone.
-Próximo: V3.2.
+**V3.2 pronta** (2026-10-24), conferida no navegador com dados de teste; falta o Igor olhar com os
+livros de verdade. Próximo: V3.3.
 
 | Item | Status  | Data       | Observação                                                                  |
 | ---- | ------- | ---------- | --------------------------------------------------------------------------- |
@@ -32,6 +33,7 @@ Próximo: V3.2.
 | V2.3 | feito   | 2026-10-21 | cobertura no leitor, Biblioteca e Vocabulário; desconhecidas por frequência |
 | V2.4 | feito   | 2026-10-21 | lista do hub na tela Vocabulário; aba Palavras no Início                    |
 | V3.1 | feito   | 2026-10-21 | furigana gerado e adaptativo (ADR 0015); 97,5% certo; ok no iPhone          |
+| V3.2 | feito\* | 2026-10-24 | palavras vistas, lido e cobertura antes/depois do Alcance, "Já vistas"      |
 
 \* Testes em aparelho dispensados pelo Igor, cobertos só pelos testes automáticos (ver abaixo).
 
@@ -50,6 +52,8 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 ## Pendências
 
 - [ ] Revisar as decisões "(autônomo, revisar)" da v2 e do V3.1 em docs/historico/DECISOES.md
+- [ ] V3.2 no aparelho: Vocabulário › "Palavras vistas" e Palavras do livro com os livros reais
+      (os perfis antigos são recalculados na primeira visita; livro não baixado no aparelho fica de fora)
 - Conhecido: na primeira abertura da v2, uma aba ou janela antiga do Dokusho (v1) aberta trava a
   atualização do banco local; o app avisa e é só fechá-la.
 
