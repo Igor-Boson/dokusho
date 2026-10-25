@@ -5,7 +5,11 @@
  */
 
 import { supabase } from '$lib/data/supabase/client';
-import { sincronizador, sincronizarEmBreve } from '$lib/data/supabase/sincronizacao/iniciar';
+import {
+  cartasRecebidas$,
+  sincronizador,
+  sincronizarEmBreve
+} from '$lib/data/supabase/sincronizacao/iniciar';
 import type { LinhaCarta, LinhaLote } from '$lib/data/supabase/sincronizacao/regras';
 import { gerarApkg, type MidiaApkg, type NotaApkg } from '$lib/functions/anki/apkg';
 import { carregarSqlJs } from '$lib/functions/anki/sql-js';
@@ -145,6 +149,7 @@ export async function reexportarCarta(carta: LinhaCarta) {
     lote_id: null,
     modified_at: new Date().toISOString()
   });
+  cartasRecebidas$.next();
   sincronizarEmBreve();
 }
 

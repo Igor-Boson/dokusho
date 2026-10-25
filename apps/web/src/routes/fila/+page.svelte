@@ -73,7 +73,11 @@
   }
 
   const abrir = (id: string) => goto(`${pagePath}/fila?carta=${id}`);
-  const voltar = () => goto(`${pagePath}/fila`);
+  // Os campos editados gravam sem aviso: a lista recarrega ao voltar.
+  const voltar = async () => {
+    await goto(`${pagePath}/fila`);
+    await carregar();
+  };
 
   onMount(() => {
     const assinaturas = [

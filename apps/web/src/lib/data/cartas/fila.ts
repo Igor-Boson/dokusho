@@ -8,7 +8,11 @@ import { BehaviorSubject } from 'rxjs';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '$lib/data/supabase/client';
 import { mensagemDaFuncao } from '$lib/data/supabase/erro-da-funcao';
-import { sincronizador, sincronizarAgora } from '$lib/data/supabase/sincronizacao/iniciar';
+import {
+  cartasRecebidas$,
+  sincronizador,
+  sincronizarAgora
+} from '$lib/data/supabase/sincronizacao/iniciar';
 import type { LinhaCarta } from '$lib/data/supabase/sincronizacao/regras';
 import { criarGeracao, type RespostaGerar } from './geracao';
 
@@ -67,6 +71,8 @@ export async function tirarDaFila(carta: LinhaCarta) {
   const agora = new Date().toISOString();
 
   await sincronizador().salvar('cartas', { ...carta, modified_at: agora, deleted_at: agora });
+  // Salvar não avisa ninguém: a Fila, o contador da navegação e o painel do leitor recarregam.
+  cartasRecebidas$.next();
 }
 
 /** URL temporária de um áudio do bucket `audio`. */
