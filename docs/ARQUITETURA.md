@@ -11,7 +11,7 @@ em português, ao lado do código do ttu, que segue com os nomes originais.
 
 | Rota                     | O que é                                                                                    |
 | ------------------------ | ------------------------------------------------------------------------------------------ |
-| `/` → `/inicio`          | Início: calendário da semana, meta, tempo e caracteres somando os aparelhos, por livro     |
+| `/` → `/inicio`          | Início: meta em anel, resumo, continuar lendo, semana em tons, progresso, registro do Anki |
 | `/manage`                | Biblioteca do ttu (livro na nuvem como placeholder com ícone; apagar com confirmação)      |
 | `/b?id=`                 | Leitor do ttu com a barra própria, o toque na palavra, o painel e a barra verde do Alcance |
 | `/fila`                  | Fila de cartas e aba Lotes; `/fila?carta=<id>` abre a edição                               |
@@ -127,7 +127,8 @@ telas, nunca no leitor.
 ## Outros
 
 - Início: `lib/data/estatisticas/` (contas testadas em `inicio.ts`; aba Palavras em `palavras.ts`, a
-  partir dos retratos de `vocab_history`).
+  partir dos retratos de `vocab_history`; registro do Anki em `anki.ts`, das Cartas exportadas
+  agrupadas pelo dia do Lote).
 - Bancos locais (IndexedDB): `books` (ttu), `dokusho-sinc` (sincronização e hub; fecha a conexão
   quando outra aba precisa atualizá-lo e avisa quando espera), `dokusho-dicionario`,
   `dokusho-perfis` (perfis dos livros, fora da sincronização).
