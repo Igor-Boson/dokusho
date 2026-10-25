@@ -88,7 +88,8 @@ function aparelho(): Aparelho {
   return { id, nome: nomeDoAparelho(navigator.userAgent, navigator.maxTouchPoints || 0) };
 }
 
-async function atualizarListaDeLivros() {
+/** Relê a lista de livros (e as capas) do banco do ttu. */
+export async function atualizarListaDeLivros() {
   // Import tardio: os handlers importam o replicator, que importa este arquivo.
   const { getStorageHandler } = await import('$lib/data/storage/storage-handler-factory');
 

@@ -40,6 +40,7 @@
   } from '$lib/data/store';
   import {
     apelidos$,
+    atualizarListaDeLivros,
     renomearLivro,
     sincronizador,
     sincronizarAgora
@@ -61,7 +62,7 @@
   import { reduceToEmptyString } from '$lib/functions/rxjs/reduce-to-empty-string';
   import pLimit from 'p-limit';
   import { combineLatest, map, Observable, share, Subject, switchMap, takeUntil } from 'rxjs';
-  import { onDestroy, tick } from 'svelte';
+  import { onDestroy, onMount, tick } from 'svelte';
   import Fa from 'svelte-fa';
 
   const booksAreLoading$ = database.listLoading$.pipe(map((isLoading) => isLoading));
@@ -147,6 +148,12 @@
   }
 
   onDestroy(() => dialogManager.dialogs$.next([]));
+
+  // As capas guardadas na memória deixam de abrir no iPhone depois que o leitor regrava o livro
+  // (a capa sumia ao voltar do livro e só voltava ao reabrir o app): relê do banco a cada visita.
+  onMount(() => {
+    if ($storageSource$ === StorageKey.BROWSER) atualizarListaDeLivros();
+  });
 
   function bookmarkToProgress(b: BooksDbBookmarkData | undefined) {
     return b?.progress
