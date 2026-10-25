@@ -253,3 +253,48 @@ export async function coberturasPorTitulo() {
   }
   return mapa;
 }
+
+/**
+ * Palavras vistas nos livros com perfil neste aparelho (V3.2), cada uma uma vez, pelo estado no hub.
+ * `faltam`: livros com perfil antigo, sem posições, que ainda não entram na conta.
+ */
+export async function palavrasVistasNosLivros() {
+  const { lerPerfis } = await import('./perfis');
+  const { palavrasVistas, temPosicoes } = await import('./perfil');
+  const [perfis, indice, ativos] = await Promise.all([
+    lerPerfis(),
+    indiceDoHub(),
+    sincronizador().livrosAtivos()
+  ]);
+  const livros = [];
+  let faltam = 0;
+
+  for (const perfil of perfis) {
+    const titulo = ativos.get(perfil.livroId);
+    if (!titulo) continue;
+    if (!temPosicoes(perfil)) {
+      faltam += 1;
+      continue;
+    }
+    livros.push({ perfil, alcance: await sincronizador().alcanceDe(titulo) });
+  }
+
+  return { ...palavrasVistas(livros, indice), livros: livros.length, faltam };
+}
+
+/** Recalcula, um por vez, os perfis antigos (sem posições) dos livros baixados neste aparelho. */
+export async function atualizarPerfisAntigos() {
+  const { garantirPerfil, lerPerfis } = await import('./perfis');
+  const { temPosicoes } = await import('./perfil');
+  const { database } = await import('$lib/data/store');
+  const ativos = await sincronizador().livrosAtivos();
+
+  for (const perfil of await lerPerfis()) {
+    const titulo = ativos.get(perfil.livroId);
+    if (!titulo || temPosicoes(perfil)) continue;
+    await garantirPerfil(perfil.livroId, async () => {
+      const db = await database.db;
+      return (await db.getFromIndex('data', 'title', titulo))?.elementHtml;
+    });
+  }
+}

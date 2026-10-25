@@ -7,7 +7,14 @@
   import { database } from '$lib/data/store';
   import { consultarPalavra } from '$lib/data/dicionario/servico';
   import { sincronizador, vocabMudou$ } from '$lib/data/supabase/sincronizacao/iniciar';
-  import { cobertura, desconhecidas, type ItemDoPerfil } from '$lib/data/vocabulario/perfil';
+  import {
+    cobertura,
+    desconhecidas,
+    desconhecidasVistas,
+    leituraDoLivro,
+    temPosicoes,
+    type ItemDoPerfil
+  } from '$lib/data/vocabulario/perfil';
   import {
     garantirPerfil,
     lerPerfil,
@@ -18,7 +25,8 @@
   import { formatPageTitle } from '$lib/functions/format-page-title';
 
   // Palavras do livro (V2.3): cobertura e as desconhecidas, da mais frequente no livro para a menos,
-  // com "Já sei" em cada uma.
+  // com "Já sei" em cada uma. V3.2: quanto já foi lido, a cobertura antes e depois do Alcance e as
+  // desconhecidas que já apareceram no trecho lido.
 
   const POR_VEZ = 50;
 
@@ -26,10 +34,14 @@
 
   let titulo = '';
   let resumo: ReturnType<typeof cobertura> | undefined;
-  let lista: ItemDoPerfil[] = [];
+  let leitura: ReturnType<typeof leituraDoLivro> | undefined;
+  let todas: ItemDoPerfil[] = [];
+  let vistas: { item: ItemDoPerfil; vezes: number }[] = [];
+  let aba: 'vistas' | 'todas' | undefined;
   let mostrando = POR_VEZ;
   let glosas = new Map<number, string>();
   let calculando: number | undefined;
+  let recalculou = false;
   let semPerfil = false;
   let mensagem = '';
 
@@ -41,13 +53,38 @@
     if (!perfil) return;
     const indice = await indiceDoHub();
     resumo = cobertura(perfil, indice);
-    lista = desconhecidas(perfil, indice);
+    todas = desconhecidas(perfil, indice);
+    if (temPosicoes(perfil)) {
+      const alcance = await sincronizador().alcanceDe(titulo);
+      leitura = leituraDoLivro(perfil, indice, alcance);
+      vistas = desconhecidasVistas(perfil, indice, alcance);
+      aba ??= leitura.lido > 0 ? 'vistas' : 'todas';
+    } else {
+      // Perfil da V2.3, sem posições: calcula de novo em segundo plano.
+      leitura = undefined;
+      aba = 'todas';
+      if (!recalculou && calculando === undefined) {
+        recalculou = true;
+        calcular();
+      }
+    }
+    await carregarGlosas();
+  }
+
+  $: lista =
+    aba === 'vistas'
+      ? vistas
+      : todas.map((item) => ({ item, vezes: undefined as number | undefined }));
+
+  async function trocarAba(nova: 'vistas' | 'todas') {
+    aba = nova;
+    mostrando = POR_VEZ;
     await carregarGlosas();
   }
 
   async function carregarGlosas() {
     const novas = new Map(glosas);
-    for (const item of lista.slice(0, mostrando)) {
+    for (const { item } of lista.slice(0, mostrando)) {
       if (item.seq === null || novas.has(item.seq)) continue;
       const entrada = (await consultarPalavra(item.escrita)).find((e) => e.seq === item.seq);
       novas.set(item.seq, entrada?.sentidos[0]?.g.slice(0, 3).join('; ') ?? '');
@@ -116,8 +153,47 @@
       </div>
     </section>
 
-    <h2>Desconhecidas, das mais frequentes no livro</h2>
-    {#each lista.slice(0, mostrando) as item (`${item.seq}|${item.leitura}`)}
+    {#if !leitura && calculando !== undefined}
+      <p class="dokusho-livro__vazio">
+        Calculando as palavras vistas… {Math.round(calculando * 100)}%
+      </p>
+    {/if}
+
+    {#if leitura}
+      <section class="dokusho-livro__leitura">
+        <div><b>{leitura.lido}%</b> do livro lido</div>
+        {#if leitura.lida.ocorrencias && leitura.restante.ocorrencias}
+          <div>
+            cobertura no que você leu: <b>{leitura.lida.porcentagem}%</b> · no que falta:
+            <b>{leitura.restante.porcentagem}%</b>
+          </div>
+        {/if}
+      </section>
+
+      <div class="dokusho-livro__abas" role="tablist">
+        <button
+          role="tab"
+          aria-selected={aba === 'vistas'}
+          class:ativa={aba === 'vistas'}
+          on:click={() => trocarAba('vistas')}
+          >Já vistas ({vistas.length.toLocaleString('pt-BR')})</button
+        >
+        <button
+          role="tab"
+          aria-selected={aba === 'todas'}
+          class:ativa={aba === 'todas'}
+          on:click={() => trocarAba('todas')}
+          >No livro todo ({todas.length.toLocaleString('pt-BR')})</button
+        >
+      </div>
+    {/if}
+
+    <h2>
+      {aba === 'vistas'
+        ? 'Desconhecidas que você já viu, das mais vistas'
+        : 'Desconhecidas, das mais frequentes no livro'}
+    </h2>
+    {#each lista.slice(0, mostrando) as { item, vezes } (`${item.seq}|${item.leitura}|${item.escrita}`)}
       <div class="dokusho-livro__palavra">
         <div>
           <span class="dokusho-livro__escrita" lang="ja">{item.escrita}</span>
@@ -127,11 +203,19 @@
             {(item.seq !== null && glosas.get(item.seq)) || ''}
           </div>
         </div>
-        <span class="dokusho-livro__vezes">×{item.ocorrencias}</span>
+        <span class="dokusho-livro__vezes"
+          >{vezes === undefined
+            ? `×${item.ocorrencias}`
+            : `vista ×${vezes} de ${item.ocorrencias}`}</span
+        >
         <button on:click={() => jaSei(item)}>Já sei</button>
       </div>
     {:else}
-      <p class="dokusho-livro__vazio">Nenhuma palavra desconhecida neste livro.</p>
+      <p class="dokusho-livro__vazio">
+        {aba === 'vistas'
+          ? 'Nenhuma palavra desconhecida no trecho que você já leu.'
+          : 'Nenhuma palavra desconhecida neste livro.'}
+      </p>
     {/each}
     {#if lista.length > mostrando}
       <button class="dokusho-livro__mais" on:click={mostrarMais}
@@ -191,6 +275,45 @@
     box-shadow: 0 1px 3px var(--dk-shadow);
     font-size: 14px;
     color: var(--dk-ink2);
+  }
+
+  .dokusho-livro__leitura {
+    margin-top: 10px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: var(--dk-surface);
+    box-shadow: 0 1px 3px var(--dk-shadow);
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--dk-ink2);
+
+    b {
+      color: var(--dk-ink);
+    }
+  }
+
+  .dokusho-livro__abas {
+    display: flex;
+    gap: 4px;
+    margin-top: 14px;
+    padding: 3px;
+    border-radius: 10px;
+    background: var(--dk-sunk);
+
+    button {
+      flex: 1;
+      min-height: 34px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dk-ink2);
+    }
+
+    .ativa {
+      background: var(--dk-surface);
+      color: var(--dk-ink);
+      box-shadow: 0 1px 2px var(--dk-shadow);
+    }
   }
 
   .dokusho-livro__porcentagem {
