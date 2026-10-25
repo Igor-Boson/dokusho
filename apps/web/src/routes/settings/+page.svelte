@@ -3,6 +3,7 @@
   import { tap } from 'rxjs';
   import { browser, version } from '$app/environment';
   import { procurarAtualizacao } from '$lib/data/atualizacao';
+  import { diagnosticarCapas } from '$lib/data/diagnostico-capas';
   import { afterNavigate } from '$app/navigation';
   import SettingsContent from '$lib/components/settings/settings-content.svelte';
   import SettingsHeader from '$lib/components/settings/settings-header.svelte';
@@ -166,6 +167,22 @@
       procurando = false;
     }
   }
+
+  let diagnosticando = false;
+  let diagnostico: string[] = [];
+
+  async function diagnosticar() {
+    diagnosticando = true;
+    diagnostico = ['Conferindo…'];
+
+    try {
+      diagnostico = await diagnosticarCapas();
+    } catch (erro) {
+      diagnostico = [`Falhou: ${erro instanceof Error ? erro.message : erro}`];
+    } finally {
+      diagnosticando = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -251,6 +268,12 @@
       <span>Versão do app: {versaoDoApp}</span>
       <button on:click={procurar} disabled={procurando}>Procurar atualização</button>
       {#if resultado}<span>{resultado}</span>{/if}
+      <button on:click={diagnosticar} disabled={diagnosticando}>Diagnóstico das capas</button>
+      {#if diagnostico.length}
+        <ul>
+          {#each diagnostico as linha}<li>{linha}</li>{/each}
+        </ul>
+      {/if}
     </div>
   </div>
 </div>
@@ -268,6 +291,12 @@
 
     button {
       text-decoration: underline;
+    }
+
+    ul {
+      flex-basis: 100%;
+      font-size: 12px;
+      word-break: break-all;
     }
   }
 </style>
