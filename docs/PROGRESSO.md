@@ -9,7 +9,7 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 (PR #5, 2026-10-21). Decisões marcadas "(autônomo, revisar)" em docs/historico/DECISOES.md.
 **V3.1 no ar** (PRs #6 e #7, 2026-10-21), conferido pelo Igor no iPhone.
 **V3.2 pronta** (2026-10-24), conferida no navegador com dados de teste; falta o Igor olhar com os
-livros de verdade. Próximo: V3.3.
+livros de verdade. **V3.3 pronta** (2026-10-24): roteiro do docs/FASES.md concluído.
 
 | Item | Status  | Data       | Observação                                                                  |
 | ---- | ------- | ---------- | --------------------------------------------------------------------------- |
@@ -34,6 +34,7 @@ livros de verdade. Próximo: V3.3.
 | V2.4 | feito   | 2026-10-21 | lista do hub na tela Vocabulário; aba Palavras no Início                    |
 | V3.1 | feito   | 2026-10-21 | furigana gerado e adaptativo (ADR 0015); 97,5% certo; ok no iPhone          |
 | V3.2 | feito\* | 2026-10-24 | palavras vistas, lido e cobertura antes/depois do Alcance, "Já vistas"      |
+| V3.3 | feito\* | 2026-10-24 | "Exportar CSV" no card Palavras (conhecidas e aprendendo, BOM para Excel)   |
 
 \* Testes em aparelho dispensados pelo Igor, cobertos só pelos testes automáticos (ver abaixo).
 
@@ -54,6 +55,8 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 - [ ] Revisar as decisões "(autônomo, revisar)" da v2 e do V3.1 em docs/historico/DECISOES.md
 - [ ] V3.2 no aparelho: Vocabulário › "Palavras vistas" e Palavras do livro com os livros reais
       (os perfis antigos são recalculados na primeira visita; livro não baixado no aparelho fica de fora)
+- [ ] V3.3 no aparelho: Vocabulário › Palavras › "Exportar CSV" no iPhone (folha de compartilhamento)
+      e no Windows (download, abrir no Excel)
 - Conhecido: na primeira abertura da v2, uma aba ou janela antiga do Dokusho (v1) aberta trava a
   atualização do banco local; o app avisa e é só fechá-la.
 

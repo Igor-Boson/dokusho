@@ -442,3 +442,9 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   do trecho lido, das vistas mais vezes). Gráfico de vistas por dia e tela Início ficaram de fora
   (o Alcance não tem histórico). Perfis da V2.3 são recalculados ao abrir as telas ou o livro;
   livro não baixado no aparelho fica de fora da soma, com aviso "Faltam N livros".
+- 2026-10-24: V3.3 (aprovado pelo Igor antes de implementar). Um CSV só, com conhecidas e
+  aprendendo pelo estado que a tela mostra ("Já sei" conta como conhecida), conhecidas primeiro e
+  cada grupo pela leitura. Colunas: palavra, leitura, estado, origem (Anki, Já sei ou os dois),
+  intervalo (só do Anki), entradas do JMdict, data da última mudança. UTF-8 com BOM e CRLF para o
+  Excel. Sem glosa (dependeria do dicionário no aparelho). Botão no card Palavras do Vocabulário;
+  entrega pela folha de compartilhamento no toque e por download no PC, como o .apkg.
