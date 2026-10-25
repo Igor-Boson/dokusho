@@ -116,7 +116,7 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   pronúncia (em inglês, como nos exemplos do Google): `Say this Japanese word, pronounced 「<leitura>」: <palavra>`.
   Resposta do `generate`: `{ estado, motivo?, campos, medidas }` (409 `ocupada` se outra chamada gera).
 
-- 2026-10-21: V1.1 (autônomo, revisar). **ADR 0014**: a sincronização não é um handler do ttu (eles
+- 2026-10-21: V1.1 (autônomo, revisado em 2026-10-24). **ADR 0014**: a sincronização não é um handler do ttu (eles
   copiam arquivos, pelo título, num gesto manual); é o módulo `lib/data/supabase/sincronizacao/`, que lê
   e grava o IndexedDB do ttu direto e troca linhas com o Supabase. `sincronizador.ts` (motor, testado com
   um servidor falso e dois aparelhos), `regras.ts` (LWW, Alcance, conversões), `banco.ts` (IndexedDB
@@ -134,7 +134,8 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   processado com progresso. Dois livros com o mesmo título continuam impossíveis no mesmo aparelho (o
   ttu indexa pelo título); o segundo não desce.
   Marcador: sobe com Alcance (máximo pela leitura; um "desmarcar" mais novo vence), aparelho e nome. Ao
-  abrir o livro, o leitor espera até 4 s pela sincronização; se outro aparelho tem marcador mais novo,
+  abrir o livro, o leitor espera até 4 s pela sincronização (mudou em 2026-10-24: o livro abre na
+  hora e a pergunta vem depois); se outro aparelho tem marcador mais novo,
   pergunta "Você parou no iPad, cap. 3 (42%). Ir para lá?" (Ficar aqui / Ir para lá). Aparelho sem
   marcador recebe direto.
   Estatísticas: as do ttu são só deste aparelho (`device_id` aleatório no localStorage); as dos outros
@@ -144,7 +145,7 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   livro e do marcador, arquivos do bucket apagados; reimportar depois devolve o livro.
   Padrões mudados no ttu: estatísticas ligadas e livros "placeholder" visíveis. `ConfirmDialog` aceita
   rótulos. Sem login, nada é sincronizado (o app segue local).
-- 2026-10-21: V1.2 (autônomo, revisar). Busca em `lib/data/dicionario/busca.ts`: o toque escolhe o
+- 2026-10-21: V1.2 (autônomo, revisado em 2026-10-24). Busca em `lib/data/dicionario/busca.ts`: o toque escolhe o
   pedaço do tokenizador (começo); o fim é o trecho mais longo (até 6 pedaços, 14 caracteres, sem
   atravessar pontuação ou espaço) cujo termo "pedaços inteiros + forma de dicionário do último" está
   no dicionário; depois a superfície e as reservas (verbo do potencial, sem alongamento すごーい, sem っ
@@ -165,7 +166,7 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   Baixar/Atualizar (compara com `atual.json`), Apagar deste aparelho, Medir velocidade (substitui a
   `/teste/dicionario`, que saiu). `dialog-template.svelte` ganhou `<script lang="ts">`: `pnpm check`
   caiu de 27 para **15** erros, todos antigos do ttu.
-- 2026-10-21: V1.3 (autônomo, revisar). `lib/components/painel-palavra/`: `leitor-dokusho.svelte`
+- 2026-10-21: V1.3 (autônomo, revisado em 2026-10-24). `lib/components/painel-palavra/`: `leitor-dokusho.svelte`
   (entra no leitor do ttu ao lado do BookReader) escuta o clique na janela; `caractereNoPonto`
   (caretRangeFromPoint/caretPositionFromPoint, 6 px de folga) acha o caractere; o parágrafo (p, h\*,
   li…) vira texto sem `<rt>` com o mapa de volta aos nós e os `<ruby>`; o tokenizador corta o
@@ -200,7 +201,7 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   (substituindo o `requestAnimationFrame`, que não roda com a janela oculta): 食べた → 食べる,
   気がついた → 気がつく, 漢字 com o furigana do livro, setas, pontuação fechando, carta gravada como o
   CARDS.md pede.
-- 2026-10-21: V1.4 (autônomo, revisar). Rota `/inicio` (a raiz `/` passou a abrir o Início; o ttu
+- 2026-10-21: V1.4 (autônomo, revisado em 2026-10-24). Rota `/inicio` (a raiz `/` passou a abrir o Início; o ttu
   abria o último livro). Navegação inferior (`lib/components/navegacao/`) em Início, Biblioteca
   (`/manage`) e Fila, com o número de cartas na fila; Vocabulário aparece desativado (v2). Contas em
   `lib/data/estatisticas/inicio.ts` (testadas): soma das linhas por dia e livro (as do ttu, que são
@@ -209,8 +210,9 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   lista por livro (com a capa do ttu; livro de outro aparelho que já foi apagado aparece como "Livro
   apagado"). Meta: a do ttu (`readingGoal$`, janela diária/semanal/mensal pelo `getReadingGoalWindow`),
   tempo e/ou caracteres; "Definir meta" abre Configurações na aba Statistics (`/settings?aba=`). Dias
-  pela chave do ttu (com a hora de virada do dia das configurações). Tela clara, sem tema escuro.
-- 2026-10-21: V1.5 (autônomo, revisar). Rota `/fila` (lista "Na fila") e `/fila?carta=<id>` (edição).
+  pela chave do ttu (com a hora de virada do dia das configurações). Tela clara, sem tema escuro
+  (o modo escuro entrou depois, no mesmo dia).
+- 2026-10-21: V1.5 (autônomo, revisado em 2026-10-24). Rota `/fila` (lista "Na fila") e `/fila?carta=<id>` (edição).
   Geração em `lib/data/cartas/geracao.ts` (testada): uma carta por vez, só com rede e login;
   sincroniza antes (a carta tem que estar no servidor) e depois (traz os campos); 409 `ocupada` fica
   para depois; as 3 tentativas ficam na função (R5). Gatilhos: ao abrir o app, ao voltar a rede, ao
@@ -221,7 +223,7 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   bucket `audio` com URL assinada de 1 h, marca "confira a voz" na lista e na edição, "Tirar da fila"
   (soft delete), carta exportada só para leitura. A Frase na lista mostra só o `<b>` (o resto do texto
   é escapado). A edição fica bloqueada enquanto a carta gera.
-- 2026-10-21: V1.6 (autônomo, revisar). Regras em `lib/data/cartas/exportar.ts` (testadas): entram as
+- 2026-10-21: V1.6 (autônomo, revisado em 2026-10-24). Regras em `lib/data/cartas/exportar.ts` (testadas): entram as
   geradas sem Lote (e as com erro, se marcar "Incluir a carta com erro"); nota com os 14 campos do
   CARDS.md, `[sound:<arquivo do bucket>]`, Frequency em texto, etiquetas `dokusho` e
   `dokusho::<título>` (livro desconhecido: só `dokusho`); tamanho estimado pelos áudios presentes
@@ -238,7 +240,7 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   o `wav-teste.ts` e a opção `deck` do `gerarApkg`; o R1 no iPhone passa a ser pela exportação de
   verdade (FASES V1.7 atualizado). Testado no navegador: o .apkg de uma carta abre no sql.js com o deck
   `日本語::1. Dokusho`, as etiquetas e os campos certos; o Lote aparece na aba.
-- 2026-10-21: V1.7 (autônomo, revisar; **parcial**: o limite de uso acabou). Feito: service worker sem
+- 2026-10-21: V1.7 (autônomo, revisado em 2026-10-24; **parcial**: o limite de uso acabou). Feito: service worker sem
   skipWaiting automático (espera a mensagem ATUALIZAR) e aviso "Nova versão do app · Atualizar" no topo
   de Início, Biblioteca e Fila, nunca no leitor (ADR 0011; `lib/data/atualizacao.ts`, verifica a cada
   hora e ao voltar ao app); manifesto do Dokusho (standalone, start_url ./inicio) e ícone próprio
@@ -299,28 +301,28 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
 
 - 2026-10-21: a branch `v2-autonomo` saiu do `main` com a `docs/organizar` por cima (fast-forward):
   o pedido da v2 já citava docs/historico/ e docs/ARQUITETURA.md, que só existiam nela. (autônomo,
-  revisar)
+  revisado em 2026-10-24)
 - 2026-10-21: V2.1. Migração aditiva `20261022000000_hub.sql`: `vocab.jmdict_ids` (todas as entradas
   em que a Palavra cai) e `vocab.ja_sei_at` (a marca "Já sei"). Nas linhas do Anki, `state` é só o
   estado dos Cards; o "Já sei" fica à parte e o estado da Palavra é o mais avançado dos dois
   (`estadoDaLinha`). Assim, desfazer o "Já sei" volta ao estado do Anki, e uma Palavra que sai do Anki
-  com "Já sei" vira linha `ja_sei` em vez de ser apagada. (autônomo, revisar)
+  com "Já sei" vira linha `ja_sei` em vez de ser apagada. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.1. Uma linha de vocab por Palavra = (Word sem HTML, leituras do Word Reading em
   hiragana juntas com ・, ex. 何 なに・なん). Vários Cards da mesma Palavra: estado mais avançado,
-  `interval_days` = o maior, `suspended` só se todos estão, `leech` se algum tem. (autônomo, revisar)
+  `interval_days` = o maior, `suspended` só se todos estão, `leech` se algum tem. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.1. Suspenso **com** leech é aprendendo mesmo com intervalo ≥ 21 dias (o ESCOPO diz
   "suspenso com leech: aprendendo" e "intervalo ≥ 21: conhecida" sem dizer qual vence; o leech é a
-  palavra que você erra). Leech ativo (tirado da suspensão) segue o intervalo. (autônomo, revisar)
+  palavra que você erra). Leech ativo (tirado da suspensão) segue o intervalo. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.1. A Sincronização do Anki só regrava as linhas que mudaram (`synced_at` = quando
   mudou); a data da última sincronização vem do retrato mais novo de `vocab_history`, que vale em
   todos os aparelhos. Antes de ler o Anki, uma rodada do sincronizador recebe os "Já sei" dos outros
-  aparelhos; depois, outra envia. (autônomo, revisar)
+  aparelhos; depois, outra envia. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.1. Lote confirmado no Anki quando **todas** as cartas dele (Word + Word Reading)
-  estão em algum Card dos decks lidos; marca "✓ no Anki" na aba Lotes. (autônomo, revisar)
+  estão em algum Card dos decks lidos; marca "✓ no Anki" na aba Lotes. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.1. Botão "Sincronizar Anki" na tela Vocabulário (agora ligada na navegação), só
   quando o aparelho é Windows; nos outros, a data e os números do último retrato. Opções: decks lidos
   (localStorage, padrão `日本語` com subdecks) e pular o sync do AnkiWeb. Saíram a `/teste/anki` e o
-  `listarDecks` do cliente, que só ela usava. (autônomo, revisar)
+  `listarDecks` do cliente, que só ela usava. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.1, ensaio com o Anki real **só em leitura** (sem `sync`, com um banco falso em
   memória; nada gravado no hub): 1515 Cards → 1503 Palavras, 0 sem entrada, 23 em mais de uma
   entrada; 996 conhecidas, 507 aprendendo. 18,6 s no PC: 12,5 s lendo os Cards (cardsInfo/notesInfo
@@ -333,53 +335,53 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   isso); menu ⋯ "Tirar o destaque das palavras" (localStorage). Medido no PC com o livro do R4 e o
   hub do Anki real em memória: 300 parágrafos (14 mil caracteres) casados em 6 s com o dicionário
   frio (~20 ms por parágrafo; uma tela tem 10–20), repintura 31 ms. Não conferido visualmente: o
-  painel do navegador do Claude oculto não desenha o leitor. (autônomo, revisar)
+  painel do navegador do Claude oculto não desenha o leitor. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.2. Painel: estado da entrada (conhecida/aprendendo/desconhecida, cores do D1),
   "no Anki como <leitura>" e o botão "Já sei" só para entradas fora do Anki (no Anki aparece "No
   Anki", desativado); com a marca, vira "Desfazer \"Já sei\"" (decide o "desfazer Já sei" que estava
   sem decisão). Criar carta de palavra que já está no Anki pede confirmação no painel; a Fila mostra
-  "já no Anki" nas cartas cuja entrada está no Anki. (autônomo, revisar)
+  "já no Anki" nas cartas cuja entrada está no Anki. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.2. Importação inicial (decide a "frequência N" que estava sem decisão): campo na tela
   Vocabulário com padrão **3000** (posição no JPDB, a melhor entre escrita e kana), "Ver quantas
   palavras" antes de marcar; pula entradas do Anki, Palavras já no hub e entradas só de gramática
   (prt, aux, aux-v, aux-adj, cop, conj); a linha usa a forma mais vista no JPDB. Todas as linhas de uma
   importação têm o mesmo `ja_sei_at`, e a tela lista as importações com "Desfazer". Medido no PC: ler
   o dicionário inteiro 4,7 s; até 3000 dariam 2695 palavras (antes de tirar as do Anki). (autônomo,
-  revisar)
+  revisado em 2026-10-24)
 - 2026-10-21: V2.2. O `dokusho-sinc` passou à v3 e, no navegador do Claude, a atualização ficou
   travada por uma conexão v2 aberta em outra aba (versão antiga, sem tratamento). Agora o banco fecha
   a conexão e recarrega a aba quando outra versão precisa atualizá-lo (`blocking`), e mostra "Outra
   aba ou janela do Dokusho, com a versão antiga, está aberta…" quando é ela que espera (`blocked`).
-  Na primeira vez (v2 → v3) a aba antiga não sabe fechar: feche-a à mão. (autônomo, revisar)
+  Na primeira vez (v2 → v3) a aba antiga não sabe fechar: feche-a à mão. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.3. Cobertura = porcentagem das **ocorrências** de Palavras conhecidas no texto, sem
   gramática (é a medida que diz quanto do texto você entende; a tela também mostra quantas palavras
   diferentes são conhecidas, aprendendo e desconhecidas). Pedaço sem entrada no dicionário (quase
-  sempre nome próprio) só entra na conta quando o Anki tem a escrita. (autônomo, revisar)
+  sempre nome próprio) só entra na conta quando o Anki tem a escrita. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.3. "Perfil do livro" (cada Palavra e quantas vezes aparece) calculado uma vez por
   aparelho e por versão do dicionário, em segundo plano 3 s depois de abrir o livro, num banco próprio
   `dokusho-perfis` fora da sincronização (é refeito igual em cada aparelho, e um novo store no
   `dokusho-sinc` exigiria outra atualização do banco). Cobertura e lista saem do perfil + hub na hora.
   Medido no PC com o livro do R4 (152 mil caracteres, 2679 parágrafos): **11,3 s**, 33.331
   ocorrências e 3.121 Palavras (bate com o R4); a tela fica livre (fatias de 30 ms), salvo uma pausa
-  de ~0,6 s na primeira carga do tokenizador, que já existe no primeiro toque. (autônomo, revisar)
+  de ~0,6 s na primeira carga do tokenizador, que já existe no primeiro toque. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.3. Onde aparece: barra do topo do leitor ("· cobertura 87%", ou o progresso do
   cálculo), selo na capa da Biblioteca, seção "Livros" da tela Vocabulário e a tela
   `/vocabulario/livro?id=<hash>` ("Palavras do livro" no menu ⋯ do leitor), com as desconhecidas da
   mais frequente no livro para a menos, glosa, número de vezes e "Já sei" em cada uma (50 por vez).
-  Livro sem perfil: "Calcular agora" na própria tela. (autônomo, revisar)
+  Livro sem perfil: "Calcular agora" na própria tela. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.4. Aba Palavras do Início: o total é o de conhecidas no hub agora (com os "Já sei"
   feitos depois da última sincronização); o gráfico não soma por dia (é um total acumulado): cada
   dia vale o último retrato de `vocab_history` até ele, hoje vale o hub agora, e acima de 60 dias uma
   barra por semana com o valor do fim dela. Nessa aba, "Por livro" vira "Cobertura por livro" (só os
-  livros com perfil neste aparelho). O calendário e a meta seguem a leitura. (autônomo, revisar)
+  livros com perfil neste aparelho). O calendário e a meta seguem a leitura. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.4. Tela Vocabulário (decide a "tela Vocabulário" que estava sem decisão), de cima
   para baixo: Anki (sincronização e último retrato), Livros (cobertura), "Já sei" pela frequência e
   Palavras: filtros Conhecidas / Aprendendo / Já sei com contagem, busca pela escrita ou leitura
   (hiragana ou katakana), mais recentes primeiro, 100 por vez; cada linha mostra a origem (Anki,
   suspenso, leech, intervalo; data do "Já sei") e "Desfazer" quando tem "Já sei" (desfaz a entrada
-  inteira). Sem gráfico próprio (o histórico está no Início). (autônomo, revisar)
+  inteira). Sem gráfico próprio (o histórico está no Início). (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V2.4. O aviso de banco bloqueado também aparece se o `dokusho-sinc` não abrir em 5 s:
-  no navegador do Claude, a aba antiga congelada nem disparava o evento `blocked`. (autônomo, revisar)
+  no navegador do Claude, a aba antiga congelada nem disparava o evento `blocked`. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: v2 encerrada no código (chat autônomo). Falta só o que é 👤: a primeira Sincronização
   do Anki real, conferir destaque e painel no leitor, juntar o PR e ver no iPad/iPhone o critério da
   v2 (passos no docs/MANHA.md).
@@ -388,11 +390,11 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   calculado no aparelho só perto da tela e guardado em memória pelo texto do parágrafo (ADR 0015).
   Não usa `<ruby>`: a leitura não ocupa lugar (as páginas não se mexem) e não entra no texto que o
   ttu conta. Posição pelo lado block-start (em cima no horizontal, à direita no vertical), que segue o
-  writing-mode real do texto. (autônomo, revisar)
+  writing-mode real do texto. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V3.1. O ふ da barra abre um menu com quatro opções: Sem furigana (o hideFurigana$ do
   ttu, como antes), Do livro (só o do EPUB, o padrão), Todos e Adaptativo. "Sem furigana" ficou
   porque era o que o botão fazia na v1. Modo por aparelho (localStorage `dokusho-furigana`). Todos e
-  Adaptativo pedem o dicionário se ele não estiver baixado. (autônomo, revisar)
+  Adaptativo pedem o dicionário se ele não estiver baixado. (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V3.1. Adaptativo: esconde o furigana das conhecidas (pelo hub, com "Já sei"); mostra o
   das aprendendo, desconhecidas, gramática e palavras que o hub não conhece. A pedido do Igor, vale
   também para o `<ruby>` que o EPUB já traz: o `<rt>` some (visibility, sem mudar o layout) quando
@@ -403,7 +405,7 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   kanji pelo JmdictFurigana; no conjugado, o JmdictFurigana da forma de dicionário aplicado à
   superfície (見詰め). Regras de reserva do teste das 30 frases: 何 → なん antes de だ/で/の/と/て e de
   contador, 行っ → い, 色 → いろ, 後 のち → あと, 他 → ほか, 風 → ふう entre verbo e な/に.
-  (autônomo, revisar)
+  (autônomo, revisado em 2026-10-24)
 - 2026-10-21: V3.1 testado no navegador do Claude (PC, livro do R4): Todos e Adaptativo no vertical e
   no horizontal, toque e realce com o furigana ligado, "Já sei" e desfazer trocando o furigana sem
   recarregar. A troca de vertical para horizontal sem recarregar deixava a leitura em cima do kanji
@@ -448,3 +450,8 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   intervalo (só do Anki), entradas do JMdict, data da última mudança. UTF-8 com BOM e CRLF para o
   Excel. Sem glosa (dependeria do dicionário no aparelho). Botão no card Palavras do Vocabulário;
   entrega pela folha de compartilhamento no toque e por download no PC, como o .apkg.
+- 2026-10-24: revisão das decisões "(autônomo, revisar)" com o Igor: todas aprovadas. Conferidas em
+  especial: o "Já sei" pela frequência (usado; a lista pareceu certa), leech suspenso como
+  aprendendo (fica assim) e a flexão que não vira palavra, com a carta pela forma de dicionário (é o
+  que ele quer). As demais (tela, cores, ordem das listas, backup por mescla e as técnicas) foram
+  aprovadas sem mudança.

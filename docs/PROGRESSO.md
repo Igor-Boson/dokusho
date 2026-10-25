@@ -6,7 +6,7 @@ Estado e pendências. Curto: o próximo chat lê isto primeiro. O histórico fic
 ## Estado
 
 **v1 pronta** (2026-10-21), no ar em https://dokusho-kappa.vercel.app. **v2 pronta** e no ar
-(PR #5, 2026-10-21). Decisões marcadas "(autônomo, revisar)" em docs/historico/DECISOES.md.
+(PR #5, 2026-10-21). Decisões "(autônomo)" revisadas com o Igor em 2026-10-24.
 **V3.1 no ar** (PRs #6 e #7, 2026-10-21), conferido pelo Igor no iPhone.
 **V3.2 pronta** (2026-10-24), conferida no navegador com dados de teste; falta o Igor olhar com os
 livros de verdade. **V3.3 pronta** (2026-10-24): roteiro do docs/FASES.md concluído.
@@ -52,7 +52,6 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 
 ## Pendências
 
-- [ ] Revisar as decisões "(autônomo, revisar)" da v2 e do V3.1 em docs/historico/DECISOES.md
 - [ ] V3.2 no aparelho: Vocabulário › "Palavras vistas" e Palavras do livro com os livros reais
       (os perfis antigos são recalculados na primeira visita; livro não baixado no aparelho fica de fora)
 - [ ] V3.3 no aparelho: Vocabulário › Palavras › "Exportar CSV" no iPhone (folha de compartilhamento)
