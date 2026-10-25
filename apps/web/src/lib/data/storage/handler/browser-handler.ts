@@ -107,7 +107,16 @@ export class BrowserStorageHandler extends BaseStorageHandler {
 
     await db.put('data', book);
 
-    this.addBookCard(this.currentContext.title, { characters, lastBookModified, lastBookOpen });
+    // No Safari, a capa lida antes do put deixa de valer quando o registro é regravado (o arquivo do
+    // Blob antigo é apagado): a Biblioteca mostrava a capa quebrada ao voltar do livro. Relê a nova.
+    const salvo = await db.get('data', book.id);
+
+    this.addBookCard(this.currentContext.title, {
+      characters,
+      lastBookModified,
+      lastBookOpen,
+      imagePath: salvo?.coverImage || ''
+    });
   }
 
   async getFilenameForRecentCheck(fileIdentifier: string) {
