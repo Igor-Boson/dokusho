@@ -470,6 +470,7 @@
 <style lang="scss">
   .dokusho-inicio {
     max-width: 640px;
+    overflow-x: clip;
     margin: 0 auto;
     padding: 0 18px calc(96px + env(safe-area-inset-bottom, 0px));
     font-family: 'Noto Sans JP', system-ui, sans-serif;
@@ -723,7 +724,7 @@
 
   .dokusho-inicio__continuar {
     display: grid;
-    grid-template-columns: 40px 1fr auto;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
     gap: 14px;
     align-items: center;
 
@@ -876,7 +877,7 @@
 
   .dokusho-inicio__livro {
     display: grid;
-    grid-template-columns: 34px 1fr auto;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
     gap: 12px;
     align-items: center;
     margin-bottom: 12px;
