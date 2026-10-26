@@ -479,3 +479,11 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   (`updateLastRead`). Correção: antes do put a capa vira cópia própria, e uma capa já perdida volta
   pela imagem de mesmo tamanho e tipo (`capa-independente.ts`). Conferido no iPhone. Ficaram nas
   Configurações a versão do app (horário do build) e "Procurar atualização"; o diagnóstico saiu.
+- 2026-10-26: tempo de leitura inflado no iPhone (40 min lidos viraram 3 h 07 no dia 25/10). O
+  contador do ttu soma, a cada tique de 1 s, o tempo desde o tique anterior; com a tela apagada ou
+  em outro app o iOS congela o JavaScript, a pausa por `visibilitychange` nem sempre chega antes, e
+  o primeiro tique na volta somava as horas paradas. Decidido com o Igor: intervalo acima de 5 s
+  entre tiques conta 1 s (`contagem-do-tempo.ts`); pausa por inatividade ligada com 5 min (10 min
+  pareceu muito), descontando o tempo parado, e voltando sozinha no próximo toque ou virada de
+  página (o leitor não tem o ▶ do ttu). Os padrões do leitor viraram rodadas numeradas, para o
+  aparelho que já tinha o 0 gravado pegar os 5 min uma vez. O dia 25/10 fica como está.

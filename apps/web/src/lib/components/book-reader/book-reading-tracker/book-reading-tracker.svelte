@@ -51,9 +51,11 @@
     Observable,
     startWith,
     switchMap,
+    take,
     tap,
     throttleTime
   } from 'rxjs';
+  import { segundosDoTique, segundosParados } from './contagem-do-tempo';
   import { createEventDispatcher, onDestroy, onMount, tick } from 'svelte';
   import { quintInOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
@@ -249,6 +251,7 @@
   let actionInProgress = false;
   let hadError = false;
   let pausedByAutoPause = false;
+  let pausedByIdle = false;
   let visibilityState: DocumentVisibilityState;
   let currentReadingGoalStart = '';
   let currentReadingGoalEnd = '';
@@ -314,6 +317,7 @@
         : merge(
             fromEvent(document, PAGE_CHANGE),
             fromEvent<PointerEvent>(window, 'pointermove'),
+            fromEvent<PointerEvent>(window, 'pointerdown'),
             fromEvent<Event>(document, 'selectionchange')
           ).pipe(
             startWith(true),
@@ -321,6 +325,25 @@
             tap(() => (trackerIdleTime = Date.now() + $trackerIdleTime$ * 1000))
           )
     ),
+    reduceToEmptyString()
+  );
+
+  // Dokusho: o leitor não tem o ▶ do ttu, então a pausa por inatividade termina sozinha na próxima
+  // virada de página ou toque na tela.
+  const resumeAfterIdle$ = isTrackerPaused$.pipe(
+    switchMap((isPaused) =>
+      isPaused && pausedByIdle
+        ? merge(
+            fromEvent(document, PAGE_CHANGE),
+            fromEvent<PointerEvent>(window, 'pointerdown')
+          ).pipe(take(1))
+        : NEVER
+    ),
+    tap(() => {
+      pausedByIdle = false;
+      wasTrackerPaused = false;
+      isTrackerPaused$.next(false);
+    }),
     reduceToEmptyString()
   );
 
@@ -643,17 +666,24 @@
     const now = Date.now();
     const nowTick = trackerIdleTime ? Math.min(trackerIdleTime, now) : now;
     const trackerIdleTimeReached = trackerIdleTime && nowTick >= trackerIdleTime;
-    const elapsed = Math.round((nowTick - lastTrackerTick) / 1000);
+    const previousTick = lastTrackerTick;
+    const elapsed = segundosDoTique(nowTick, previousTick);
 
     lastTrackerTick = nowTick;
 
     if (trackerIdleTimeReached) {
+      // Calculado antes da pausa: pausar zera o trackerIdleTime.
+      const idleSeconds = segundosParados(previousTick, trackerIdleTime - $trackerIdleTime$ * 1000);
+
+      pausedByIdle = true;
       wasTrackerPaused = true;
       isTrackerPaused$.next(true);
 
       if (frozenPosition === -1) {
         if ($adjustStatisticsAfterIdleTime$) {
-          processStatistics(0, elapsed - $trackerIdleTime$, lastTrackerTick, true);
+          if (idleSeconds) {
+            processStatistics(0, -idleSeconds, lastTrackerTick, true);
+          }
         } else if (elapsed) {
           processStatistics(0, elapsed, lastTrackerTick, true);
         }
@@ -763,6 +793,7 @@
 
 {$readingTracker$ ?? ''}
 {$updateTrackerIdleTime$ ?? ''}
+{$resumeAfterIdle$ ?? ''}
 {$autoScrollerTimer$ ?? ''}
 
 <svelte:window on:blur={handleBlur} on:focus={handleFocus} />
