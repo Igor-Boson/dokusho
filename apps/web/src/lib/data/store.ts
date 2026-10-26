@@ -67,22 +67,23 @@ import { writableStringLocalStorageSubject } from './internal/writable-string-lo
 const telaDeToque = browser && window.matchMedia('(pointer: coarse)').matches;
 
 // Uma vez por aparelho: a tela de configurações do ttu grava todos os valores, então os padrões
-// novos só valem se os antigos saírem. Depois disso, o que você mudar fica.
+// novos só valem se os antigos saírem. Depois disso, o que você mudar fica. Cada rodada nova de
+// padrões entra no fim da lista; o aparelho guarda quantas já aplicou.
 const PADROES_DO_DOKUSHO = 'dokusho-padroes-do-leitor';
+const RODADAS_DE_PADROES = [
+  ['theme', 'fontFamilyGroupOne', 'lineHeight', 'writingMode', 'viewMode', 'trackerAutoStartTime'],
+  // Pausa por inatividade em 5 min (o tempo de leitura somava o app parado).
+  ['trackerIdleTime']
+];
 
 if (browser) {
   try {
-    if (!localStorage.getItem(PADROES_DO_DOKUSHO)) {
-      [
-        'theme',
-        'fontFamilyGroupOne',
-        'lineHeight',
-        'writingMode',
-        'viewMode',
-        'trackerAutoStartTime'
-      ].forEach((chave) => localStorage.removeItem(chave));
-      localStorage.setItem(PADROES_DO_DOKUSHO, '1');
-    }
+    const aplicadas = Number(localStorage.getItem(PADROES_DO_DOKUSHO)) || 0;
+
+    RODADAS_DE_PADROES.slice(aplicadas)
+      .flat()
+      .forEach((chave) => localStorage.removeItem(chave));
+    localStorage.setItem(PADROES_DO_DOKUSHO, String(RODADAS_DE_PADROES.length));
   } catch {
     // Sem localStorage, valem os padrões.
   }
@@ -336,7 +337,9 @@ export const addCharactersOnCompletion$ = writableBooleanLocalStorageSubject()(
 // começava pausado até tocar no ▶ do rodapé, que o leitor do Dokusho não mostra).
 export const trackerAutostartTime$ = writableNumberLocalStorageSubject()('trackerAutoStartTime', 1);
 
-export const trackerIdleTime$ = writableNumberLocalStorageSubject()('trackerIdleTime', 0);
+// Dokusho: pausa depois de 5 min sem virar página nem tocar na tela, descontando esse tempo
+// (adjustStatisticsAfterIdleTime); volta a contar no próximo toque ou virada de página.
+export const trackerIdleTime$ = writableNumberLocalStorageSubject()('trackerIdleTime', 300);
 
 export const trackerForwardSkipThreshold$ = writableNumberLocalStorageSubject()(
   'trackerForwardSkipThreshold',

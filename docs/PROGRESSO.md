@@ -13,7 +13,8 @@ livros de verdade. **V3.3 pronta** (2026-10-24): roteiro do docs/FASES.md conclu
 **Início refeito** (2026-10-25): meta em anel, resumo, continuar lendo, semana em tons e registro
 do Anki; apelido do livro (nome mostrado no lugar do título do EPUB). Capa que sumia no iPhone
 depois de abrir o livro corrigida e conferida no aparelho. Versão do app e "Procurar atualização"
-no fim das Configurações.
+no fim das Configurações. **Tempo de leitura** (2026-10-26): o app parado não conta mais como
+leitura; pausa sozinho depois de 5 min sem tocar.
 
 | Item | Status  | Data       | Observação                                                                  |
 | ---- | ------- | ---------- | --------------------------------------------------------------------------- |
@@ -62,6 +63,8 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
       e no Windows (download, abrir no Excel)
 - [ ] Início no aparelho: "Adicionadas ao Anki" com os dados reais (anel da meta, "Continuar
       lendo" e semana conferidos no iPhone em 2026-10-25)
+- [ ] Tempo de leitura no iPhone: ler, apagar a tela por uns minutos e voltar; o "lidos hoje" não
+      pode pular. Parado 5 min sem tocar, pausa e desconta; volta ao virar a página
 - [ ] Apelido do livro: ver o apelido dado no iPhone chegar no PC (renomear no iPhone conferido)
 - Conhecido: na primeira abertura da v2, uma aba ou janela antiga do Dokusho (v1) aberta trava a
   atualização do banco local; o app avisa e é só fechá-la.
