@@ -5,6 +5,7 @@
  */
 
 import type { LinhaCarta, LinhaLote } from '$lib/data/supabase/sincronizacao/regras';
+import { tituloDaOrigem } from '$lib/data/noticias/origem';
 
 // Registro do Anki na tela Início: as Cartas exportadas, agrupadas pelo dia do Lote. Carta cujo
 // Lote ainda não chegou pela sincronização usa a data em que mudou para "exportada".
@@ -36,7 +37,7 @@ export function registroDoAnki(
 
     const quando = (carta.lote_id && exportadoEm.get(carta.lote_id)) || carta.modified_at;
     const dia = diaDe(quando);
-    const livro = carta.book_id ? titulos.get(carta.book_id) : undefined;
+    const livro = tituloDaOrigem(carta.book_id, titulos);
     const palavra: PalavraDoRegistro = {
       id: carta.id,
       palavra: carta.word,

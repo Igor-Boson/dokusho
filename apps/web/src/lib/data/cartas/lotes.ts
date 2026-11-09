@@ -15,6 +15,7 @@ import { gerarApkg, type MidiaApkg, type NotaApkg } from '$lib/functions/anki/ap
 import { carregarSqlJs } from '$lib/functions/anki/sql-js';
 import { geracao } from './fila';
 import { audiosParaApagar, cartasExportaveis, notaDaCarta } from './exportar';
+import { tituloDaOrigem } from '$lib/data/noticias/origem';
 
 // Lotes no app (V1.6): montar o .apkg com os áudios do bucket, gravar o Lote quando o arquivo é
 // entregue, baixar um Lote de novo, reexportar uma carta e apagar o áudio dos Lotes antigos.
@@ -49,10 +50,7 @@ async function montar(
   for (const [i, carta] of cartas.entries()) {
     aoProgredir?.(`Baixando os áudios (${i + 1} de ${cartas.length})`);
 
-    const { nota, midias: daCarta } = notaDaCarta(
-      carta,
-      carta.book_id ? titulos.get(carta.book_id) : undefined
-    );
+    const { nota, midias: daCarta } = notaDaCarta(carta, tituloDaOrigem(carta.book_id, titulos));
 
     for (const { nome, caminho } of daCarta) {
       if (midias.has(nome)) continue;

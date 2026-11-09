@@ -4,6 +4,9 @@
  * All rights reserved.
  */
 
+// Regras das Notícias (ESCOPO "Notícias da NHK Easy"; GLOSSARY › Notícias), sem banco nem tela:
+// a Edição do dia, o que ela mostra, a próxima Notícia, o Histórico e quando a Coleta preocupa.
+
 type NoticiaParaEdicao = {
   news_id: string;
   published_at: string;
