@@ -15,6 +15,10 @@ import {
 } from '$lib/data/supabase/sincronizacao/iniciar';
 import type { LinhaNoticia } from '$lib/data/supabase/sincronizacao/regras';
 import { getDateKey } from '$lib/functions/statistic-util';
+import { cobertura, type PerfilDoLivro } from '$lib/data/vocabulario/perfil';
+import { perfilDoTexto } from '$lib/data/vocabulario/perfis';
+import { indiceDoHub } from '$lib/data/vocabulario/servico';
+import { htmlDaNoticia, resumoDaCobertura } from './cobertura';
 import { escolherEdicao, precisaColetar } from './edicao';
 
 // As Notícias no app (ESCOPO "Notícias da NHK Easy"): Edição do dia, Notícia lida, a Coleta pedida
@@ -181,4 +185,40 @@ export async function coletar(forcar = false) {
   } finally {
     coletando$.next(false);
   }
+}
+
+/** Perfil de cada Notícia nesta visita (o texto não muda; o hub, sim: a conta é refeita). */
+const perfisDasNoticias = new Map<string, Promise<PerfilDoLivro | undefined>>();
+
+/**
+ * Cobertura de cada Notícia pelo hub de agora ("92% · 6 desconhecidas"). Vazio sem dicionário
+ * neste aparelho ou com o hub vazio: nada é baixado só para isso.
+ */
+export async function coberturasDasNoticias(noticias: LinhaNoticia[]) {
+  const saida = new Map<string, string>();
+  const indice = await indiceDoHub();
+
+  if (indice.vazio) return saida;
+
+  for (const noticia of noticias) {
+    if (!noticia.body_html) continue;
+
+    let perfil = perfisDasNoticias.get(noticia.news_id);
+
+    if (!perfil) {
+      perfil = perfilDoTexto(noticia.news_id, htmlDaNoticia(noticia));
+      perfisDasNoticias.set(noticia.news_id, perfil);
+    }
+
+    const pronto = await perfil;
+
+    if (!pronto) {
+      perfisDasNoticias.delete(noticia.news_id);
+      break;
+    }
+
+    saida.set(noticia.news_id, resumoDaCobertura(cobertura(pronto, indice)));
+  }
+
+  return saida;
 }

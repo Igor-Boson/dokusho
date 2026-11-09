@@ -87,6 +87,9 @@ telas, nunca no leitor.
 - `edicao.ts` (puro): Edição do dia, pendentes, próxima, Histórico, aviso da Coleta. `servico.ts`:
   grava a Edição (uma vez por dia, pela hora de início do dia das estatísticas) e as lidas, pede a
   Coleta, preferências por aparelho (Notícias por dia, furigana Sem/NHK/Adaptativo).
+- Cobertura por Notícia: `cobertura.ts` (puro) e `coberturasDasNoticias` em `servico.ts`, pelo
+  `perfilDoTexto` de `vocabulario/perfis.ts` (calcula na hora e não guarda: as Notícias não entram
+  na cobertura dos livros nem nas palavras vistas).
 - `fotos.ts`: a ação `fotos` da função busca na NHK; o app reduz e guarda no Cache Storage
   `dokusho-noticias-fotos`. `origem.ts`: Carta de Notícia com `book_id` `nhk:<id>` e título
   "NHK Easy" (etiqueta `dokusho::NHK_Easy`).
