@@ -32,7 +32,11 @@ const CHAVES: Record<TabelaSinc, string[]> = {
   lotes: ['id'],
   translations: ['sentence_sha256'],
   vocab: ['word', 'reading'],
-  vocab_history: ['id']
+  vocab_history: ['id'],
+  news_articles: ['news_id'],
+  news_reads: ['news_id'],
+  news_editions: ['day'],
+  news_collection: ['user_id']
 };
 
 const PADRAO: Record<TabelaSinc, Record<string, unknown>> = {
@@ -44,7 +48,11 @@ const PADRAO: Record<TabelaSinc, Record<string, unknown>> = {
   lotes: {},
   translations: {},
   vocab: {},
-  vocab_history: {}
+  vocab_history: {},
+  news_articles: {},
+  news_reads: {},
+  news_editions: {},
+  news_collection: {}
 };
 
 class ServidorFalso {
@@ -933,5 +941,73 @@ describe('EPUB original', () => {
 
     // Na rodada seguinte não há mais erro: o livro segue só com o processado.
     await expect(iphone.sincronizador.sincronizar()).resolves.toBe('feito');
+  });
+});
+
+describe('notícias', () => {
+  const noticia = (id: string, quando: string) => ({
+    user_id: 'u1',
+    news_id: id,
+    published_at: '2026-11-09T10:30:00.000Z',
+    title: '猫',
+    title_ruby: '<ruby>猫<rt>ねこ</rt></ruby>',
+    body_html: '<p>猫がいます。</p>',
+    body_chars: 6,
+    image_url: null,
+    voice_uri: null,
+    fetched_at: quando,
+    modified_at: quando,
+    updated_at: quando,
+    deleted_at: null
+  });
+
+  it('Notícias da Coleta chegam; lida e Edição de um aparelho chegam ao outro', async () => {
+    const iphone = criarAparelho(servidor, 'iPhone');
+    const pc = criarAparelho(servidor, 'Windows');
+
+    servidor.tabela('news_articles').set('n1', noticia('n1', '2026-11-09T11:00:00.000Z'));
+    servidor.tabela('news_collection').set('u1', {
+      user_id: 'u1',
+      last_attempt_at: '2026-11-09T11:45:00.000Z',
+      last_success_at: '2026-11-09T11:45:30.000Z',
+      last_error: null,
+      articles: 1,
+      with_text: 1,
+      modified_at: '2026-11-09T11:45:30.000Z',
+      updated_at: '2026-11-09T11:45:30.000Z',
+      deleted_at: null
+    });
+    await iphone.sincronizador.sincronizar();
+
+    expect(await iphone.sincronizador.ler('noticias', 'n1')).toMatchObject({ title: '猫' });
+    expect(await iphone.sincronizador.ler('coleta', 'u1')).toMatchObject({ with_text: 1 });
+
+    await iphone.sincronizador.salvar('edicoes', {
+      user_id: 'u1',
+      day: '2026-11-09',
+      news_ids: ['n1'],
+      modified_at: '2026-11-09T22:00:00.000Z',
+      updated_at: '2026-11-09T22:00:00.000Z',
+      deleted_at: null
+    });
+    await iphone.sincronizador.salvar('noticiasLidas', {
+      user_id: 'u1',
+      news_id: 'n1',
+      read_at: '2026-11-09T22:05:00.000Z',
+      modified_at: '2026-11-09T22:05:00.000Z',
+      updated_at: '2026-11-09T22:05:00.000Z',
+      deleted_at: null
+    });
+    await iphone.sincronizador.sincronizar();
+    await pc.sincronizador.sincronizar();
+
+    expect(await pc.sincronizador.ler('edicoes', '2026-11-09')).toMatchObject({ news_ids: ['n1'] });
+    expect(await pc.sincronizador.ler('noticiasLidas', 'n1')).toMatchObject({
+      read_at: '2026-11-09T22:05:00.000Z'
+    });
+    // As Notícias são só do servidor: nada volta para news_articles.
+    expect(servidor.tabela('news_articles').get('n1')).toMatchObject({
+      modified_at: '2026-11-09T11:00:00.000Z'
+    });
   });
 });

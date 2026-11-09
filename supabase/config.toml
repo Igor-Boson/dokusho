@@ -418,3 +418,7 @@ enabled = true
 # antigos: a função confere o login ela mesma (auth.getUser + ALLOWED_USER_ID).
 [functions.gemini]
 verify_jwt = false
+
+# Mesma razão da gemini: a função confere o login com auth.getUser (ou o token da Coleta do pg_cron).
+[functions.nhk]
+verify_jwt = false

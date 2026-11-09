@@ -59,9 +59,12 @@ describe('backup (ESCOPO "Backup")', () => {
       'vocab_history',
       'translations',
       'lotes',
-      'batch_items'
+      'batch_items',
+      'news_reads',
+      'news_editions'
     ]);
     expect(CHAVES_DO_BACKUP.vocab).toBe('user_id,word,reading');
+    expect(CHAVES_DO_BACKUP.news_editions).toBe('user_id,day');
   });
 
   it('"último backup: há N dias"', () => {

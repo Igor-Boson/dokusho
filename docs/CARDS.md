@@ -17,7 +17,7 @@ O card é o mais parecido possível com o do Kaishi 1.5k. Os modelos de frente, 
 
 - **Frente:** a palavra grande e, embaixo, a frase da leitura com a palavra em negrito azul.
 - **Verso:** a palavra com furigana em cima, o significado, a frase com furigana, a tradução da frase e os dois áudios (palavra e frase).
-- **Etiquetas:** `dokusho` e `dokusho::<título do livro>`, com os espaços do título trocados por `_` (o Anki não aceita espaço em etiqueta). O livro não aparece no card.
+- **Etiquetas:** `dokusho` e `dokusho::<título do livro>`, com os espaços do título trocados por `_` (o Anki não aceita espaço em etiqueta). O livro não aparece no card. Carta criada numa Notícia leva `dokusho` e `dokusho::NHK_Easy` (ADR 0017).
 - **guid:** `guid_for("leituras-igor", palavra, leitura)`, a mesma função do genanki com dois valores. Duas Palavras com a mesma escrita e leituras diferentes (開く あく/ひらく) são notas diferentes (ADR 0006). As 14 notas antigas do deck usam o guid antigo, só pela palavra.
 
 O que fica diferente do Kaishi: não há imagem nem pitch accent (os campos existem, mas ficam vazios), o áudio é sintético (Gemini TTS, voz Orus) e os significados são em português.

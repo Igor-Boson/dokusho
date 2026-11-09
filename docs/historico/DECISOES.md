@@ -487,3 +487,20 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   pareceu muito), descontando o tempo parado, e voltando sozinha no próximo toque ou virada de
   página (o leitor não tem o ▶ do ttu). Os padrões do leitor viraram rodadas numeradas, para o
   aparelho que já tinha o 0 gravado pegar os 5 min uma vez. O dia 25/10 fica como está.
+- 2026-11-09: Notícias da NHK Easy (v4), pedidas pelo Igor como alternativa ao scroll. Produto
+  aprovado por ele num cenário de uso (ESCOPO › "Notícias da NHK Easy"): Edição do dia fixa que
+  termina em 今日はここまで, "Lida" no fim do texto abre a próxima, estoque de um ano, sem dívida de
+  dias sem abrir, furigana Sem/NHK/Adaptativo, foto, cartão no Início, aba própria, tempo no Início
+  numa segunda etapa. Técnica decidida por mim, a pedido dele: Coleta numa Edge Function do
+  Supabase (ADR 0016), Notícia fora do modelo de Livro (ADR 0017), etiqueta `dokusho::NHK_Easy`,
+  amostras reais fora do git. Teste de fumaça em docs/historico/TESTES-DE-RISCO.md.
+- 2026-11-09: Notícias, decisões técnicas (autônomo, a pedido do Igor). Coleta: até 20 artigos por
+  vez, das mais novas para trás, 1 pedido/s com até 3 tentativas; o app pede Coleta quando a última
+  tentativa tem mais de 12 h e a função pula se a última foi há menos de 1 h. Agenda às 11h45 UTC
+  (20h45 no Japão). news_articles só a função grava (RLS só leitura no app); lida e Edição em
+  tabelas próprias, para a Coleta nunca sobrescrever a marca. A tela só escolhe a Edição depois da
+  primeira rodada de sincronização (até 6 s), para não escolher outra quando outro aparelho já
+  escolheu; Edição sem estoque com texto não é gravada. Fotos: a da versão fácil (abre sem login)
+  antes da normal, reduzidas para 960 px em JPEG no Cache Storage `dokusho-noticias-fotos`; nada no
+  Storage. Toque, painel, destaque e furigana saíram de `leitor-dokusho.svelte` para
+  `toque-na-palavra.svelte`, conferido no leitor de livros. Datas das Notícias no horário do Japão.

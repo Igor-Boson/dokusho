@@ -8,3 +8,4 @@ supabase/.branches
 dicts/
 tools/.venv
 __pycache__/
+nhk-amostras/

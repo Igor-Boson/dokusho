@@ -31,7 +31,11 @@ import {
   type LinhaMarcador,
   type LinhaMeta,
   type LinhaCarta,
+  type LinhaColeta,
+  type LinhaEdicao,
   type LinhaLote,
+  type LinhaNoticia,
+  type LinhaNoticiaLida,
   type LinhaTraducao,
   type LinhaRetrato,
   type LinhaVocab,
@@ -55,6 +59,10 @@ export interface Linhas {
   translations: LinhaTraducao;
   vocab: LinhaVocab;
   vocab_history: LinhaRetrato;
+  news_articles: LinhaNoticia;
+  news_reads: LinhaNoticiaLida;
+  news_editions: LinhaEdicao;
+  news_collection: LinhaColeta;
 }
 
 export interface NovasLinhas {
@@ -67,6 +75,10 @@ export interface NovasLinhas {
   translations: never;
   vocab: Omit<LinhaVocab, 'user_id' | 'updated_at'>;
   vocab_history: Omit<LinhaRetrato, 'user_id' | 'updated_at'>;
+  news_articles: never;
+  news_reads: Omit<LinhaNoticiaLida, 'user_id' | 'updated_at'>;
+  news_editions: Omit<LinhaEdicao, 'user_id' | 'updated_at'>;
+  news_collection: never;
 }
 
 export type TabelaSinc = keyof Linhas;
@@ -77,17 +89,25 @@ export interface LojasDeLinhas {
   traducoes: LinhaTraducao;
   vocab: LinhaVocab;
   retratos: LinhaRetrato;
+  noticias: LinhaNoticia;
+  noticiasLidas: LinhaNoticiaLida;
+  edicoes: LinhaEdicao;
+  coleta: LinhaColeta;
 }
 
-/** Lojas que este aparelho também escreve (as traduções, só o servidor). */
-export type LojaEditavel = Exclude<keyof LojasDeLinhas, 'traducoes'>;
+/** Lojas que este aparelho também escreve (traduções, Notícias e a Coleta, só o servidor). */
+export type LojaEditavel = Exclude<keyof LojasDeLinhas, 'traducoes' | 'noticias' | 'coleta'>;
 
 const TABELA_DA_LOJA: Record<keyof LojasDeLinhas, TabelaSinc> = {
   cartas: 'batch_items',
   lotes: 'lotes',
   traducoes: 'translations',
   vocab: 'vocab',
-  retratos: 'vocab_history'
+  retratos: 'vocab_history',
+  noticias: 'news_articles',
+  noticiasLidas: 'news_reads',
+  edicoes: 'news_editions',
+  coleta: 'news_collection'
 };
 
 /** Chave da linha no IndexedDB: a Palavra (word, reading) no vocab, um texto nas outras. */
@@ -99,8 +119,19 @@ function chaveDaLinha<L extends keyof LojasDeLinhas>(
 ): ChaveDeLinha {
   if (loja === 'traducoes') return (linha as LinhaTraducao).sentence_sha256;
   if (loja === 'vocab') return [(linha as LinhaVocab).word, (linha as LinhaVocab).reading];
+  if (loja === 'noticias' || loja === 'noticiasLidas')
+    return (linha as LinhaNoticia | LinhaNoticiaLida).news_id;
+  if (loja === 'edicoes') return (linha as LinhaEdicao).day;
+  if (loja === 'coleta') return (linha as LinhaColeta).user_id;
   return (linha as LinhaCarta | LinhaLote | LinhaRetrato).id;
 }
+
+const LOJAS_DE_NOTICIAS = new Set<keyof LojasDeLinhas>([
+  'noticias',
+  'noticiasLidas',
+  'edicoes',
+  'coleta'
+]);
 
 const textoDaChave = (k: ChaveDeLinha) => (Array.isArray(k) ? k.join('|') : k);
 
@@ -132,6 +163,8 @@ export interface Avisos {
   cartas(): void;
   /** O hub de vocabulário (vocab ou vocab_history) mudou com o que veio do servidor. */
   vocab?(): void;
+  /** Notícias, lidas, Edições ou o estado da Coleta chegaram do servidor. */
+  noticias?(): void;
 }
 
 export interface OpcoesSincronizador {
@@ -460,6 +493,22 @@ export class Sincronizador {
     await passo(() => this.enviarLinhas(servidor, 'batch_items', 'cartas'));
     await passo(() => this.enviarLinhas(servidor, 'lotes', 'lotes'));
 
+    // Notícias (v4): o estado da Coleta e as Notícias vêm do servidor; lidas e Edições vão e vêm.
+    await passo(() =>
+      this.receber(servidor, 'news_collection', (linhas) => this.receberLinhas('coleta', linhas))
+    );
+    await passo(() =>
+      this.receber(servidor, 'news_articles', (linhas) => this.receberLinhas('noticias', linhas))
+    );
+    await passo(() =>
+      this.receber(servidor, 'news_reads', (linhas) => this.receberLinhas('noticiasLidas', linhas))
+    );
+    await passo(() =>
+      this.receber(servidor, 'news_editions', (linhas) => this.receberLinhas('edicoes', linhas))
+    );
+    await passo(() => this.enviarLinhas(servidor, 'news_reads', 'noticiasLidas'));
+    await passo(() => this.enviarLinhas(servidor, 'news_editions', 'edicoes'));
+
     // Enviar o hub antes de receber não perde nada: o servidor ignora a escrita mais velha.
     await passo(() => this.enviarLinhas(servidor, 'vocab', 'vocab'));
     await passo(() => this.enviarLinhas(servidor, 'vocab_history', 'retratos'));
@@ -544,6 +593,7 @@ export class Sincronizador {
 
     if (!mudou) return;
     if (loja === 'vocab' || loja === 'retratos') this.opcoes.avisos.vocab?.();
+    else if (LOJAS_DE_NOTICIAS.has(loja)) this.opcoes.avisos.noticias?.();
     else this.opcoes.avisos.cartas();
   }
 

@@ -257,6 +257,144 @@ export type Database = {
         };
         Relationships: [];
       };
+      news_articles: {
+        Row: {
+          body_chars: number | null;
+          body_html: string | null;
+          deleted_at: string | null;
+          fetched_at: string | null;
+          image_url: string | null;
+          modified_at: string;
+          news_id: string;
+          published_at: string;
+          title: string;
+          title_ruby: string;
+          updated_at: string;
+          user_id: string;
+          voice_uri: string | null;
+        };
+        Insert: {
+          body_chars?: number | null;
+          body_html?: string | null;
+          deleted_at?: string | null;
+          fetched_at?: string | null;
+          image_url?: string | null;
+          modified_at?: string;
+          news_id: string;
+          published_at: string;
+          title: string;
+          title_ruby: string;
+          updated_at?: string;
+          user_id: string;
+          voice_uri?: string | null;
+        };
+        Update: {
+          body_chars?: number | null;
+          body_html?: string | null;
+          deleted_at?: string | null;
+          fetched_at?: string | null;
+          image_url?: string | null;
+          modified_at?: string;
+          news_id?: string;
+          published_at?: string;
+          title?: string;
+          title_ruby?: string;
+          updated_at?: string;
+          user_id?: string;
+          voice_uri?: string | null;
+        };
+        Relationships: [];
+      };
+      news_collection: {
+        Row: {
+          articles: number;
+          deleted_at: string | null;
+          last_attempt_at: string | null;
+          last_error: string | null;
+          last_success_at: string | null;
+          modified_at: string;
+          updated_at: string;
+          user_id: string;
+          with_text: number;
+        };
+        Insert: {
+          articles?: number;
+          deleted_at?: string | null;
+          last_attempt_at?: string | null;
+          last_error?: string | null;
+          last_success_at?: string | null;
+          modified_at?: string;
+          updated_at?: string;
+          user_id: string;
+          with_text?: number;
+        };
+        Update: {
+          articles?: number;
+          deleted_at?: string | null;
+          last_attempt_at?: string | null;
+          last_error?: string | null;
+          last_success_at?: string | null;
+          modified_at?: string;
+          updated_at?: string;
+          user_id?: string;
+          with_text?: number;
+        };
+        Relationships: [];
+      };
+      news_editions: {
+        Row: {
+          day: string;
+          deleted_at: string | null;
+          modified_at: string;
+          news_ids: string[];
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          day: string;
+          deleted_at?: string | null;
+          modified_at?: string;
+          news_ids: string[];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Update: {
+          day?: string;
+          deleted_at?: string | null;
+          modified_at?: string;
+          news_ids?: string[];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      news_reads: {
+        Row: {
+          deleted_at: string | null;
+          modified_at: string;
+          news_id: string;
+          read_at: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          deleted_at?: string | null;
+          modified_at?: string;
+          news_id: string;
+          read_at: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Update: {
+          deleted_at?: string | null;
+          modified_at?: string;
+          news_id?: string;
+          read_at?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       reading_goals: {
         Row: {
           character_goal: number;

@@ -77,7 +77,11 @@ function sincFalso(inicial: Partial<{ [L in keyof LojasDeLinhas]: LojasDeLinhas[
     lotes: [...(inicial.lotes ?? [])],
     traducoes: [],
     vocab: [...(inicial.vocab ?? [])],
-    retratos: [...(inicial.retratos ?? [])]
+    retratos: [...(inicial.retratos ?? [])],
+    noticias: [],
+    noticiasLidas: [],
+    edicoes: [],
+    coleta: []
   } as { [L in keyof LojasDeLinhas]: LojasDeLinhas[L][] };
   let rodadas = 0;
   const chave = (l: Record<string, unknown>) => (l.id as string) ?? `${l.word}|${l.reading}`;

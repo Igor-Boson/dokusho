@@ -6,7 +6,8 @@
   import { pagePath } from '$lib/data/env';
   import { cartasRecebidas$, sincronizador } from '$lib/data/supabase/sincronizacao/iniciar';
 
-  // Navegação inferior (ESCOPO "Interface"): Início, Biblioteca, Fila de cartas e Vocabulário.
+  // Navegação inferior (ESCOPO "Interface"): Início, Notícias, Biblioteca, Fila de cartas e
+  // Vocabulário.
 
   let naFila = 0;
 
@@ -15,6 +16,12 @@
       rotulo: 'Início',
       caminho: '/inicio',
       icone: 'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z'
+    },
+    {
+      rotulo: 'Notícias',
+      caminho: '/noticias',
+      icone:
+        'M4 5h12v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM16 9h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-3M7 9h6M7 13h6M7 16h3'
     },
     {
       rotulo: 'Biblioteca',
@@ -94,7 +101,7 @@
     bottom: 0;
     z-index: 30;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     border-top: 1px solid var(--dk-line);
     background: var(--dk-surface);
     color: var(--dk-ink3);

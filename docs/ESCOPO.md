@@ -12,7 +12,7 @@ Princípios:
 - O Anki manda no estado das palavras que estão nele; a marca "Já sei" do app cobre as que não estão (ADR 0007). O app nunca escreve no Anki: as cartas chegam lá por .apkg.
 - Funciona offline e sincroniza quando há rede.
 - Sem Claude dentro do app. O Claude (via Claude Code) só ajuda a construir; a tradução da frase, o significado da palavra na carta e o áudio vêm do Gemini, chamado pelo servidor.
-- Só EPUB de texto, sem DRM. Mangá e outros formatos ficam fora.
+- Só EPUB de texto, sem DRM, mais as Notícias da NHK Easy (v4). Mangá e outros formatos ficam fora.
 - O repositório é público: nada de chave, dado pessoal ou link privado nos arquivos.
 
 ## Interface
@@ -26,7 +26,7 @@ A interface segue os leitores graduados Yomu Yomu e DuChinese: tela de leitura l
 | Leitor         | Texto limpo, com barra verde nos parágrafos já lidos; barra do topo (voltar, título, Aa, furigana, menu com "Desmarcar a partir daqui"); ao tocar numa palavra, painel inferior com a palavra, a leitura, a glosa em inglês, o estado, "Já sei" (v2), a marca "na fila" ou "exportada em <data>", o botão "Traduzir frase" e o botão "Criar carta" |
 | Fila de cartas | Lista das cartas com o estado (pendente, gerando, gerada, erro, exportada), a opção de abrir e editar, os Lotes já exportados (data e aparelho) e o botão "Exportar .apkg"                                                                                                                                                                         |
 
-Navegação inferior: Início, Biblioteca, Fila de cartas e Vocabulário (a tela de Vocabulário chega com o hub, na v2).
+Navegação inferior: Início, Notícias (v4), Biblioteca, Fila de cartas e Vocabulário (a tela de Vocabulário chega com o hub, na v2).
 
 Esboço de três das telas:
 
@@ -230,6 +230,37 @@ Regras da fila:
 - No iPhone e no iPad, a exportação abre a folha de compartilhamento do iOS (envio direto ao AnkiMobile); no Windows, é um download.
 - Mudar o formato continua sendo editar `docs/CARDS.md`, uma vez só.
 
+## Notícias da NHK Easy (v4)
+
+Uma alternativa ao scroll: abrir, ler cinco minutos de notícias em japonês fácil, acabou. Cada
+Notícia é independente; não há onde parar nem onde continuar. Definido com o Igor em 2026-11-09
+(ADR 0016, 0017; termos em GLOSSARY.md › Notícias).
+
+- **Coleta:** todo dia, depois da publicação da NHK (7h a 8h em Brasília, só dias úteis, 2 a 4 por
+  dia), o servidor busca as Notícias novas. O estoque é o último ano da NHK (~620); o texto das mais
+  antigas é baixado aos poucos, das mais novas para trás. O app pede uma Coleta quando a última tem
+  mais de 12 h.
+- **Edição do dia:** na primeira abertura do dia, o app escolhe as N Notícias não lidas mais
+  recentes (N nas configurações, padrão 5); como a NHK publica menos que isso, entram as de dias
+  anteriores. A Edição fica fixa até a virada do dia (a mesma hora de início do dia das
+  estatísticas): ler uma não puxa outra, e o que a NHK publicar depois entra na Edição seguinte. Não
+  há dívida: três dias sem abrir não viram três Edições.
+- **Leitura:** um toque abre a Notícia: foto, título, data e texto na horizontal, sem furigana. O
+  menu ふ tem Sem, NHK (o ruby original) e Adaptativo (o ruby da NHK só nas palavras não
+  conhecidas); o kanji é sempre o do original. Toque na palavra, painel, destaque, "Já sei",
+  "Traduzir frase" e "Criar carta" funcionam como no Livro.
+- **Fim:** o botão "Lida", no fim do texto, tira a Notícia da Edição e abre a próxima; depois da
+  última aparece 今日はここまで, sem "carregar mais". O Histórico de notícias (lidas, por data) fica
+  num link à parte, onde dá para reabrir e desmarcar.
+- **Onde:** aba Notícias na navegação inferior e um cartão no Início ("Notícias de hoje: 2 de 5").
+  O tempo lendo Notícias entra no tempo de leitura do Início numa segunda etapa.
+- **Offline e aparelhos:** a Edição, o texto e as fotos ficam no aparelho; o que é lido num
+  aparelho aparece como lido nos outros.
+- **Quando a NHK muda:** a tela continua mostrando o que já foi baixado e avisa desde quando a
+  Coleta falha; nada é apagado.
+- **Fora:** áudio (a NHK responde 403 fora do Japão), cobertura por Notícia, palavras vistas nas
+  Notícias.
+
 ## Roadmap por versão
 
 A v1 entrega o leitor sincronizado com criação de cartas; a v2 liga o hub ao Anki; a v3 é opcional.
@@ -239,8 +270,9 @@ A v1 entrega o leitor sincronizado com criação de cartas; a v2 liga o hub ao A
 | v1            | Fork do ttu com biblioteca, marcador e estatísticas no Supabase; dicionário embutido; tela inicial com calendário, meta, tempo e caracteres lidos; parágrafos lidos; consulta ao tocar na palavra; "Traduzir frase" (Gemini); fila de cartas com geração (tradução, significado em português e áudio pelo Gemini) e exportação .apkg; backup | Você lê no iPad, continua no iPhone no mesmo ponto, e 10 palavras na fila viram cartas com significado em português e áudio, que importam no Anki sem duplicar ao reimportar |
 | v2            | Botão Sincronizar Anki; estados conhecida, aprendendo e desconhecida; "Já sei" e importação inicial por frequência; destaque no texto; aviso de palavra já no Anki; cobertura por livro; lista de desconhecidas por frequência; aba de palavras conhecidas na tela inicial; Lote confirmado no Anki                                          | Abrir um EPUB mostra a cobertura em %, e uma palavra conhecida no Anki aparece destacada no iPad depois de sincronizar no PC                                                 |
 | v3 (opcional) | Furigana gerado e adaptativo; estatísticas cruzando leitura e vocabulário, com palavras vistas; exportação em CSV das palavras conhecidas e em aprendizado                                                                                                                                                                                   | Cada item funciona sozinho; nenhum bloqueia os outros                                                                                                                        |
+| v4            | Notícias da NHK Easy: Coleta diária no servidor, Edição do dia que termina, leitura com toque e cartas, Histórico de notícias, cartão no Início; depois, o tempo das Notícias no Início                                                                                                                                                      | Abrir a aba Notícias no iPhone mostra a Edição do dia; ler as N termina em 今日はここまで, e uma carta criada numa Notícia sai com a etiqueta `dokusho::NHK_Easy`            |
 
-Fora do escopo: mangá e formatos que não sejam EPUB de texto; EPUB com DRM; Claude ou qualquer LLM além do Gemini; extensão do Yomitan; notificações e lembretes; mais de um usuário; cards gerados pelas conversas do Claude; folhas de escrita e KANJIDIC; dicionário de nomes (JMnedict); pitch accent; sincronização por Google Drive, OneDrive ou pasta local; audiobook e legendas do ttu; envio direto ao Anki pelo AnkiConnect; outro idioma; texto que não venha de EPUB; explicação de gramática.
+Fora do escopo: mangá e formatos que não sejam EPUB de texto; EPUB com DRM; Claude ou qualquer LLM além do Gemini; extensão do Yomitan; notificações e lembretes; mais de um usuário; cards gerados pelas conversas do Claude; folhas de escrita e KANJIDIC; dicionário de nomes (JMnedict); pitch accent; sincronização por Google Drive, OneDrive ou pasta local; audiobook e legendas do ttu; envio direto ao Anki pelo AnkiConnect; outro idioma; texto que não venha de EPUB (a exceção são as Notícias da NHK Easy, v4); explicação de gramática.
 
 ## Arquitetura e modelo de dados
 
@@ -279,6 +311,10 @@ O iPad e o iPhone recebem o estado do vocabulário já sincronizado. O .apkg é 
 | batch_items                | As cartas: campos, frase, livro, estado (pendente, gerando, gerada, erro, exportada), motivo do erro, texto para a voz, caminhos dos áudios no bucket `audio` e Lote |
 | lotes                      | Data da exportação, aparelho onde foi baixado, cartas, confirmado no Anki                                                                                            |
 | gemini_usage               | Contagem diária de chamadas ao Gemini, para o teto                                                                                                                   |
+| news_articles              | Notícias (v4): id da NHK, data de publicação, título com e sem ruby, texto limpo (só `<p>` e `<ruby>`), endereço da foto; escrita só pela Coleta                     |
+| news_reads                 | Notícias lidas: id da Notícia e horário; desmarcar é soft delete                                                                                                     |
+| news_editions              | Edição do dia: dia, ids das Notícias na ordem e horário em que foi montada                                                                                           |
+| news_collection            | Estado da Coleta: última tentativa, último sucesso e o erro; escrita só pela Coleta                                                                                  |
 
 **Sincronização:** vale a última escrita pelo horário do aparelho em que você agiu; o `updated_at` do servidor serve só para cada aparelho perguntar o que mudou (ADR 0002). Exclusões são marcadas, não apagadas, o que evita o problema do merge do ttu que ressuscita dado apagado. Toda tabela tem `user_id uuid references auth.users`, `updated_at`, `deleted_at` (soft delete) e RLS `user_id = auth.uid()`. vocab usa upsert na chave (user_id, word, reading).
 

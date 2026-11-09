@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import NavegacaoInferior from '$lib/components/navegacao/navegacao-inferior.svelte';
+  import CartaoNoticias from '$lib/components/noticias/cartao-noticias.svelte';
   import { ReadingGoalFrequency } from '$lib/components/book-reader/book-reading-tracker/book-reading-tracker';
   import { pagePath } from '$lib/data/env';
   import {
@@ -294,6 +295,8 @@
       <small>{aoAnkiNaSemana === 1 ? 'palavra' : 'palavras'} ao Anki</small>
     </div>
   </div>
+
+  <CartaoNoticias />
 
   {#if livroAtual}
     <a class="dokusho-cartao dokusho-inicio__continuar" href="{pagePath}/b?id={livroAtual.id}">

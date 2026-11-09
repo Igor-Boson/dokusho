@@ -1,0 +1,56 @@
+[
+  {
+    "2026-11-09": [
+      {
+        "news_id": "20261109ne00001",
+        "news_prearranged_time": "2026-11-09 19:30:00",
+        "title": "猫が公園で寝ています　２匹",
+        "title_with_ruby": "<ruby>猫<rt>ねこ</rt></ruby>が<ruby>公園<rt>こうえん</rt></ruby>で<ruby>寝<rt>ね</rt></ruby>ています　２<ruby>匹<rt>ひき</rt></ruby>",
+        "has_news_easy_image": true,
+        "news_easy_image_uri": "https://news.web.nhk/news/easy/ogp/20261109ne00001/abcDEF123.jpg",
+        "has_news_web_image": true,
+        "news_web_image_uri": "https://news.web.nhk/news/nd/kiji/20261109xx00001/foto_l.jpg",
+        "has_news_easy_voice": true,
+        "news_easy_voice_uri": "20261109ne00001_vozInventada.m4a"
+      },
+      {
+        "news_id": "20261109ne00002",
+        "news_prearranged_time": "2026-11-09 20:10:00",
+        "title": "雨の日",
+        "title_with_ruby": "<ruby>雨<rt>あめ</rt></ruby>の<ruby>日<rt>ひ</rt></ruby>",
+        "has_news_easy_image": false,
+        "news_easy_image_uri": "",
+        "has_news_web_image": true,
+        "news_web_image_uri": "https://news.web.nhk/news/nd/kiji/20261109xx00002/foto_l.jpg",
+        "has_news_easy_voice": false,
+        "news_easy_voice_uri": ""
+      }
+    ],
+    "2026-11-06": [
+      {
+        "news_id": "20261106ne00003",
+        "news_prearranged_time": "2026-11-06 19:00:00",
+        "title": "写真のない記事",
+        "title_with_ruby": "<ruby>写真<rt>しゃしん</rt></ruby>のない<ruby>記事<rt>きじ</rt></ruby>",
+        "has_news_easy_image": false,
+        "news_easy_image_uri": "",
+        "has_news_web_image": false,
+        "news_web_image_uri": "",
+        "has_news_easy_voice": true,
+        "news_easy_voice_uri": "20261106ne00003_outra.m4a"
+      },
+      {
+        "news_id": "../../etc",
+        "news_prearranged_time": "2026-11-06 19:00:00",
+        "title": "id inválido",
+        "title_with_ruby": "id inválido"
+      },
+      {
+        "news_id": "20261106ne00004",
+        "news_prearranged_time": "ontem",
+        "title": "data inválida",
+        "title_with_ruby": "data inválida"
+      }
+    ]
+  }
+]

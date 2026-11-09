@@ -26,6 +26,12 @@ export type LinhaTraducao = Tabelas['translations']['Row'];
 export type LinhaVocab = Tabelas['vocab']['Row'];
 export type LinhaRetrato = Tabelas['vocab_history']['Row'];
 
+// Notícias (v4): news_articles e news_collection só o servidor grava (a Coleta).
+export type LinhaNoticia = Tabelas['news_articles']['Row'];
+export type LinhaNoticiaLida = Tabelas['news_reads']['Row'];
+export type LinhaEdicao = Tabelas['news_editions']['Row'];
+export type LinhaColeta = Tabelas['news_collection']['Row'];
+
 export type NovaLinhaLivro = Tabelas['books']['Insert'];
 export type NovaLinhaMarcador = Tabelas['bookmarks']['Insert'];
 export type NovaLinhaEstatistica = Tabelas['reading_stats']['Insert'];

@@ -20,7 +20,10 @@ export const TABELAS_DO_BACKUP = [
   'vocab_history',
   'translations',
   'lotes',
-  'batch_items'
+  'batch_items',
+  // Notícias: só o que é seu (lidas e Edições); o texto volta pela Coleta.
+  'news_reads',
+  'news_editions'
 ] as const;
 
 export type TabelaDoBackup = (typeof TABELAS_DO_BACKUP)[number];
@@ -35,7 +38,9 @@ export const CHAVES_DO_BACKUP: Record<TabelaDoBackup, string> = {
   vocab_history: 'user_id,id',
   translations: 'user_id,sentence_sha256',
   lotes: 'user_id,id',
-  batch_items: 'user_id,id'
+  batch_items: 'user_id,id',
+  news_reads: 'user_id,news_id',
+  news_editions: 'user_id,day'
 };
 
 type Linha = Record<string, unknown>;
