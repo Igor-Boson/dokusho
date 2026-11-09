@@ -7,6 +7,22 @@
 export const ORIGEM = 'https://news.web.nhk';
 export const PAGINA_EASY = `${ORIGEM}/news/easy/`;
 
+// O fluxo de quem está fora do Japão (NHK ONE, desde out/2025): este endereço passa pelo aviso de
+// uso com uma localização fixa de Tóquio e devolve os cookies que as listas e os artigos pedem.
+export const ENDERECOS = {
+  entrar:
+    `${ORIGEM}/tix/build_authorize?idp=a-alaz&profileType=abroad` +
+    `&redirect_uri=${encodeURIComponent(PAGINA_EASY)}` +
+    '&entity=none&area=130&pref=13&jisx0402=13101&postal=1000001',
+  listas: [`${PAGINA_EASY}news-list.json`, `${PAGINA_EASY}top-list.json`],
+  artigo: (id: string) => `${PAGINA_EASY}${id}/${id}.html`
+};
+
+export const idValido = (id: string) => ID.test(id);
+
+// A foto da versão fácil abre sem login; a da notícia normal pede os cookies.
+export const fotoPedeLogin = (url: string) => !new URL(url).pathname.startsWith('/news/easy/ogp/');
+
 export type Etapa = 'login' | 'lista' | 'artigo' | 'consentimento' | 'foto' | 'rede';
 
 export class ErroNhk extends Error {

@@ -2,8 +2,11 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  ENDERECOS,
   ErroNhk,
   cookiesPara,
+  fotoPedeLogin,
+  idValido,
   guardarCookies,
   limparHtml,
   lerArtigo,
@@ -179,6 +182,28 @@ describe('cookies', () => {
       'z_at=novo; max-age=43200; domain=web.nhk; path=/'
     ]);
     expect(cookiesPara(pote, 'https://news.web.nhk/')).toBe('z_at=novo');
+  });
+});
+
+describe('endereços', () => {
+  it('o login é o de fora do Japão e volta para a página do Easy', () => {
+    const u = new URL(ENDERECOS.entrar);
+    expect(u.searchParams.get('profileType')).toBe('abroad');
+    expect(u.searchParams.get('redirect_uri')).toBe('https://news.web.nhk/news/easy/');
+    expect(ENDERECOS.artigo('20261109de72841')).toBe(
+      'https://news.web.nhk/news/easy/20261109de72841/20261109de72841.html'
+    );
+  });
+
+  it('só a foto da notícia normal pede login', () => {
+    expect(fotoPedeLogin('https://news.web.nhk/news/easy/ogp/x/y.jpg')).toBe(false);
+    expect(fotoPedeLogin('https://news.web.nhk/news/nd/kiji/x/y_l.jpg')).toBe(true);
+  });
+
+  it('id da NHK: letras minúsculas e números, nada de caminho', () => {
+    expect(idValido('20261109de72841')).toBe(true);
+    expect(idValido('../x')).toBe(false);
+    expect(idValido('k10014871861')).toBe(true);
   });
 });
 
