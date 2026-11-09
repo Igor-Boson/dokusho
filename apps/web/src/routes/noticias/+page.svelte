@@ -6,6 +6,7 @@
   import { estadoDaEdicao } from '$lib/data/noticias/edicao';
   import { fotoDe, garantirFotos } from '$lib/data/noticias/fotos';
   import {
+    coberturasDasNoticias,
     coletando$,
     coletar,
     definirPorDia,
@@ -18,7 +19,8 @@
   import {
     noticiasRecebidas$,
     sincronizador,
-    sincronizarAgora
+    sincronizarAgora,
+    vocabMudou$
   } from '$lib/data/supabase/sincronizacao/iniciar';
   import type { LinhaColeta, LinhaNoticia } from '$lib/data/supabase/sincronizacao/regras';
   import { formatPageTitle } from '$lib/functions/format-page-title';
@@ -32,6 +34,8 @@
   let idsLidos = new Set<string>();
   let coleta: LinhaColeta | undefined;
   let fotos = new Map<string, string>();
+  /** "92% · 6 desconhecidas" de cada Notícia da Edição (com dicionário e hub neste aparelho). */
+  let coberturas = new Map<string, string>();
   let erroDaBusca = '';
   /** Antes da primeira rodada de sincronização, só mostra a Edição já gravada (não escolhe outra). */
   let podeEscolher = false;
@@ -51,7 +55,15 @@
       ? await edicaoDeHoje()
       : (await sincronizador().ler('edicoes', hoje()))?.news_ids;
     carregado = true;
-    await carregarFotos();
+    await Promise.all([carregarFotos(), carregarCoberturas()]);
+  }
+
+  async function carregarCoberturas() {
+    const daEdicao = (edicao ?? [])
+      .map((id) => noticias.get(id))
+      .filter((n): n is LinhaNoticia => !!n);
+
+    coberturas = await coberturasDasNoticias(daEdicao).catch(() => coberturas);
   }
 
   async function carregarFotos() {
@@ -96,11 +108,14 @@
   }
 
   onMount(() => {
-    const assinatura = noticiasRecebidas$.subscribe(() => carregar());
+    const assinaturas = [
+      noticiasRecebidas$.subscribe(() => carregar()),
+      vocabMudou$.subscribe(() => carregarCoberturas())
+    ];
 
     carregar().then(prepararEmSegundoPlano);
 
-    return () => assinatura.unsubscribe();
+    return () => assinaturas.forEach((assinatura) => assinatura.unsubscribe());
   });
 
   onDestroy(() => fotos.forEach((url) => URL.revokeObjectURL(url)));
@@ -143,6 +158,9 @@
             <div>
               <b lang="ja">{noticia.title}</b>
               <small lang="ja">{dataDaNoticia(noticia.published_at)}</small>
+              {#if coberturas.get(noticia.news_id)}
+                <small class="dokusho-noticias__cobertura">{coberturas.get(noticia.news_id)}</small>
+              {/if}
             </div>
           </a>
         </li>
@@ -242,6 +260,13 @@
       font-size: 12px;
       color: var(--dk-ink2);
     }
+  }
+
+  .dokusho-noticias__lista .dokusho-noticias__cobertura {
+    display: block;
+    margin-top: 2px;
+    color: var(--dk-read);
+    font-weight: 700;
   }
 
   .dokusho-noticias__fim {

@@ -117,6 +117,30 @@ async function calcular(livroId: string, html: () => Promise<string | undefined>
   if (!texto) return undefined;
 
   const inicio = performance.now();
+  const { pronto, paragrafos } = await construir(livroId, versao, texto, (fracao) => {
+    calculando.set(livroId, fracao);
+    progressoDoPerfil$.next({ livroId, fracao });
+  });
+
+  await (await db()).put('perfis', pronto);
+  calculando.delete(livroId);
+  ultimaMedida = {
+    livroId,
+    paragrafos,
+    palavras: pronto.itens.length,
+    ms: Math.round(performance.now() - inicio)
+  };
+  perfilPronto$.next(livroId);
+  return pronto;
+}
+
+/** Tokeniza o HTML parágrafo a parágrafo, devolvendo a vez ao navegador a cada ~30 ms. */
+async function construir(
+  id: string,
+  versao: string,
+  texto: string,
+  aoProgredir?: (fracao: number) => void
+) {
   const tk = await tokenizador();
   const memo = new Map<string, Promise<PalavraJmdict | null | undefined>>();
   const casar = (p: Pedaco) => {
@@ -138,24 +162,23 @@ async function calcular(livroId: string, html: () => Promise<string | undefined>
     const { texto: doParagrafo } = lerParagrafo(elemento);
     if (doParagrafo.trim()) await perfil.acrescentar(tk.tokenizar(doParagrafo), casar, fim);
     if (performance.now() - fatia > FATIA_MS) {
-      calculando.set(livroId, i / paragrafos.length);
-      progressoDoPerfil$.next({ livroId, fracao: i / paragrafos.length });
+      aoProgredir?.(i / paragrafos.length);
       await new Promise((r) => setTimeout(r, 0));
       fatia = performance.now();
     }
   }
 
-  const pronto = perfil.pronto(livroId, versao, total);
-  await (await db()).put('perfis', pronto);
-  calculando.delete(livroId);
-  ultimaMedida = {
-    livroId,
-    paragrafos: paragrafos.length,
-    palavras: pronto.itens.length,
-    ms: Math.round(performance.now() - inicio)
-  };
-  perfilPronto$.next(livroId);
-  return pronto;
+  return { pronto: perfil.pronto(id, versao, total), paragrafos: paragrafos.length };
+}
+
+/**
+ * Perfil de um texto curto (uma Notícia), calculado na hora e não guardado: não entra na cobertura
+ * dos livros nem nas palavras vistas. undefined sem dicionário neste aparelho.
+ */
+export async function perfilDoTexto(id: string, html: string) {
+  const versao = await versaoDoDicionario();
+  if (!versao) return undefined;
+  return (await construir(id, versao, html)).pronto;
 }
 
 /** Tempo do último cálculo (para medir no aparelho). */

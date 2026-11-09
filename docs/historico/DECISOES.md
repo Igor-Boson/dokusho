@@ -504,3 +504,7 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   antes da normal, reduzidas para 960 px em JPEG no Cache Storage `dokusho-noticias-fotos`; nada no
   Storage. Toque, painel, destaque e furigana saíram de `leitor-dokusho.svelte` para
   `toque-na-palavra.svelte`, conferido no leitor de livros. Datas das Notícias no horário do Japão.
+- 2026-11-09: cobertura por Notícia na Edição do dia (pedido do Igor, depois de perguntar o nível do
+  NHK Easy). Mesma conta da cobertura do Livro, sobre título e texto; o perfil é calculado na hora
+  (`perfilDoTexto`) e fica só na memória da visita, para não misturar as Notícias com os livros no
+  banco `dokusho-perfis`. Sem dicionário ou com o hub vazio, não aparece.

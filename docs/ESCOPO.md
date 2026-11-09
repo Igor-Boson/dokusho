@@ -252,14 +252,16 @@ Notícia é independente; não há onde parar nem onde continuar. Definido com o
 - **Fim:** o botão "Lida", no fim do texto, tira a Notícia da Edição e abre a próxima; depois da
   última aparece 今日はここまで, sem "carregar mais". O Histórico de notícias (lidas, por data) fica
   num link à parte, onde dá para reabrir e desmarcar.
+- **Nível:** a NHK não marca nível JLPT (gramática perto do N4–N3, vocabulário até N2 ou além,
+  conforme o assunto). Cada Notícia da Edição mostra a cobertura pelo hub ("92% · 6 desconhecidas"),
+  a mesma conta da cobertura do Livro (pedido do Igor, 2026-11-09).
 - **Onde:** aba Notícias na navegação inferior e um cartão no Início ("Notícias de hoje: 2 de 5").
   O tempo lendo Notícias entra no tempo de leitura do Início numa segunda etapa.
 - **Offline e aparelhos:** a Edição, o texto e as fotos ficam no aparelho; o que é lido num
   aparelho aparece como lido nos outros.
 - **Quando a NHK muda:** a tela continua mostrando o que já foi baixado e avisa desde quando a
   Coleta falha; nada é apagado.
-- **Fora:** áudio (a NHK responde 403 fora do Japão), cobertura por Notícia, palavras vistas nas
-  Notícias.
+- **Fora:** áudio (a NHK responde 403 fora do Japão) e palavras vistas nas Notícias.
 
 ## Roadmap por versão
 
