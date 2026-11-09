@@ -133,3 +133,22 @@ Com as regras, 202/202 nestas frases, mas elas foram ajustadas em cima delas: a 
 estimativa é a de antes (97,5%). Também conferidos: 一日 いちにち, 何度 なんど (regra do 何), 明日
 あした, その後 ご, 下げ さ, 上手く うまく. Rodar de novo (em apps/web):
 `$env:MEDIR_FURIGANA="<arquivo>"; npx vitest run gerado.medicao`.
+
+## NHK Easy: teste de fumaça (v4, 2026-11-09)
+
+Do PC do Igor (fora do Japão), com curl, cookies e 1 pedido por segundo:
+
+- `tix/build_authorize?...profileType=abroad...`: 3 redirecionamentos e 200; cookies `z_at`,
+  `bff-rt-authz` etc. valem 12 h.
+- `top-list.json`: 200, 20 itens de 5 dias. `news-list.json`: existe, 200, 882 KB, um objeto
+  dia → itens com 621 Notícias de 234 dias (um ano); 1 a 4 por dia, só dias úteis, ~13 por semana;
+  publicação entre 19h e 20h no Japão.
+- Sem cookie: a lista dá 401 `missing_token`; o artigo dá 200 com a página de consentimento
+  (ご利用にあたって), sem `#js-article-body`.
+- Artigo: 200; corpo em `#js-article-body`, 4 a 6 `<p>`, 196 a 284 caracteres; cada palavra num
+  `span.colorX`; nenhum `a.dicWin`; 2 de 3 trazem a foto num `<img>` dentro do corpo. Limpo (só `<p>`
+  e `<ruby>`), ~2 KB.
+- Fotos (1920×1080, ~200 KB): a da versão fácil (`/news/easy/ogp/...`, 142 de 621) abre sem cookie;
+  a da notícia normal (`/news/nd/kiji/...`, as outras 479) dá 401 sem cookie e 200 com ele.
+- Áudio: o caminho antigo (`vod-stream.nhk.jp`) dá 404; o atual, tirado do player
+  (`media.vd.st.nhk/news/easy_audio/<voz>/index.m3u8`), dá 403 Access Denied. Fora da v4.

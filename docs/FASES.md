@@ -208,3 +208,17 @@ Resultados de cada teste em docs/historico/TESTES-DE-RISCO.md.
 - V3.1 Furigana gerado e furigana adaptativo
 - V3.2 Estatísticas cruzando leitura e vocabulário, com palavras vistas
 - V3.3 Exportar CSV de conhecidas e aprendendo
+
+## 4. v4 · Notícias da NHK Easy (ESCOPO: "Notícias da NHK Easy"; ADR 0016, 0017)
+
+Feita num chat só, a pedido do Igor (2026-11-09), em passos pequenos no branch `feat/noticias-nhk`.
+
+- N1 Leitura da lista e do artigo da NHK, com a página de consentimento como erro (testes primeiro;
+  amostras reais em `nhk-amostras/`, fora do git).
+- N2 Edge Function `nhk` (Coleta e fotos), tabelas `news_*` e o teste nos servidores do Supabase.
+- N3 Agendamento diário (pg_cron) e cópia das Notícias para o aparelho pelo sincronizador.
+- N4 Toque, painel e Carta separados do leitor de livros num componente que recebe a raiz do texto.
+- N5 Telas: aba Notícias com a Edição do dia, leitura, "Lida", Histórico, aviso da Coleta, cartão
+  no Início.
+- N6 Tempo de leitura das Notícias no Início (segunda etapa, depois de N1–N5 no ar).
+- **Pronto quando:** critério da v4 no ESCOPO.

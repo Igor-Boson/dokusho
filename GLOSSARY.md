@@ -53,7 +53,7 @@ O ponto mais distante que você já leu num Livro; ao contrário do Marcador, nu
 _Avoid_: progresso máximo, parágrafos lidos
 
 **Frase**:
-O trecho do Livro em que a Palavra apareceu, delimitado por 。！？ sem cortar dentro de 「」, sem o furigana do EPUB.
+O trecho do Livro ou da Notícia em que a Palavra apareceu, delimitado por 。！？ sem cortar dentro de 「」, sem o furigana do texto.
 _Avoid_: sentença, contexto
 
 **Livro**:
@@ -69,9 +69,31 @@ O significado curto da Palavra, em inglês, tirado do dicionário sem tradução
 _Avoid_: definição, tradução da palavra
 
 **Furigana adaptativo**:
-O modo de furigana que mostra a leitura só das Palavras que não estão no estado conhecida, tanto a gerada pelo app quanto a que o EPUB já traz.
+O modo de furigana que mostra a leitura só das Palavras que não estão no estado conhecida, tanto a gerada pelo app quanto a que o EPUB ou a NHK já trazem.
 _Avoid_: furigana inteligente, furigana parcial
 
 **Tradução da frase**:
-A frase do livro traduzida para o português pelo Gemini, pedida por você e guardada em cache.
+A Frase traduzida para o português pelo Gemini, pedida por você e guardada em cache.
 _Avoid_: significado da frase
+
+## Notícias
+
+**Notícia**:
+Um artigo do NHK NEWS WEB EASY guardado no app, com título, data, texto e foto; não é um Livro e não aparece na Biblioteca.
+_Avoid_: artigo, matéria, post
+
+**Coleta**:
+A busca diária das Notícias que a NHK publicou, feita pelo servidor e não pelo aparelho.
+_Avoid_: sync, scraping, atualização
+
+**Edição do dia**:
+As N Notícias não lidas mais recentes, escolhidas na primeira abertura do dia e fixas até a virada; com todas lidas, a leitura do dia acabou (今日はここまで).
+_Avoid_: feed, Hoje, lista do dia
+
+**Notícia lida**:
+A Notícia que você marcou ao terminar a leitura; sai da Edição do dia e vai para o Histórico de notícias.
+_Avoid_: concluída, vista
+
+**Histórico de notícias**:
+As Notícias lidas, por data, que você pode reabrir; fica fora da Edição do dia.
+_Avoid_: arquivo, lidas

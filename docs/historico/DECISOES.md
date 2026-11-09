@@ -487,3 +487,10 @@ quando não há ADR mais novo; o estado atual de cada módulo está resumido em 
   pareceu muito), descontando o tempo parado, e voltando sozinha no próximo toque ou virada de
   página (o leitor não tem o ▶ do ttu). Os padrões do leitor viraram rodadas numeradas, para o
   aparelho que já tinha o 0 gravado pegar os 5 min uma vez. O dia 25/10 fica como está.
+- 2026-11-09: Notícias da NHK Easy (v4), pedidas pelo Igor como alternativa ao scroll. Produto
+  aprovado por ele num cenário de uso (ESCOPO › "Notícias da NHK Easy"): Edição do dia fixa que
+  termina em 今日はここまで, "Lida" no fim do texto abre a próxima, estoque de um ano, sem dívida de
+  dias sem abrir, furigana Sem/NHK/Adaptativo, foto, cartão no Início, aba própria, tempo no Início
+  numa segunda etapa. Técnica decidida por mim, a pedido dele: Coleta numa Edge Function do
+  Supabase (ADR 0016), Notícia fora do modelo de Livro (ADR 0017), etiqueta `dokusho::NHK_Easy`,
+  amostras reais fora do git. Teste de fumaça em docs/historico/TESTES-DE-RISCO.md.
