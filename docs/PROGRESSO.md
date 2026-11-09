@@ -18,7 +18,7 @@ leitura; pausa sozinho depois de 5 min sem tocar.
 **Notícias da NHK Easy (v4)** (2026-11-09, branch `feat/noticias-nhk`): Coleta no servidor (Edge
 Function `nhk` + pg_cron), aba Notícias com a Edição do dia que termina em 今日はここまで, leitura com
 toque e Cartas, fotos, Histórico e cartão no Início. Conferida no navegador com dados de teste;
-falta o Igor configurar a Coleta diária, ver a primeira Coleta no Supabase e usar no iPhone.
+Coleta diária configurada e a primeira rodou nos servidores do Supabase; falta usar no iPhone.
 
 | Item  | Status   | Data       | Observação                                                                  |
 | ----- | -------- | ---------- | --------------------------------------------------------------------------- |
@@ -63,9 +63,8 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 
 ## Pendências
 
-- [ ] Notícias: rodar `node tools/configurar-coleta-nhk.ts` (grava o token da Coleta diária); depois
-      do deploy, abrir a aba Notícias logado e ver a primeira Coleta (se a NHK barrar os servidores
-      do Supabase, o aviso aparece na tela: plano B no ADR 0016)
+- [ ] Notícias: depois do deploy, abrir a aba logado e ver as fotos chegarem (a ação `fotos` da
+      função ainda não rodou com o seu login)
 - [ ] Notícias no iPhone: tocar numa palavra, criar uma Carta (etiqueta `dokusho::NHK_Easy` no
       .apkg), furigana Sem/NHK/Adaptativo, ler as N até 今日はここまで, abrir offline
 - [ ] N6: tempo de leitura das Notícias no Início

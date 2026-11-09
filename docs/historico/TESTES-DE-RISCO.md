@@ -152,3 +152,7 @@ Do PC do Igor (fora do Japão), com curl, cookies e 1 pedido por segundo:
   a da notícia normal (`/news/nd/kiji/...`, as outras 479) dá 401 sem cookie e 200 com ele.
 - Áudio: o caminho antigo (`vod-stream.nhk.jp`) dá 404; o atual, tirado do player
   (`media.vd.st.nhk/news/easy_audio/<voz>/index.m3u8`), dá 403 Access Denied. Fora da v4.
+- Primeira Coleta nos servidores do Supabase (2026-11-09, disparada pelo SQL do job do pg_cron): 200
+  em 25 s; 621 Notícias da news-list, 20 artigos com texto (175 a 273 caracteres), nenhum com
+  `span`, `a`, `img`, `div` ou `class`; todas com foto. A NHK aceita os servidores do Supabase:
+  o plano B do ADR 0016 não foi preciso.
