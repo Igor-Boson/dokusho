@@ -15,31 +15,37 @@ do Anki; apelido do livro (nome mostrado no lugar do título do EPUB). Capa que 
 depois de abrir o livro corrigida e conferida no aparelho. Versão do app e "Procurar atualização"
 no fim das Configurações. **Tempo de leitura** (2026-10-26): o app parado não conta mais como
 leitura; pausa sozinho depois de 5 min sem tocar.
+**Notícias da NHK Easy (v4)** (2026-11-09, branch `feat/noticias-nhk`): Coleta no servidor (Edge
+Function `nhk` + pg_cron), aba Notícias com a Edição do dia que termina em 今日はここまで, leitura com
+toque e Cartas, fotos, Histórico e cartão no Início. Conferida no navegador com dados de teste;
+falta o Igor configurar a Coleta diária, ver a primeira Coleta no Supabase e usar no iPhone.
 
-| Item | Status  | Data       | Observação                                                                  |
-| ---- | ------- | ---------- | --------------------------------------------------------------------------- |
-| S1   | feito   | 2026-10-20 | ttu roda; vitest; supabase init + link                                      |
-| S2   | feito   | 2026-10-21 | schema, login, cadastro desligado; rls_check conferido no SQL Editor        |
-| D1   | feito   | 2026-10-20 | telas aprovadas; regra dos toques B; protótipo no branch prototype/d1-telas |
-| R1   | feito\* | 2026-10-21 | guid e .apkg iguais ao genanki; Anki do PC ok; AnkiMobile dispensado        |
-| R2   | feito   | 2026-10-21 | AnkiConnect pelo Chrome; URL de produção no `webCorsOriginList`             |
-| R3   | feito\* | 2026-10-20 | lindera; 32 MB; PC dentro das metas; medida no iPhone dispensada            |
-| R4   | feito   | 2026-10-20 | 97,5% do texto acha entrada; 0 Cards sem entrada                            |
-| R5   | feito   | 2026-10-21 | 30 cartas aprovadas; US$ 0,0038/carta; alerta de orçamento criado           |
-| V1.1 | feito\* | 2026-10-21 | sincronização por linha (ADR 0014)                                          |
-| V1.2 | feito   | 2026-10-21 | 103/103 formas com o JMdict inteiro                                         |
-| V1.3 | feito\* | 2026-10-21 | toque, painel, carta local, barra verde                                     |
-| V1.4 | feito   | 2026-10-21 | Início somando os aparelhos; números conferidos no PC                       |
-| V1.5 | feito   | 2026-10-21 | 10 cartas geradas no PC                                                     |
-| V1.6 | feito   | 2026-10-21 | .apkg importa no Anki do PC e reimportar não duplica                        |
-| V1.7 | feito   | 2026-10-21 | PWA, backup, aviso de servidor pausado, deploy (só o `main` publica)        |
-| V2.1 | feito   | 2026-10-21 | 1ª sincronização real: 1515 Cards, 1503 Palavras, 0 sem entrada, 1 Lote     |
-| V2.2 | feito   | 2026-10-21 | destaque, painel e "Já sei" conferidos no PC pelo Igor                      |
-| V2.3 | feito   | 2026-10-21 | cobertura no leitor, Biblioteca e Vocabulário; desconhecidas por frequência |
-| V2.4 | feito   | 2026-10-21 | lista do hub na tela Vocabulário; aba Palavras no Início                    |
-| V3.1 | feito   | 2026-10-21 | furigana gerado e adaptativo (ADR 0015); 97,5% certo; ok no iPhone          |
-| V3.2 | feito\* | 2026-10-24 | palavras vistas, lido e cobertura antes/depois do Alcance, "Já vistas"      |
-| V3.3 | feito\* | 2026-10-24 | "Exportar CSV" no card Palavras (conhecidas e aprendendo, BOM para Excel)   |
+| Item  | Status   | Data       | Observação                                                                  |
+| ----- | -------- | ---------- | --------------------------------------------------------------------------- |
+| S1    | feito    | 2026-10-20 | ttu roda; vitest; supabase init + link                                      |
+| S2    | feito    | 2026-10-21 | schema, login, cadastro desligado; rls_check conferido no SQL Editor        |
+| D1    | feito    | 2026-10-20 | telas aprovadas; regra dos toques B; protótipo no branch prototype/d1-telas |
+| R1    | feito\*  | 2026-10-21 | guid e .apkg iguais ao genanki; Anki do PC ok; AnkiMobile dispensado        |
+| R2    | feito    | 2026-10-21 | AnkiConnect pelo Chrome; URL de produção no `webCorsOriginList`             |
+| R3    | feito\*  | 2026-10-20 | lindera; 32 MB; PC dentro das metas; medida no iPhone dispensada            |
+| R4    | feito    | 2026-10-20 | 97,5% do texto acha entrada; 0 Cards sem entrada                            |
+| R5    | feito    | 2026-10-21 | 30 cartas aprovadas; US$ 0,0038/carta; alerta de orçamento criado           |
+| V1.1  | feito\*  | 2026-10-21 | sincronização por linha (ADR 0014)                                          |
+| V1.2  | feito    | 2026-10-21 | 103/103 formas com o JMdict inteiro                                         |
+| V1.3  | feito\*  | 2026-10-21 | toque, painel, carta local, barra verde                                     |
+| V1.4  | feito    | 2026-10-21 | Início somando os aparelhos; números conferidos no PC                       |
+| V1.5  | feito    | 2026-10-21 | 10 cartas geradas no PC                                                     |
+| V1.6  | feito    | 2026-10-21 | .apkg importa no Anki do PC e reimportar não duplica                        |
+| V1.7  | feito    | 2026-10-21 | PWA, backup, aviso de servidor pausado, deploy (só o `main` publica)        |
+| V2.1  | feito    | 2026-10-21 | 1ª sincronização real: 1515 Cards, 1503 Palavras, 0 sem entrada, 1 Lote     |
+| V2.2  | feito    | 2026-10-21 | destaque, painel e "Já sei" conferidos no PC pelo Igor                      |
+| V2.3  | feito    | 2026-10-21 | cobertura no leitor, Biblioteca e Vocabulário; desconhecidas por frequência |
+| V2.4  | feito    | 2026-10-21 | lista do hub na tela Vocabulário; aba Palavras no Início                    |
+| V3.1  | feito    | 2026-10-21 | furigana gerado e adaptativo (ADR 0015); 97,5% certo; ok no iPhone          |
+| V3.2  | feito\*  | 2026-10-24 | palavras vistas, lido e cobertura antes/depois do Alcance, "Já vistas"      |
+| V3.3  | feito\*  | 2026-10-24 | "Exportar CSV" no card Palavras (conhecidas e aprendendo, BOM para Excel)   |
+| N1–N5 | feito\*  | 2026-11-09 | Notícias da NHK Easy; falta o teste no iPhone e a Coleta agendada           |
+| N6    | pendente | —          | tempo das Notícias no Início (segunda etapa, depois do v4 no ar)            |
 
 \* Testes em aparelho dispensados pelo Igor, cobertos só pelos testes automáticos (ver abaixo).
 
@@ -57,6 +63,12 @@ Se algo disso falhar no uso, anote aqui e abra um chat de correção.
 
 ## Pendências
 
+- [ ] Notícias: rodar `node tools/configurar-coleta-nhk.ts` (grava o token da Coleta diária); depois
+      do deploy, abrir a aba Notícias logado e ver a primeira Coleta (se a NHK barrar os servidores
+      do Supabase, o aviso aparece na tela: plano B no ADR 0016)
+- [ ] Notícias no iPhone: tocar numa palavra, criar uma Carta (etiqueta `dokusho::NHK_Easy` no
+      .apkg), furigana Sem/NHK/Adaptativo, ler as N até 今日はここまで, abrir offline
+- [ ] N6: tempo de leitura das Notícias no Início
 - [ ] V3.2 no aparelho: Vocabulário › "Palavras vistas" e Palavras do livro com os livros reais
       (os perfis antigos são recalculados na primeira visita; livro não baixado no aparelho fica de fora)
 - [ ] V3.3 no aparelho: Vocabulário › Palavras › "Exportar CSV" no iPhone (folha de compartilhamento)

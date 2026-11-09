@@ -66,6 +66,7 @@ export async function garantirFotos(ids: string[]) {
   const cache = await abrir();
 
   if (!cache || !navigator.onLine) return;
+  if (!(await supabase.auth.getSession()).data.session) return;
 
   const faltam: string[] = [];
 

@@ -16,7 +16,8 @@ desfazer um ADR sem um novo ADR).
   de Drive, OneDrive e pasta local do ttu ficam no código e saem da interface; audiobook e legendas
   também).
 - Supabase: Auth (e-mail + senha, cadastro desligado), Postgres com RLS, Storage (buckets `epubs`,
-  `audio`, `dicts`), Edge Function `gemini` (ações `translate` e `generate`).
+  `audio`, `dicts`), Edge Function `gemini` (ações `translate` e `generate`) e Edge Function `nhk`
+  (Coleta das Notícias do NHK Easy e fotos; ADR 0016), agendada pelo pg_cron.
   Schema em supabase/migrations/. Cliente: @supabase/supabase-js.
 - Hospedagem: Vercel (build estático do adapter-static), só `main`, sem previews. Configuração em
   apps/web/vercel.json (Root Directory `apps/web`, saída `build`, cleanUrls); env vars na Vercel:
@@ -48,6 +49,9 @@ desfazer um ADR sem um novo ADR).
   GEMINI_TETO_DIARIO. Lógica pura em supabase/functions/gemini/\*.ts sem imports (testada pelo vitest);
   só o index.ts usa Deno. verify_jwt = false em toda função (os tokens do Auth são ES256 e o gateway
   só aceita os antigos); a função confere o login com auth.getUser.
+- Notícias: npx supabase functions deploy nhk --use-api. Coleta diária: node tools/configurar-coleta-nhk.ts
+  (quem roda é o usuário: grava o secret NHK_TOKEN_COLETA e o Vault). Amostras reais da NHK em
+  nhk-amostras/ (fora do git; os testes pulam sem elas).
 - Cartas de teste (R5): node tools/gerar-cartas-teste.ts [dicts/r5] (pede e-mail e senha; quem roda é
   o usuário); lê cartas.json e precos.json da pasta e grava relatorio.html.
 - Referência do genanki (R1): py -3.14 -m venv tools/.venv; tools/.venv/Scripts/python -m pip
@@ -66,7 +70,8 @@ desfazer um ADR sem um novo ADR).
 
 ## Regras fixas
 
-- Repositório público: nunca chave, dado pessoal ou link privado em arquivo versionado.
+- Repositório público: nunca chave, dado pessoal ou link privado em arquivo versionado. Nem texto
+  da NHK: as amostras reais ficam em nhk-amostras/ (fora do git).
 - Nenhuma chamada a Claude/LLM dentro do app. Só Gemini, só pela Edge Function `gemini`.
 - Chaves: GEMINI_API_KEY só como secret do Supabase (ler com Deno.env.get("GEMINI_API_KEY")). A função
   aceita só o usuário do secret ALLOWED_USER_ID e respeita um teto diário. Nomes de modelo em

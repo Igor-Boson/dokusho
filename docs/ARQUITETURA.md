@@ -20,9 +20,12 @@ em português, ao lado do código do ttu, que segue com os nomes originais.
 | `/statistics`            | Estatísticas do ttu (só deste aparelho)                                                    |
 | `/vocabulario`           | Vocabulário: Sincronização do Anki (botão só no Windows) e o hub                           |
 | `/vocabulario/livro?id=` | Palavras do livro: cobertura e desconhecidas por frequência                                |
+| `/noticias`              | Notícias: a Edição do dia, 今日はここまで, aviso da Coleta, Notícias por dia               |
+| `/noticias/ler?id=`      | Leitura da Notícia (foto, data, título, texto), furigana ふ, "Lida" que abre a próxima     |
+| `/noticias/historico`    | Histórico de notícias (lidas por dia)                                                      |
 
-Navegação inferior (`lib/components/navegacao/`): Início, Biblioteca, Fila (com contador) e
-Vocabulário. Os avisos "Nova versão" e "Servidor pausado" ficam no topo dessas
+Navegação inferior (`lib/components/navegacao/`): Início, Notícias, Biblioteca, Fila (com contador)
+e Vocabulário. Os avisos "Nova versão" e "Servidor pausado" ficam no topo dessas
 telas, nunca no leitor.
 
 ## Sincronização (`lib/data/supabase/sincronizacao/`, ADR 0001, 0002, 0014)
@@ -55,7 +58,9 @@ telas, nunca no leitor.
   aceitar trecho que só acrescenta flexão (`soFlexao`); reservas (potencial, alongamento, っ final,
   katakana). Casos em `busca.casos.ts` (103).
 - `servico.ts`: estado, download com aviso de tamanho, `consultarPalavra` com cache.
-- Leitor: `leitor-dokusho.svelte` acha o caractere sob o toque (pointerdown/pointerup, porque o
+- Toque: `toque-na-palavra.svelte` (comum ao leitor de livros e às Notícias; ADR 0017) recebe a raiz
+  do texto, a origem da Carta e o modo do furigana; `leitor-dokusho.svelte` põe nele o que é do
+  Livro (Alcance, cobertura, barra). O toque acha o caractere (pointerdown/pointerup, porque o
   Safari não dispara `click` em área vazia), monta o parágrafo sem `<rt>` (`texto-do-dom.ts`) e
   realça com a CSS Custom Highlight API. `painel-palavra.svelte` (inferior até 767 px, lateral acima),
   `barra-leitor.svelte` (barra do topo do D1), `alcance-dom.ts` (barra verde).
@@ -72,6 +77,22 @@ telas, nunca no leitor.
   perto da tela e marca `dk-fg--conhecida` (também no `<ruby>` do EPUB) pelo hub; o CSS em
   `leitor-dokusho.svelte` mostra a leitura conforme `html[data-dk-furigana]`. O menu ふ fica na
   `barra-leitor.svelte`.
+
+## Notícias (`lib/data/noticias/`, `supabase/functions/nhk/`; ADR 0016, 0017)
+
+- Coleta: Edge Function `nhk` (`index.ts` com rede; `nhk.ts` puro e testado: lista, artigo limpo
+  por lista branca, cookies do login de fora do Japão). Agendada pelo pg_cron (11h45 UTC, token no
+  Vault, configurado por `tools/configurar-coleta-nhk.ts`) e pedida pelo app quando a última tem
+  mais de 12 h. Grava `news_articles` e `news_collection` (o app só lê).
+- `edicao.ts` (puro): Edição do dia, pendentes, próxima, Histórico, aviso da Coleta. `servico.ts`:
+  grava a Edição (uma vez por dia, pela hora de início do dia das estatísticas) e as lidas, pede a
+  Coleta, preferências por aparelho (Notícias por dia, furigana Sem/NHK/Adaptativo).
+- `fotos.ts`: a ação `fotos` da função busca na NHK; o app reduz e guarda no Cache Storage
+  `dokusho-noticias-fotos`. `origem.ts`: Carta de Notícia com `book_id` `nhk:<id>` e título
+  "NHK Easy" (etiqueta `dokusho::NHK_Easy`).
+- Sincronização: lojas `noticias`, `noticiasLidas`, `edicoes` e `coleta` no `dokusho-sinc` (v4).
+- Testes com uma amostra inventada versionada e, quando existem, as amostras reais em
+  `nhk-amostras/` (fora do git).
 
 ## Hub de vocabulário (`lib/data/vocabulario/`; ADR 0007, 0008, 0013)
 
