@@ -4,6 +4,8 @@
  * All rights reserved.
  */
 
+// Datas das Notícias no horário do Japão, como a NHK mostra (2026年11月9日).
+
 const DATA_JP = new Intl.DateTimeFormat('ja-JP', {
   timeZone: 'Asia/Tokyo',
   year: 'numeric',

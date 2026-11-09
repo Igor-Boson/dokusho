@@ -4,6 +4,9 @@
  * All rights reserved.
  */
 
+// De onde vem a Carta (book_id): o hash do Livro, ou nhk:<id> numa Notícia (ADR 0017). As Cartas
+// de Notícia levam o título "NHK Easy", que vira a etiqueta dokusho::NHK_Easy (docs/CARDS.md).
+
 const PREFIXO = 'nhk:';
 export const TITULO_DAS_NOTICIAS = 'NHK Easy';
 
