@@ -8,7 +8,9 @@
 
 import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const env = readFileSync('apps/web/.env', 'utf8');
 const url = /^PUBLIC_SUPABASE_URL=["']?([^"'\r\n]+)/m.exec(env)?.[1]?.trim();
@@ -25,22 +27,35 @@ function supabase(args: string[]) {
   } catch (e) {
     const saida = String((e as { stderr?: Buffer }).stderr ?? e).replaceAll(token, '<token>');
     console.error(saida);
-    process.exit(1);
+    process.exitCode = 1;
+    throw new Error('o comando do Supabase falhou');
   }
 }
 
-console.log('1/2 Gravando o secret NHK_TOKEN_COLETA da função nhk...');
-supabase(['secrets', 'set', `NHK_TOKEN_COLETA=${token}`]);
-
-console.log('2/2 Guardando o endereço da função e o token no Vault...');
 const guardar = (nome: string, valor: string) => `
   perform vault.update_secret(id, '${valor}') from vault.secrets where name = '${nome}';
   if not found then perform vault.create_secret('${valor}', '${nome}'); end if;`;
-supabase([
-  'db',
-  'query',
-  '--linked',
-  `"do $$ begin ${guardar('nhk_coleta_url', funcao)} ${guardar('nhk_coleta_token', token)} end $$;"`
-]);
+try {
+  console.log('1/2 Gravando o secret NHK_TOKEN_COLETA da função nhk...');
+  supabase(['secrets', 'set', `NHK_TOKEN_COLETA=${token}`]);
 
-console.log('Pronto. A Coleta roda todo dia às 8h45 (Brasília).');
+  console.log('2/2 Guardando o endereço da função e o token no Vault...');
+  // O SQL vai num arquivo temporário: pela linha de comando, o cmd do Windows corta na primeira
+  // quebra de linha (e o $$ não sobrevive a todos os shells). O arquivo é apagado logo depois.
+  const pasta = mkdtempSync(join(tmpdir(), 'dokusho-coleta-'));
+  const arquivo = join(pasta, 'vault.sql');
+  try {
+    writeFileSync(
+      arquivo,
+      `do $$ begin ${guardar('nhk_coleta_url', funcao)} ${guardar('nhk_coleta_token', token)}\nend $$;\n`,
+      { mode: 0o600 }
+    );
+    supabase(['db', 'query', '--linked', '--file', `"${arquivo}"`]);
+  } finally {
+    rmSync(pasta, { recursive: true, force: true });
+  }
+
+  console.log('Pronto. A Coleta roda todo dia às 8h45 (Brasília).');
+} catch {
+  console.error('Parou no meio. Rodar de novo é seguro: troca o token nos dois lugares.');
+}
