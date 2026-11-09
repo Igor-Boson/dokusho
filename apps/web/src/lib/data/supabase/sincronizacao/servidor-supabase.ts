@@ -18,7 +18,11 @@ const CONFLITO: Record<TabelaSinc, string> = {
   lotes: 'user_id,id',
   translations: 'user_id,sentence_sha256',
   vocab: 'user_id,word,reading',
-  vocab_history: 'user_id,id'
+  vocab_history: 'user_id,id',
+  news_articles: 'user_id,news_id',
+  news_reads: 'user_id,news_id',
+  news_editions: 'user_id,day',
+  news_collection: 'user_id'
 };
 
 const CHAVE: Record<TabelaSinc, string[]> = {
@@ -30,7 +34,11 @@ const CHAVE: Record<TabelaSinc, string[]> = {
   lotes: ['id'],
   translations: ['sentence_sha256'],
   vocab: ['word', 'reading'],
-  vocab_history: ['id']
+  vocab_history: ['id'],
+  news_articles: ['news_id'],
+  news_reads: ['news_id'],
+  news_editions: ['day'],
+  news_collection: ['user_id']
 };
 
 const POR_ENVIO = 500;

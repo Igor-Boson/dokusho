@@ -44,6 +44,9 @@ export const cartasRecebidas$ = new Subject<void>();
 /** O hub de vocabulário mudou (chegou do servidor ou foi gravado aqui): destaque, painel e telas releem. */
 export const vocabMudou$ = new Subject<void>();
 
+/** Notícias, lidas, Edições ou o estado da Coleta chegaram do servidor (as telas das Notícias releem). */
+export const noticiasRecebidas$ = new Subject<void>();
+
 /** Apelidos dos livros (título → nome mostrado); muda quando um chega do servidor ou é dado aqui. */
 export const apelidos$ = new BehaviorSubject<Map<string, string>>(new Map());
 
@@ -131,7 +134,8 @@ export function sincronizador() {
         metas: async () => readingGoal$.next(await getCurrentReadingGoal()),
         estatisticas: () => estatisticasRecebidas$.next(),
         cartas: () => cartasRecebidas$.next(),
-        vocab: () => vocabMudou$.next()
+        vocab: () => vocabMudou$.next(),
+        noticias: () => noticiasRecebidas$.next()
       },
       apagarLivroLocal: async (dataId) => {
         const livro = await database.getData(dataId);

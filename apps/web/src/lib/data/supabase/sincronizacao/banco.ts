@@ -8,9 +8,13 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type {
   AlcanceLocal,
   LinhaCarta,
+  LinhaColeta,
+  LinhaEdicao,
   LinhaEstatistica,
   LinhaLote,
   LinhaMarcador,
+  LinhaNoticia,
+  LinhaNoticiaLida,
   LinhaRetrato,
   LinhaTraducao,
   LinhaVocab
@@ -64,6 +68,14 @@ interface SincDb extends DBSchema {
   vocab: { key: [string, string]; value: LinhaVocab; indexes: { entradas: number } };
   /** Retratos da Sincronização do Anki (vocab_history). */
   retratos: { key: string; value: LinhaRetrato };
+  /** Notícias (news_articles), pelo id da NHK; só o servidor grava. */
+  noticias: { key: string; value: LinhaNoticia };
+  /** Notícias lidas (news_reads), pelo id da Notícia. */
+  noticiasLidas: { key: string; value: LinhaNoticiaLida };
+  /** Edições do dia (news_editions), pelo dia (AAAA-MM-DD). */
+  edicoes: { key: string; value: LinhaEdicao };
+  /** Estado da Coleta (news_collection), uma linha; só o servidor grava. */
+  coleta: { key: string; value: LinhaColeta };
 }
 
 export type BancoSinc = IDBPDatabase<SincDb>;
@@ -78,7 +90,7 @@ export interface AvisosDoBanco {
 }
 
 export function abrirBancoSinc(nome = NOME_BANCO_SINC, avisos: AvisosDoBanco = {}) {
-  return openDB<SincDb>(nome, 3, {
+  return openDB<SincDb>(nome, 4, {
     blocked() {
       avisos.bloqueado?.();
     },
@@ -114,6 +126,13 @@ export function abrirBancoSinc(nome = NOME_BANCO_SINC, avisos: AvisosDoBanco = {
           { multiEntry: true }
         );
         db.createObjectStore('retratos', { keyPath: 'id' });
+      }
+
+      if (versaoAntiga < 4) {
+        db.createObjectStore('noticias', { keyPath: 'news_id' });
+        db.createObjectStore('noticiasLidas', { keyPath: 'news_id' });
+        db.createObjectStore('edicoes', { keyPath: 'day' });
+        db.createObjectStore('coleta', { keyPath: 'user_id' });
       }
     }
   });
